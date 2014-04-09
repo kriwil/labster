@@ -23,7 +23,7 @@ edX
   
   # put this at the bottom
   if FEATURES.get('LABSTER'):
-    INSTALLED_APS += ('labster',)
+    INSTALLED_APPS += ('labster',)
     
   
   # lms/urls.py

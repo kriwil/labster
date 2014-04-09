@@ -12,6 +12,7 @@ edX
 ---
 
 ::
+
   # lms/envs/common.py
   FEATURES = {
     ...

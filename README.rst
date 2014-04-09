@@ -19,6 +19,9 @@ edX
     'LABSTER': True,
   }
   
+  ...
+  
+  # put this at the bottom
   if FEATURES.get('LABSTER'):
     INSTALLED_APS += ('labster',)
     

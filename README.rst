@@ -19,7 +19,7 @@ edX
     'LABSTER': True,
   }
   
-  if FAETURES.get('LABSTER'):
+  if FEATURES.get('LABSTER'):
     INSTALLED_APS += ('labster',)
     
   

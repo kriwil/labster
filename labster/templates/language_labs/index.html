@@ -1,0 +1,24 @@
+{% if language_labs %}
+	<table>
+		<thead>
+			<tr>
+				<th>Language Code</th>
+				<th>Language Name</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for lang in language_labs %}
+				<tr>
+					<td>{{ lang.language_code }}</td>
+                    <td>{{ lang.language_name }}</td>
+					<td>___</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p>There is no language available</p>
+{% endif %}
+
+<a href="/labster/language_labs/add/">Add Language</a>

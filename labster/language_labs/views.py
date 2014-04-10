@@ -1,7 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.forms import ModelForm
-from django.shortcuts import render
-from django.core.urlresolvers import reverse
+from django.shortcuts import render, get_object_or_404
 
 from labster.models import LanguageLab
 
@@ -18,13 +17,32 @@ def index(request):
     return render(request, 'language_labs/index.html', context)
 
 
-def add_language_lab(request):
+def add(request):
     if request.method == 'POST':
         form = LanguageForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect('/labster/language_labs/index')
+            return HttpResponseRedirect('/labster/language_labs/')
     else:
         form = LanguageForm()
 
-    return render(request, 'language_labs/add_language_lab.html', {'form': form})
+    return render(request, 'language_labs/add.html', {'form': form})
+
+
+def update(request, lab_id):
+    lang = get_object_or_404(LanguageLab, pk=lab_id)
+    if request.method == 'POST':
+        form = LanguageForm(request.POST, instance=lang)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/labster/language_labs/')
+    else:
+        form = LanguageForm(instance=lang)
+
+    return render(request, 'language_labs/update.html', {'form': form, 'lang': lang})
+
+
+def delete(request, lab_id):
+    lang = get_object_or_404(LanguageLab, pk=lab_id)
+    lang.delete()
+    return HttpResponseRedirect('/labster/language_labs/')

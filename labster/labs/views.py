@@ -1,7 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.forms import ModelForm
 from django.shortcuts import render
-from django.core.urlresolvers import reverse
 
 from labster.models import Lab
 

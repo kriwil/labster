@@ -12,7 +12,10 @@
 				<tr>
 					<td>{{ lang.language_code }}</td>
                     <td>{{ lang.language_name }}</td>
-					<td>___</td>
+					<td>
+                        <a href="/labster/language_labs/{{ lang.id }}/update/">Update</a> |
+                        <a href="/labster/language_labs/{{ lang.id }}/delete/">Delete</a>
+                    </td>
 				</tr>
 			{% endfor %}
 		</tbody>

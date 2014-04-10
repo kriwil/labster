@@ -1,0 +1,6 @@
+<h2>Update Language for Lab</h2>
+<form action="/labster/language_labs/{{ lang.id }}/update/" method="post">
+	{% csrf_token %}
+	{{ form.as_p }}
+	<input type="submit" value="Update Language Lab" />
+</form>

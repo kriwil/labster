@@ -18,9 +18,12 @@
 					<td>{{ lab.description }}</td>
 					<td>{{ lab.objective }}</td>
 					<td>{{ lab.url }}</td>
-					<td>{{ lab.wikiurl }}</td>
+					<td>{{ lab.wiki_url }}</td>
 					<td>{{ lab.screenshot }}</td>
-					<td>___</td>
+					<td>
+                        <a href="/labster/labs/{{ lab.id }}/update/">Update</a> |
+                        <a href="/labster/labs/{{ lab.id }}/delete/">Delete</a>
+					</td>
 				</tr>
 			{% endfor %}
 		</tbody>
@@ -28,3 +31,5 @@
 {% else %}
 	<p>There is no labs available</p>
 {% endif %}
+
+<a href="/labster/labs/add/">Add Lab</a>

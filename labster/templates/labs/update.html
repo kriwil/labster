@@ -1,0 +1,6 @@
+<h2>Update Lab</h2>
+<form action="/labster/labs/{{ lab.id }}/update/" method="post">
+	{% csrf_token %}
+	{{ form.as_p }}
+	<input type="submit" value="Update Lab" />
+</form>

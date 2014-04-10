@@ -12,6 +12,7 @@ class Lab(models.Model):
     url = models.CharField(max_length=120)
     wiki_url = models.CharField(max_length=120)
     screenshot = models.CharField(max_length=120)
+    questions = models.TextField(default='')
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
 

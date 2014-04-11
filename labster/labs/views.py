@@ -1,14 +1,20 @@
+from django import forms
 from django.http import HttpResponseRedirect
 from django.forms import ModelForm
+from django.forms.widgets import CheckboxSelectMultiple
 from django.shortcuts import render, get_object_or_404
 
-from labster.models import Lab
+from labster.models import Lab, LanguageLab
 
 
 class LabForm(ModelForm):
+
+    languages = forms.ModelMultipleChoiceField(queryset=LanguageLab.objects.all(),
+                                               widget=CheckboxSelectMultiple)
+
     class Meta:
         model = Lab
-        fields = ['name', 'description', 'url', 'wiki_url', 'screenshot']
+        fields = ['name', 'description', 'url', 'wiki_url', 'screenshot', 'languages']
 
 
 def index(request):
@@ -26,7 +32,7 @@ def add(request):
     else:
         form = LabForm()
 
-    return render(request, 'labs/add_lab.html', {'form': form})
+    return render(request, 'labs/add.html', {'form': form})
 
 
 def update(request, lab_id):

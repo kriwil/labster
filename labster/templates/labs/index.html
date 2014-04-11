@@ -8,6 +8,7 @@
 				<th>Url</th>
 				<th>Wiki Url</th>
 				<th>Picture</th>
+                <th>Languages</th>
 				<th>Action</th>
 			</tr>
 		</thead>
@@ -20,6 +21,7 @@
 					<td>{{ lab.url }}</td>
 					<td>{{ lab.wiki_url }}</td>
 					<td>{{ lab.screenshot }}</td>
+                    <td>{{ lab.languages }}</td>
 					<td>
                         <a href="/labster/labs/{{ lab.id }}/update/">Update</a> |
                         <a href="/labster/labs/{{ lab.id }}/delete/">Delete</a>

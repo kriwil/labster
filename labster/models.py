@@ -5,6 +5,9 @@ class LanguageLab(models.Model):
     language_code = models.CharField(max_length=4)
     language_name = models.CharField(max_length=32)
 
+    def __unicode__(self):
+        return self.language_name
+
 
 class Lab(models.Model):
     name = models.CharField(max_length=64)

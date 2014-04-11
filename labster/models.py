@@ -19,6 +19,9 @@ class Lab(models.Model):
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
 
+    def __unicode__(self):
+        return self.name
+
 
 # class CourseProxy(models.Model):
 

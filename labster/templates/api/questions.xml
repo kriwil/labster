@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<questions>
+<problemset>
     {% for q in questions %}
-    {{ q|safe }}
+    <item id="">
+        {{ q|safe }}
+    </item>
     {% endfor %}
-</questions>
+</problemset>

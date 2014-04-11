@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 from courseware.courses import get_course
 from courseware.model_data import FieldDataCache
-from courseware.module_render import get_module_for_descriptor
+# from courseware.module_render import get_module_for_descriptor
 from xmodule.modulestore.django import modulestore
 
 
@@ -15,12 +15,12 @@ def questions(request):
 
     course = get_course(course_id=course_id)
 
-    field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
-        course.id, user, course, depth=2)
-    course_module = get_module_for_descriptor(user, request, course, field_data_cache, course.id)
+    # field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
+    #     course.id, user, course, depth=2)
+    # course_module = get_module_for_descriptor(user, request, course, field_data_cache, course.id)
 
     chapter_descriptor = course.get_child_by(lambda m: m.url_name == chapter)
-    chapter_module = course_module.get_child_by(lambda m: m.url_name == chapter)
+    # chapter_module = course_module.get_child_by(lambda m: m.url_name == chapter)
 
     section_descriptor = chapter_descriptor.get_child_by(lambda m: m.url_name == section)
     section_descriptor = modulestore().get_instance(course.id, section_descriptor.location, depth=None)
@@ -31,7 +31,7 @@ def questions(request):
     questions = []
     for each in section_field_data_cache.descriptors:
         if each.plugin_name == 'problem':
-            xml = each.get_context().get('data')
+            xml = each.data
             if xml:
                 questions.append(xml)
 

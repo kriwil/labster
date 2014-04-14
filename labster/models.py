@@ -23,9 +23,14 @@ class Lab(models.Model):
         return self.name
 
 
-# class CourseProxy(models.Model):
+class CourseProxy(models.Model):
 
-#     course_id = models.CharField(max_length=100)
-#     chapter = models.CharField(max_length=100)
-#     section = models.CharField(max_length=100, default="", blank=True)
-#     position = models.CharField(max_length=100, default="", blank=True)
+    lab = models.ForeignKey(Lab)
+    course_id = models.CharField(max_length=255)
+    chapter_id = models.CharField(max_length=100)
+    section_id = models.CharField(max_length=100, default="", blank=True)
+    unit_id = models.CharField(max_length=100, default="", blank=True)
+    position = models.CharField(max_length=100, default="", blank=True)
+
+    def __unicode__(self):
+        return "Proxy for {}".format(self.lab.name)

@@ -16,22 +16,13 @@ class Lab(models.Model):
     description = models.TextField(default='')
     url = models.URLField(max_length=120)
     wiki_url = models.URLField(max_length=120, blank=True)
-    screenshot = models.ImageField(upload_to='labster/lab/images')
+    screenshot = models.ImageField(upload_to='labster/lab/images', blank=True)
     questions = models.TextField(default='', blank=True)
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
 
     def __unicode__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        # when updating the screenshot, we need to delete the old image file
-        try:
-            this = Lab.objects.get(id=self.id)
-            if this.screenshot != self.screenshot:
-                this.screenshot.delete(save=False)
-        except:pass
-        super(Lab, self).save(*args, **kwargs)
 
 
 @receiver(pre_delete, sender=Lab)

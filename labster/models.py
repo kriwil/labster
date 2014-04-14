@@ -30,9 +30,18 @@ def lab_delete(sender, instance, **kwargs):
     # Also delete the screenshot image file when deleting the Lab
     instance.screenshot.delete(False)
 
-# class CourseProxy(models.Model):
 
+class QuizBlockLab(models.Model):
+    lab = models.ForeignKey(Lab)
+    quiz_block_id = models.CharField(max_length=64, unique=True)
+    order = models.IntegerField(default=0)
+    description = models.CharField(max_length=120, default='')
+    questions = models.TextField(default='')
+
+
+# class CourseProxy(models.Model):
 #     course_id = models.CharField(max_length=100)
+#     lab_id = models.ForeignKey()
 #     chapter = models.CharField(max_length=100)
 #     section = models.CharField(max_length=100, default="", blank=True)
 #     position = models.CharField(max_length=100, default="", blank=True)

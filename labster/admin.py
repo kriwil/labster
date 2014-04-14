@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from labster.models import LanguageLab, Lab
+from labster.models import LanguageLab, Lab, QuizBlockLab
 from labster.forms import LabAdminForm
 
 
@@ -12,3 +12,4 @@ class LabAdmin(admin.ModelAdmin):
 
 admin.site.register(LanguageLab)
 admin.site.register(Lab, LabAdmin)
+admin.site.register(QuizBlockLab)

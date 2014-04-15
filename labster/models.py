@@ -1,6 +1,7 @@
 from django.db import models
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
+from django.utils import timezone
 
 
 class LanguageLab(models.Model):
@@ -21,6 +22,9 @@ class Lab(models.Model):
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
 
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
     def __unicode__(self):
         return self.name
 
@@ -38,6 +42,9 @@ class QuizBlockLab(models.Model):
     description = models.CharField(max_length=120, default='')
     questions = models.TextField(default='')
 
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
     def __unicode__(self):
         return self.quiz_block_id
 
@@ -51,5 +58,16 @@ class CourseProxy(models.Model):
     unit_id = models.CharField(max_length=100, default="", blank=True)
     position = models.CharField(max_length=100, default="", blank=True)
 
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)
+
+
+def update_modified_at(sender, instance, **kwargs):
+    instance.modified_at = timezone.now()
+
+pre_save.connect(update_modified_at, sender=Lab)
+pre_save.connect(update_modified_at, sender=QuizBlockLab)
+pre_save.connect(update_modified_at, sender=CourseProxy)

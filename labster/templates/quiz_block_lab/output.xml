@@ -1,3 +1,0 @@
-<quizblock id="{{ obj.id }} " description="{{ obj.description }}">
-    {{ obj.questions|safe }}
-</quizblock>

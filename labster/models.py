@@ -3,7 +3,6 @@ from lxml import etree
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
-from django.template.loader import render_to_string
 from django.utils import timezone
 
 
@@ -59,7 +58,10 @@ class QuizBlockLab(models.Model):
 
     @property
     def xml(self):
-        return render_to_string("quiz_block_lab/output.xml", {'obj': self})
+        output = """<quizblock id="{id}" description="{description}">{questions}</quizblock>"""
+        output = output.format(id=self.id, description=self.description,
+                               questions=self.questions)
+        return output
 
     @property
     def question_list(self):

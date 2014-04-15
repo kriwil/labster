@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<problemset>
-    {% for q in questions %}
-    <item id="">
-        {{ q|safe }}
-    </item>
+<lab id="" name="">
+    {% for quizblock in problemset %}
+    <quizblock id="" description="">
+        {% for problem in quizblock %}
+        {{ problem|safe }}
+        {% endfor %}
+    </quizblock>
     {% endfor %}
-</problemset>
+</lab>

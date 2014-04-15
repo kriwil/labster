@@ -14,7 +14,7 @@ class LabAdmin(BaseAdmin):
 
 
 class LabProxyAdmin(BaseAdmin):
-    list_display = ('lab', 'course_id')
+    list_display = ('lab', 'course_id', 'created_at', 'modified_at')
 
 
 admin.site.register(LanguageLab)

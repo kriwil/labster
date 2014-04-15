@@ -1,16 +1,20 @@
 from django.contrib.auth.models import User
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from courseware.courses import get_course
 from courseware.model_data import FieldDataCache
-# from courseware.module_render import get_module_for_descriptor
 from xmodule.modulestore.django import modulestore
+
+from labster.models import LabProxy
 
 
 def questions(request):
-    course_id = "TheOrganization/CN101/2014_RUN"
-    chapter = "2f85b01abbfd42e28e9e40e7b165bd1b"
-    section = "f67f1514023f4be68c6171b37066c366"
+    p_id = request.GET.get('p_id')
+    lab_proxy = get_object_or_404(LabProxy, id=p_id)
+
+    course_id = lab_proxy.course_id
+    chapter = lab_proxy.chapter_id
+    section = lab_proxy.section_id
     user = User.objects.get(email='staff@example.com')
 
     course = get_course(course_id=course_id)
@@ -28,15 +32,22 @@ def questions(request):
     section_field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
         course.id, user, section_descriptor, depth=2)
 
-    questions = []
+    problemset = quizblock = []
     for each in section_field_data_cache.descriptors:
+        if each.plugin_name == 'quizblock':
+            len(quizblock) and problemset.append(quizblock)
+            print each.quizblock_id
+            quizblock = []
+
         if each.plugin_name == 'problem':
             xml = each.data
             if xml:
-                questions.append(xml)
+                quizblock.append(xml)
+
+    len(quizblock) and problemset.append(quizblock)
 
     template_name = "api/questions.xml"
     context = {
-        'questions': questions,
+        'problemset': problemset,
     }
     return render(request, template_name, context, content_type="text/xml")

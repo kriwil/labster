@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 
@@ -28,6 +29,9 @@ class Lab(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_quizblocks(self):
+        return self.quizblocklab_set.all()
+
 
 @receiver(pre_delete, sender=Lab)
 def lab_delete(sender, instance, **kwargs):
@@ -45,8 +49,15 @@ class QuizBlockLab(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        ordering = ('lab__id', 'order')
+
     def __unicode__(self):
         return self.quiz_block_id
+
+    @property
+    def xml(self):
+        return render_to_string("quiz_block_lab/output.xml", {'obj': self})
 
 
 class CourseProxy(models.Model):

@@ -1,0 +1,2 @@
+<quizblock id="{{ obj.id }} " description="{{ obj.description }}">
+</quzblock>

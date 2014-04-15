@@ -1,3 +1,3 @@
 <quizblock id="{{ obj.id }} " description="{{ obj.description }}">
-    {{ obj.questions }}
+    {{ obj.questions|safe }}
 </quizblock>

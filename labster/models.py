@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
@@ -58,6 +60,13 @@ class QuizBlockLab(models.Model):
     @property
     def xml(self):
         return render_to_string("quiz_block_lab/output.xml", {'obj': self})
+
+    @property
+    def question_list(self):
+        root = etree.fromstring(self.xml)
+        problems = root.findall('problem')
+        question_list = [etree.tostring(problem).strip() for problem in problems]
+        return question_list
 
     @property
     def serialized(self):

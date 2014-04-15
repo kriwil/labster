@@ -9,7 +9,6 @@ class LabAdmin(admin.ModelAdmin):
     form = LabAdminForm
 
 
-
 admin.site.register(LanguageLab)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(QuizBlockLab)

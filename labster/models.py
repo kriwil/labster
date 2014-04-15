@@ -38,6 +38,9 @@ class QuizBlockLab(models.Model):
     description = models.CharField(max_length=120, default='')
     questions = models.TextField(default='')
 
+    def __unicode__(self):
+        return self.quiz_block_id
+
 
 class CourseProxy(models.Model):
 

@@ -31,6 +31,14 @@ def lab_delete(sender, instance, **kwargs):
     instance.screenshot.delete(False)
 
 
+class QuizBlockLab(models.Model):
+    lab = models.ForeignKey(Lab)
+    quiz_block_id = models.CharField(max_length=64, unique=True)
+    order = models.IntegerField(default=0)
+    description = models.CharField(max_length=120, default='')
+    questions = models.TextField(default='')
+
+
 class CourseProxy(models.Model):
 
     lab = models.ForeignKey(Lab)

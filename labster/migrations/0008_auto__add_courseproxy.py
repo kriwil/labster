@@ -53,6 +53,15 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'language_code': ('django.db.models.fields.CharField', [], {'max_length': '4'}),
             'language_name': ('django.db.models.fields.CharField', [], {'max_length': '32'})
+        },
+        'labster.quizblocklab': {
+            'Meta': {'object_name': 'QuizBlockLab'},
+            'description': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '120'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'lab': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labster.Lab']"}),
+            'order': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'questions': ('django.db.models.fields.TextField', [], {'default': "''"}),
+            'quiz_block_id': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64'})
         }
     }
 

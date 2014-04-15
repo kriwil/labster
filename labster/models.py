@@ -79,17 +79,22 @@ class QuizBlockLab(models.Model):
         return data
 
 
-class CourseProxy(models.Model):
+class LabProxy(models.Model):
 
     lab = models.ForeignKey(Lab)
     course_id = models.CharField(max_length=255)
     chapter_id = models.CharField(max_length=100)
-    section_id = models.CharField(max_length=100, default="", blank=True)
+    section_id = models.CharField(max_length=100)
+
+    # not used?
     unit_id = models.CharField(max_length=100, default="", blank=True)
     position = models.CharField(max_length=100, default="", blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('lab', 'course_id', 'chapter_id', 'section_id')
 
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)
@@ -101,4 +106,4 @@ def update_modified_at(sender, instance, **kwargs):
 
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
-pre_save.connect(update_modified_at, sender=CourseProxy)
+pre_save.connect(update_modified_at, sender=LabProxy)

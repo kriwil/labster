@@ -1,7 +1,6 @@
-from django.conf import settings
 from django.contrib import admin
 
-from labster.models import LanguageLab, Lab, QuizBlockLab, CourseProxy
+from labster.models import LanguageLab, Lab, QuizBlockLab, LabProxy
 from labster.forms import LabAdminForm
 
 
@@ -14,11 +13,11 @@ class LabAdmin(BaseAdmin):
     form = LabAdminForm
 
 
-class CourseProxyAdmin(BaseAdmin):
+class LabProxyAdmin(BaseAdmin):
     list_display = ('lab', 'course_id')
 
 
 admin.site.register(LanguageLab)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(QuizBlockLab, BaseAdmin)
-admin.site.register(CourseProxy, CourseProxyAdmin)
+admin.site.register(LabProxy, LabProxyAdmin)

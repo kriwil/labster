@@ -59,6 +59,14 @@ class QuizBlockLab(models.Model):
     def xml(self):
         return render_to_string("quiz_block_lab/output.xml", {'obj': self})
 
+    @property
+    def serialized(self):
+        fields = ['lab_id', 'quiz_block_id', 'order', 'description',
+                  'questions', 'xml']
+
+        data = {each: getattr(self, each) for each in fields}
+        return data
+
 
 class CourseProxy(models.Model):
 
@@ -78,6 +86,7 @@ class CourseProxy(models.Model):
 
 def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
+
 
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)

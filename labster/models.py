@@ -39,9 +39,14 @@ class QuizBlockLab(models.Model):
     questions = models.TextField(default='')
 
 
-# class CourseProxy(models.Model):
-#     course_id = models.CharField(max_length=100)
-#     lab_id = models.ForeignKey()
-#     chapter = models.CharField(max_length=100)
-#     section = models.CharField(max_length=100, default="", blank=True)
-#     position = models.CharField(max_length=100, default="", blank=True)
+class CourseProxy(models.Model):
+
+    lab = models.ForeignKey(Lab)
+    course_id = models.CharField(max_length=255)
+    chapter_id = models.CharField(max_length=100)
+    section_id = models.CharField(max_length=100, default="", blank=True)
+    unit_id = models.CharField(max_length=100, default="", blank=True)
+    position = models.CharField(max_length=100, default="", blank=True)
+
+    def __unicode__(self):
+        return "Proxy for {}".format(self.lab.name)

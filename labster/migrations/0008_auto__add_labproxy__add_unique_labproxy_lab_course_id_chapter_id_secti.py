@@ -16,15 +16,15 @@ class Migration(SchemaMigration):
             ('course_id', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('chapter_id', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('section_id', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('unit_id', self.gf('django.db.models.fields.CharField')(default='', max_length=100, blank=True)),
+            ('unit_id', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('position', self.gf('django.db.models.fields.CharField')(default='', max_length=100, blank=True)),
             ('created_at', self.gf('django.db.models.fields.DateTimeField')(default=timezone.now)),
             ('modified_at', self.gf('django.db.models.fields.DateTimeField')(default=timezone.now)),
         ))
         db.send_create_signal('labster', ['LabProxy'])
 
-        # Adding unique constraint on 'LabProxy', fields ['lab', 'course_id', 'chapter_id', 'section_id']
-        db.create_unique('labster_labproxy', ['lab_id', 'course_id', 'chapter_id', 'section_id'])
+        # Adding unique constraint on 'LabProxy', fields ['lab', 'course_id', 'chapter_id', 'section_id', 'unit_id']
+        db.create_unique('labster_labproxy', ['lab_id', 'course_id', 'chapter_id', 'section_id', 'unit_id'])
 
         # Adding field 'QuizBlockLab.created_at'
         db.add_column('labster_quizblocklab', 'created_at',
@@ -48,8 +48,8 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Removing unique constraint on 'LabProxy', fields ['lab', 'course_id', 'chapter_id', 'section_id']
-        db.delete_unique('labster_labproxy', ['lab_id', 'course_id', 'chapter_id', 'section_id'])
+        # Removing unique constraint on 'LabProxy', fields ['lab', 'course_id', 'chapter_id', 'section_id', 'unit_id']
+        db.delete_unique('labster_labproxy', ['lab_id', 'course_id', 'chapter_id', 'section_id', 'unit_id'])
 
         # Deleting model 'LabProxy'
         db.delete_table('labster_labproxy')
@@ -82,7 +82,7 @@ class Migration(SchemaMigration):
             'wiki_url': ('django.db.models.fields.URLField', [], {'max_length': '120', 'blank': 'True'})
         },
         'labster.labproxy': {
-            'Meta': {'unique_together': "(('lab', 'course_id', 'chapter_id', 'section_id'),)", 'object_name': 'LabProxy'},
+            'Meta': {'unique_together': "(('lab', 'course_id', 'chapter_id', 'section_id', 'unit_id'),)", 'object_name': 'LabProxy'},
             'chapter_id': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'course_id': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'default': 'timezone.now'}),
@@ -91,7 +91,7 @@ class Migration(SchemaMigration):
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'default': 'timezone.now'}),
             'position': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100', 'blank': 'True'}),
             'section_id': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'unit_id': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '100', 'blank': 'True'})
+            'unit_id': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
         'labster.languagelab': {
             'Meta': {'object_name': 'LanguageLab'},

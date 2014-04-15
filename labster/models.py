@@ -85,16 +85,16 @@ class LabProxy(models.Model):
     course_id = models.CharField(max_length=255)
     chapter_id = models.CharField(max_length=100)
     section_id = models.CharField(max_length=100)
+    unit_id = models.CharField(max_length=100)
 
     # not used?
-    unit_id = models.CharField(max_length=100, default="", blank=True)
     position = models.CharField(max_length=100, default="", blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        unique_together = ('lab', 'course_id', 'chapter_id', 'section_id')
+        unique_together = ('lab', 'course_id', 'chapter_id', 'section_id', 'unit_id')
 
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)

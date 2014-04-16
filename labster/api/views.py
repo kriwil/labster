@@ -132,8 +132,13 @@ def quizblock_post(lab_proxy_data):
 @csrf_exempt
 def quizblocks(request, proxy_id):
     lab_proxy = get_object_or_404(LabProxy, id=proxy_id)
-    user = User.objects.get(email='staff@example.com')
+    user_id = request.GET.get('user_id')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        user = User.objects.get(email='staff@example.com')
 
+    request.user = user
     lab_proxy_data = LabProxyData(user=user, lab_proxy=lab_proxy, request=request)
 
     if request.method == 'GET':

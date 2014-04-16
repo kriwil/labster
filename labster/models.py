@@ -116,7 +116,7 @@ class GameErrorInfo(models.Model):
     browser = models.CharField(max_length=64)
     os = models.CharField(default='', max_length=32)
     message = models.TextField(default='')
-    date_encountered = models.DateTimeField(auto_now_add=True)
+    date_encountered = models.DateTimeField(default=timezone.now)
 
 
 class UserDeviceInfo(models.Model):
@@ -133,6 +133,6 @@ class UserDeviceInfo(models.Model):
     memory = models.CharField(default='', max_length=128)
     fill_rate = models.CharField(default='', max_length=128)
     shader_level = models.CharField(default='', max_length=128)
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(default=timezone.now)
     quality = models.CharField(default='', max_length=128)
     misc = models.TextField(default='')

@@ -2,12 +2,13 @@ from collections import OrderedDict
 import json
 
 from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 
 from courseware.courses import get_course
 from courseware.model_data import FieldDataCache
+from courseware.module_render import _invoke_xblock_handler
 from xmodule.modulestore.django import modulestore
 
 from labster.models import LabProxy
@@ -32,8 +33,11 @@ class LabProxyData(object):
         section_descriptor = chapter_descriptor.get_child_by(lambda m: m.url_name == section)
         section_descriptor = modulestore().get_instance(course.id, section_descriptor.location, depth=None)
 
-        self.section_field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
+        section_field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
             course.id, self.user, section_descriptor, depth=2)
+
+        self.section_field_data_cache = section_field_data_cache
+        self.course = course
 
     def get_problemset(self):
         """
@@ -63,9 +67,8 @@ class LabProxyData(object):
                         'problems': [],
                     }
 
-                if each.plugin_name == 'problem':
-                    if each.data:
-                        quizblock['problems'].append(each)
+                if each.plugin_name == 'problem' and each.data:
+                    quizblock['problems'].append(each)
 
             self.problemset = problemset
         return self.problemset
@@ -89,12 +92,38 @@ def quizblock_post(lab_proxy_data):
         answer
     """
 
-    quizblock_id = 'csi-random-stuff'
-    problem_index = 1
+    request = lab_proxy_data.request
+    quizblock_id = request.POST.get('quizblock_id')
+    problem_index = int(request.POST.get('problem_index'))
+    answer = request.POST.get('answer')
     problemset = lab_proxy_data.get_problemset()
 
+    module = problemset[quizblock_id]['problems'][problem_index]
+
+    if 'multiplechoiceresponse' in module.data:
+        answer = "choice_{}".format(answer)
+
+    # input_i4x-Labster-CS101-problem-8113409652ee470bbfbfd7a4aeca2151_2_1:choice_peeler
+    field_name = "input_{tag}-{org}-{course}-{category}-{name}_2_1"
+    field_name = field_name.format(**module.location.dict())
+
+    request.POST = request.POST.copy()
+    del request.POST['quizblock_id']
+    del request.POST['problem_index']
+    del request.POST['answer']
+    request.POST[field_name] = answer
+
+    course_id = lab_proxy_data.course.id
+    usage_id = module.location.url().replace('/', ';_')
+    result = _invoke_xblock_handler(
+        request, course_id, usage_id, 'xmodule_handler', 'problem_check',
+        lab_proxy_data.user)
+
+    content = json.loads(result.content)
+    success = content.get('success') == "correct"
+
     response_data = {
-        'success': False,
+        'success': success,
     }
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")

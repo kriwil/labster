@@ -8,7 +8,7 @@ from xmodule.modulestore.django import modulestore
 from labster.models import LabProxy
 
 
-def questions(request):
+def quizblocks(request):
     p_id = request.GET.get('p_id')
     lab_proxy = get_object_or_404(LabProxy, id=p_id)
 
@@ -32,22 +32,24 @@ def questions(request):
     section_field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
         course.id, user, section_descriptor, depth=2)
 
-    problemset = quizblock = []
+    problemset = []
+    quizblock = (None, None, [])
     for each in section_field_data_cache.descriptors:
         if each.plugin_name == 'quizblock':
-            len(quizblock) and problemset.append(quizblock)
-            print each.quizblock_id
-            quizblock = []
+            len(quizblock[2]) and problemset.append(quizblock)
+            # print each.quizblock_id
+            quizblock = (each.quizblock_id, each.description, [])
 
         if each.plugin_name == 'problem':
             xml = each.data
             if xml:
-                quizblock.append(xml)
+                quizblock[2].append(xml)
 
-    len(quizblock) and problemset.append(quizblock)
+    len(quizblock[2]) and problemset.append(quizblock)
 
     template_name = "api/questions.xml"
     context = {
+        'lab_proxy': lab_proxy,
         'problemset': problemset,
     }
     return render(request, template_name, context, content_type="text/xml")

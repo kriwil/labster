@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<lab id="" name="">
-    {% for quizblock in problemset %}
-    <quizblock id="" description="">
+<lab proxy="{{ lab_proxy.id }}" name="{{ lab_proxy.lab.name }}">
+    {% for quizblock_id, description, quizblock in problemset %}
+    <quizblock id="{{ quizblock_id }}" description="{{ description }}">
         {% for problem in quizblock %}
         {{ problem|safe }}
         {% endfor %}

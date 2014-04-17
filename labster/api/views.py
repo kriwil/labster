@@ -136,7 +136,7 @@ def quizblocks(request, proxy_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        user = User.objects.get(email='staff@example.com')
+        user = User.objects.filter(is_superuser=True)[0]
 
     request.user = user
     lab_proxy_data = LabProxyData(user=user, lab_proxy=lab_proxy, request=request)

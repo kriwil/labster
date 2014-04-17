@@ -10,6 +10,7 @@ class BaseAdmin(admin.ModelAdmin):
 
 class LabAdmin(BaseAdmin):
     list_display = ('name', 'description', 'url', 'wiki_url', 'screenshot')
+    filter_horizontal = ('languages',)
     form = LabAdminForm
 
 

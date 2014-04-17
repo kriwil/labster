@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class LanguageLab(models.Model):
@@ -107,3 +108,31 @@ def update_modified_at(sender, instance, **kwargs):
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
 pre_save.connect(update_modified_at, sender=LabProxy)
+
+
+class GameErrorInfo(models.Model):
+    user = models.ForeignKey(User)
+    lab = models.ForeignKey(Lab)
+    browser = models.CharField(max_length=64)
+    os = models.CharField(default='', max_length=32)
+    message = models.TextField(default='')
+    date_encountered = models.DateTimeField(default=timezone.now)
+
+
+class UserDeviceInfo(models.Model):
+    user = models.ForeignKey(User)
+    lab = models.ForeignKey(Lab)
+    device_id = models.CharField(default='', max_length=128)
+    frame_rate = models.CharField(default='', max_length=128)
+    type = models.CharField(default='', max_length=128)
+    os = models.CharField(default='', max_length=32)
+    ram = models.CharField(default='', max_length=32)
+    processor = models.CharField(default='', max_length=128)
+    cores = models.CharField(default='', max_length=128)
+    gpu = models.CharField(default='', max_length=128)
+    memory = models.CharField(default='', max_length=128)
+    fill_rate = models.CharField(default='', max_length=128)
+    shader_level = models.CharField(default='', max_length=128)
+    date = models.DateTimeField(default=timezone.now)
+    quality = models.CharField(default='', max_length=128)
+    misc = models.TextField(default='')

@@ -16,5 +16,9 @@ urlpatterns = patterns('',  # nopep8
     url(r'^language_labs/(?P<lang_id>\d+)/update/$', 'labster.language_labs.views.update'),
     url(r'^language_labs/(?P<lang_id>\d+)/delete/$', 'labster.language_labs.views.delete'),
 
-    url('^game_error_info/post/$', 'labster.game_error_info.views.game_error_info_post')
+    # Game Error Info
+    url('^game_error_info/post/$', 'labster.game_error_info.views.game_error_info_post'),
+
+    # User Device Info
+    url('^user_device_info/post/$', 'labster.user_device_info.views.user_device_info_post'),
 )

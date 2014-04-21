@@ -2,6 +2,7 @@ import json
 
 from django.forms import ModelForm
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from labster.models import UserDeviceInfo
 
@@ -9,10 +10,11 @@ from labster.models import UserDeviceInfo
 class UserDeviceInfoForm(ModelForm):
     class Meta:
         model = UserDeviceInfo
-        field = ['user', 'lab', 'device_id', 'frame_rate', 'type', 'os', 'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate', 'shader_level', 'quality', 'misc']
+        fields = ['user', 'lab', 'device_id', 'frame_rate', 'type', 'os', 'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate', 'shader_level', 'quality', 'misc']
 
 
-def user_device_info_post(user_device_info_data):
+@csrf_exempt
+def user_device_info_post(request):
     """
     POST:
         user
@@ -32,13 +34,15 @@ def user_device_info_post(user_device_info_data):
         quality
         misc
     """
-    request = user_device_info_data.request
     form = UserDeviceInfoForm(request.POST)
     if form.is_valid():
         form.save()
-
-    response_data = {
-        'success': 'success',
-    }
+        response_data = {
+            'message': 'success',
+        }
+    else:
+        response_data = {
+            'message': form.errors,
+        }
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")

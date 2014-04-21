@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from labster.models import LanguageLab, Lab, QuizBlockLab, LabProxy, GameErrorInfo
+from labster.models import LanguageLab, Lab, QuizBlockLab, LabProxy, GameErrorInfo, UserDeviceInfo
 from labster.forms import LabAdminForm
 
 
@@ -22,8 +22,13 @@ class GameErrorInfoAdmin(admin.ModelAdmin):
     list_display = ('user', 'lab', 'browser', 'os', 'message', 'date_encountered')
 
 
+class UserDeviceInfoAdmin(admin.ModelAdmin):
+    list_display = ('user', 'lab', 'device_id', 'frame_rate', 'type', 'os', 'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate', 'shader_level', 'quality', 'misc')
+
+
 admin.site.register(LanguageLab)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(QuizBlockLab, BaseAdmin)
 admin.site.register(LabProxy, LabProxyAdmin)
 admin.site.register(GameErrorInfo, GameErrorInfoAdmin)
+admin.site.register(UserDeviceInfo, UserDeviceInfoAdmin)

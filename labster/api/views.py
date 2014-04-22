@@ -22,6 +22,7 @@ class LabProxyData(object):
         self.lab_proxy = kwargs.get('lab_proxy')
 
         self.problemset = OrderedDict()
+        self.problem_by_id = {}
 
         course_id = self.lab_proxy.course_id
         chapter = self.lab_proxy.chapter_id
@@ -69,6 +70,7 @@ class LabProxyData(object):
 
                 if each.plugin_name == 'problem' and each.data:
                     quizblock['problems'].append(each)
+                    self.problem_by_id[each.location.name] = each
 
             if quizblock and len(quizblock['problems']):
                 problemset[quizblock['id']] = quizblock
@@ -76,6 +78,10 @@ class LabProxyData(object):
 
             self.problemset = problemset
         return self.problemset
+
+    def get_problem_by_id(self, problem_id):
+        self.get_problemset()
+        return self.problem_by_id.get(problem_id)
 
 
 def quizblock_get(lab_proxy_data):
@@ -92,17 +98,16 @@ def quizblock_post(lab_proxy_data):
     """
     POST:
         quizblock_id
-        problem_index
+        problem_id
         answer
     """
 
     request = lab_proxy_data.request
-    quizblock_id = request.POST.get('quizblock_id')
-    problem_index = int(request.POST.get('problem_index'))
+    # quizblock_id = request.POST.get('quizblock_id')
+    problem_id = request.POST.get('problem_id')
     answer = request.POST.get('answer')
-    problemset = lab_proxy_data.get_problemset()
 
-    module = problemset[quizblock_id]['problems'][problem_index]
+    module = lab_proxy_data.get_problem_by_id(problem_id)
 
     if 'multiplechoiceresponse' in module.data:
         answer = "choice_{}".format(answer)
@@ -113,7 +118,7 @@ def quizblock_post(lab_proxy_data):
 
     request.POST = request.POST.copy()
     del request.POST['quizblock_id']
-    del request.POST['problem_index']
+    del request.POST['problem_id']
     del request.POST['answer']
     request.POST[field_name] = answer
 

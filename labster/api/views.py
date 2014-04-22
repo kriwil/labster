@@ -70,6 +70,10 @@ class LabProxyData(object):
                 if each.plugin_name == 'problem' and each.data:
                     quizblock['problems'].append(each)
 
+            if quizblock and len(quizblock['problems']):
+                problemset[quizblock['id']] = quizblock
+                quizblock = None
+
             self.problemset = problemset
         return self.problemset
 

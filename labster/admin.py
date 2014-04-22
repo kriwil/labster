@@ -8,10 +8,16 @@ class BaseAdmin(admin.ModelAdmin):
     exclude = ('created_at', 'modified_at')
 
 
+class LabProxyInlineAdmin(admin.TabularInline):
+    exclude = ('created_at', 'modified_at')
+    model = QuizBlockLab
+
+
 class LabAdmin(BaseAdmin):
     list_display = ('name', 'description', 'url', 'wiki_url', 'screenshot')
     filter_horizontal = ('languages',)
     form = LabAdminForm
+    inlines = [LabProxyInlineAdmin]
 
 
 class LabProxyAdmin(BaseAdmin):

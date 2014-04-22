@@ -3,7 +3,9 @@
     {% for quizblock_id, quizblock_data in problemset.items %}
     <quizblock id="{{ quizblock_id }}" description="{{ quizblock_data.description }}">
         {% for problem in quizblock_data.problems %}
-        {{ problem.data|safe }}
+        <item id="{{ problem.location.name }}">
+            {{ problem.data|safe }}
+        </item>
         {% endfor %}
     </quizblock>
     {% endfor %}

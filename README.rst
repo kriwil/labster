@@ -31,3 +31,17 @@ edX
     urlpatterns += (
       url('^labster/', include('labster.urls')),
     )
+
+tests
+-----
+
+::
+
+  # prepare
+  virtualenv labster_test
+  source labster_test/bin/activate
+  pip install -e .
+  pip install -r requirements/tests.txt
+
+  # the tests
+  py.test labster

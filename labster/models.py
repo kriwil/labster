@@ -46,7 +46,7 @@ class QuizBlockLab(models.Model):
     quiz_block_id = models.CharField(max_length=64, unique=True)
     order = models.IntegerField(default=0)
     description = models.CharField(max_length=120, default='')
-    questions = models.TextField(default='')
+    questions = models.TextField(default='', blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)

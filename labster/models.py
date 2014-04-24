@@ -101,6 +101,20 @@ class LabProxy(models.Model):
         return "Proxy for {}".format(self.lab.name)
 
 
+class UserGameSaveFile(models.Model):
+    lab = models.ForeignKey(Lab)
+    user = models.ForeignKey(User)
+    game_save_file = models.FileField(upload_to='labster/lab/game_save_file')
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
+
+@receiver(pre_delete, sender=UserGameSaveFile)
+def game_save_file_delete(sender, instance, **kwargs):
+    # Also delete the save game file when deleting the UserGameSaveFile
+    instance.game_save_file.delete(False)
+
+
 def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
 
@@ -108,6 +122,7 @@ def update_modified_at(sender, instance, **kwargs):
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
 pre_save.connect(update_modified_at, sender=LabProxy)
+pre_save.connect(update_modified_at, sender=UserGameSaveFile)
 
 
 class GameErrorInfo(models.Model):

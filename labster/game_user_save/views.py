@@ -4,6 +4,7 @@ from django.forms import ModelForm
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 
 from labster.models import GameUserSave
 
@@ -24,11 +25,15 @@ def game_user_save_post(request):
     """
     user_id = request.POST.get('user')
     lab_id = request.POST.get('lab')
-    game_user_save = GameUserSave.objects.get(
-        Q(user=user_id),
-        Q(lab=lab_id)
-    )
-    form = GameUserSaveForm(request.POST, request.FILES, instance=game_user_save)
+    try:
+        game_user_save = GameUserSave.objects.get(
+            Q(user=user_id),
+            Q(lab=lab_id)
+        )
+        form = GameUserSaveForm(request.POST, request.FILES, instance=game_user_save)
+    except ObjectDoesNotExist:
+        form = GameUserSaveForm(request.POST, request.FILES)
+
     if form.is_valid():
         form.save()
         response_data = {

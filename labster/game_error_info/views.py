@@ -14,7 +14,7 @@ class GameErrorInfoForm(ModelForm):
 
 
 @csrf_exempt
-def game_error_info_post(request):
+def game_error_post(request):
     """
     POST:
         user

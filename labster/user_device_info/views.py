@@ -14,7 +14,7 @@ class UserDeviceInfoForm(ModelForm):
 
 
 @csrf_exempt
-def user_device_info_post(request):
+def user_device_post(request):
     """
     POST:
         user

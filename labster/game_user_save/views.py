@@ -3,6 +3,7 @@ import json
 from django.forms import ModelForm
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, get_object_or_404
 
 from labster.models import GameUserSave
 
@@ -40,5 +41,23 @@ def game_user_save_post(request):
             'message': form.errors,
         }
 
-
     return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+@csrf_exempt
+def game_user_save_get(request):
+    """
+    GET:
+        user
+        lab
+    """
+    user_id = request.GET.get('user')
+    lab_id = request.GET.get('lab')
+    game_user_save = get_object_or_404(GameUserSave, user=user_id, lab=lab_id)
+
+    template_name = "game_user_save/get_template.xml"
+    context = {
+        'game_user_save': game_user_save,
+    }
+
+    return render(request, template_name, context, content_type="text/xml")

@@ -22,6 +22,7 @@ class Lab(models.Model):
     wiki_url = models.URLField(max_length=120, blank=True)
     screenshot = models.ImageField(upload_to='labster/lab/images', blank=True)
     questions = models.TextField(default='', blank=True)
+    engine_xml = models.CharField(max_length=128, default='')
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
 

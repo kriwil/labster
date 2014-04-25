@@ -14,7 +14,7 @@ class LabProxyInlineAdmin(admin.TabularInline):
 
 
 class LabAdmin(BaseAdmin):
-    list_display = ('name', 'description', 'url', 'wiki_url', 'screenshot')
+    list_display = ('name', 'description', 'url', 'wiki_url', 'engine_xml', 'screenshot')
     filter_horizontal = ('languages',)
     form = LabAdminForm
     inlines = [LabProxyInlineAdmin]

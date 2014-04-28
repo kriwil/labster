@@ -1,4 +1,7 @@
+import unittest
+
 from labster.utils import xml_to_markdown
+
 
 md_0 = """
 What Apple device competed with the portable CD player?
@@ -102,7 +105,7 @@ xml_2 = """
 """
 
 
-class TestXmlToMarkdown:
+class XmlToMarkdownTest(unittest.TestCase):
     def test_multiplechoice(self):
         markdown_string = xml_to_markdown(xml_0.strip())
         assert markdown_string.strip() == md_0.strip()

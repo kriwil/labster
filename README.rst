@@ -37,11 +37,5 @@ tests
 
 ::
 
-  # prepare
-  virtualenv labster_test
-  source labster_test/bin/activate
-  pip install -e .
-  pip install -r requirements/tests.txt
-
-  # the tests
-  py.test labster
+  # from edX
+  python manage.py lms test labster --settings=devstack

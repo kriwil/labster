@@ -23,6 +23,5 @@ urlpatterns = patterns('',  # nopep8
     url('^user_device_info/post/$', 'labster.user_device_info.views.user_device_post'),
 
     # Game User Save File
-    url('^game_user_save/post/$', 'labster.game_user_save.views.game_user_save_post'),
-    url('^game_user_save/get/$', 'labster.game_user_save.views.game_user_save_get'),
+    url('^game_user_save/$', 'labster.game_user_save.views.game_user_save_block'),
 )

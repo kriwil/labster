@@ -1,7 +1,7 @@
 import json
 
 from django.forms import ModelForm
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
 
@@ -14,7 +14,6 @@ class GameUserSaveForm(ModelForm):
         fields = ['user', 'lab', 'game_save_file']
 
 
-@csrf_exempt
 def game_user_save_post(request):
     """
     POST:
@@ -44,7 +43,6 @@ def game_user_save_post(request):
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
-@csrf_exempt
 def game_user_save_get(request):
     """
     GET:
@@ -61,3 +59,13 @@ def game_user_save_get(request):
     }
 
     return render(request, template_name, context, content_type="text/xml")
+
+
+@csrf_exempt
+def game_user_save_block(request):
+    if request.method == 'GET':
+        return game_user_save_get(request)
+    elif request.method == 'POST':
+        return game_user_save_post(request)
+
+    return HttpResponseNotAllowed(['GET', 'POST'])

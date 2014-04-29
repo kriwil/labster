@@ -14,6 +14,10 @@ from xmodule.modulestore.django import modulestore
 from labster.models import LabProxy
 
 
+def invoke_xblock_handler(**kwargs):
+    return _invoke_xblock_handler(**kwargs)
+
+
 class LabProxyData(object):
 
     def __init__(self, *args, **kwargs):
@@ -124,7 +128,7 @@ def quizblock_post(lab_proxy_data):
 
     course_id = lab_proxy_data.course.id
     usage_id = module.location.url().replace('/', ';_')
-    result = _invoke_xblock_handler(
+    result = invoke_xblock_handler(
         request, course_id, usage_id, 'xmodule_handler', 'problem_check',
         lab_proxy_data.user)
 

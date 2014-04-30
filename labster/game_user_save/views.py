@@ -1,71 +1,46 @@
 import json
 
+from django.contrib.auth.models import User
 from django.forms import ModelForm
 from django.http import HttpResponse, HttpResponseNotAllowed
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 
-from labster.models import GameUserSave
+from rest_framework.views import APIView
 
-
-class GameUserSaveForm(ModelForm):
-    class Meta:
-        model = GameUserSave
-        fields = ['user', 'lab', 'game_save_file']
+from labster.models import GameUserSave, UserSave
+from labster.forms import UserSaveForm
 
 
-def game_user_save_post(request):
-    """
-    POST:
-        user
-        lab
-        game_save_file
-    """
-    user_id = request.POST.get('user')
-    lab_id = request.POST.get('lab')
-    try:
-        game_user_save = GameUserSave.objects.get(user=user_id, lab=lab_id)
-    except GameUserSave.DoesNotExist:
-        game_user_save = None
+class SaveDetail(APIView):
 
-    form = GameUserSaveForm(request.POST, request.FILES, instance=game_user_save)
+    def get(self, request, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = kwargs.get('lab_proxy_id')
+        user_save = get_object_or_404(UserSave, user_id=user_id)
 
-    if form.is_valid():
-        form.save()
-        response_data = {
-            'message': 'success',
+        template_name = "game_user_save/get_template.xml"
+        context = {
+            'user_save': user_save,
         }
-    else:
-        response_data = {
-            'message': form.errors,
-        }
+        return render(request, template_name, context, content_type="text/xml")
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    def post(self, request, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = kwargs.get('lab_proxy_id')
 
+        form = UserSaveForm(request.POST, request.FILES,
+                            user_id=user_id, lab_proxy_id=lab_proxy_id)
+        response_data = {'success': True}
+        if form.is_valid():
+            form.save()
+        else:
+            response_data.update({
+                'success': False,
+                'errors': [],
+            })
 
-def game_user_save_get(request):
-    """
-    GET:
-        user
-        lab
-    """
-    user_id = request.GET.get('user')
-    lab_id = request.GET.get('lab')
-    game_user_save = get_object_or_404(GameUserSave, user=user_id, lab=lab_id)
-
-    template_name = "game_user_save/get_template.xml"
-    context = {
-        'game_user_save': game_user_save,
-    }
-
-    return render(request, template_name, context, content_type="text/xml")
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
-@csrf_exempt
-def game_user_save_block(request):
-    if request.method == 'GET':
-        return game_user_save_get(request)
-    elif request.method == 'POST':
-        return game_user_save_post(request)
-
-    return HttpResponseNotAllowed(['GET', 'POST'])
+save_detail = SaveDetail.as_view()

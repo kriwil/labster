@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GameSaveFileDetails id="{{ game_user_save.id }}">
-    <UserId>{{ game_user_save.user.id }}</UserId>
-    <UserEmail>{{ game_user_save.user.email }}</UserEmail>
-    <LabId>{{ game_user_save.lab.id }}</LabId>
-    <FileName>{{ game_user_save.game_save_file.url }}</FileName>
+<GameSaveFileDetails id="{{ user_save.id }}">
+    <UserId>{{ user_save.user.id }}</UserId>
+    <UserEmail>{{ user_save.user.email }}</UserEmail>
+    <LabId>{{ user_save.lab_proxy.id }}</LabId>
+    <FileName>{% if user_save.save_file %}{{ user_save.save_file.url }}{% endif %}</FileName>
 </GameSaveFileDetails>

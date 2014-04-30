@@ -97,26 +97,33 @@ class LabProxy(models.Model):
 
     class Meta:
         unique_together = ('lab', 'course_id', 'chapter_id', 'section_id', 'unit_id')
+        verbose_name_plural = 'Lab proxies'
 
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)
 
 
-class GameUserSave(models.Model):
-    lab = models.ForeignKey(Lab)
+class UserSave(models.Model):
+    """
+    SavePoint need to be linked to LabProxy instead of Lab
+
+    The way we designed the system, many courses could use same lab,
+    with different set of questions.
+    """
+    lab_proxy = models.ForeignKey(LabProxy)
     user = models.ForeignKey(User)
-    game_save_file = models.FileField(upload_to='labster/lab/game_save_file')
+    save_file = models.FileField(blank=True, null=True, upload_to='labster/lab/save_file')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        unique_together = ('lab', 'user')
+        unique_together = ('lab_proxy', 'user')
 
 
-@receiver(pre_delete, sender=GameUserSave)
+@receiver(pre_delete, sender=UserSave)
 def game_user_save_delete(sender, instance, **kwargs):
     # Also delete the save game file when deleting the GameUserSave
-    instance.game_save_file.delete(False)
+    instance.save_file.delete(False)
 
 
 def update_modified_at(sender, instance, **kwargs):
@@ -126,7 +133,7 @@ def update_modified_at(sender, instance, **kwargs):
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
 pre_save.connect(update_modified_at, sender=LabProxy)
-pre_save.connect(update_modified_at, sender=GameUserSave)
+pre_save.connect(update_modified_at, sender=UserSave)
 
 
 class GameErrorInfo(models.Model):

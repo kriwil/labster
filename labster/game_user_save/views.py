@@ -1,10 +1,8 @@
 import json
 
 from django.contrib.auth.models import User
-from django.forms import ModelForm
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.views import APIView
 

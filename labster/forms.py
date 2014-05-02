@@ -1,6 +1,6 @@
 from django import forms
 
-from labster.models import Lab, UserSave
+from labster.models import Lab, UserSave, ErrorInfo, DeviceInfo
 from labster.widgets import WYMEditor
 
 
@@ -23,3 +23,47 @@ class UserSaveForm(forms.ModelForm):
         super(UserSaveForm, self).__init__(*args, **kwargs)
         self.instance, _ = UserSave.objects.get_or_create(
             user_id=user_id, lab_proxy_id=lab_proxy_id)
+
+
+class ErrorInfoForm(forms.ModelForm):
+
+    class Meta:
+        model = ErrorInfo
+        fields = ('browser', 'os', 'message',)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        self.lab_proxy = kwargs.pop('lab_proxy')
+        super(UserSaveForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        kwargs['commit'] = False
+
+        instance = super(ErrorInfoForm, self).save(*args, **kwargs)
+        instance.user = self.user
+        instance.lab_proxy = self.lab_proxy
+
+        return instance
+
+
+class DeviceInfoForm(forms.ModelForm):
+
+    class Meta:
+        model = DeviceInfo
+        fields = ('device_id', 'frame_rate', 'type', 'os', 'ram', 'processor',
+                  'cores', 'gpu', 'memory', 'fill_rate', 'shader_level',
+                  'quality', 'misc')
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        self.lab_proxy = kwargs.pop('lab_proxy')
+        super(ErrorInfoForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        kwargs['commit'] = False
+
+        instance = super(DeviceInfoForm, self).save(*args, **kwargs)
+        instance.user = self.user
+        instance.lab_proxy = self.lab_proxy
+
+        return instance

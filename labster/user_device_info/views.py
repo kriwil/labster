@@ -1,48 +1,35 @@
 import json
 
-from django.forms import ModelForm
+from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
-from labster.models import UserDeviceInfo
+from rest_framework.views import APIView
 
-
-class UserDeviceInfoForm(ModelForm):
-    class Meta:
-        model = UserDeviceInfo
-        fields = ['user', 'lab', 'device_id', 'frame_rate', 'type', 'os', 'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate', 'shader_level', 'quality', 'misc']
+from labster.forms import DeviceInfoForm
+from labster.models import LabProxy
 
 
-@csrf_exempt
-def user_device_post(request):
-    """
-    POST:
-        user
-        lab
-        device_id
-        frame_rate
-        type
-        os
-        ram
-        processor
-        cores
-        gpu
-        memory
-        fill_rate
-        shader_level
-        date
-        quality
-        misc
-    """
-    form = UserDeviceInfoForm(request.POST)
-    if form.is_valid():
-        form.save()
-        response_data = {
-            'message': 'success',
-        }
-    else:
-        response_data = {
-            'message': form.errors,
-        }
+class LogDevice(APIView):
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    def post(self, request, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = kwargs.get('lab_proxy_id')
+
+        user = get_object_or_404(User, id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
+
+        form = DeviceInfoForm(request.POST, user=user, lab_proxy=lab_proxy)
+        response_data = {'success': True}
+        if form.is_valid():
+            form.save()
+        else:
+            response_data.update({
+                'success': False,
+                'errors': [],
+            })
+
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+log_device = LogDevice.as_view()

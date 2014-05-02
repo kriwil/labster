@@ -41,7 +41,7 @@ class SaveDetailTest(unittest.TestCase):
         request = self.factory.post('/')
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         content_type = response.get('Content-Type')
         self.assertEqual(content_type, "application/json")
@@ -53,7 +53,7 @@ class SaveDetailTest(unittest.TestCase):
         request = self.factory.post('/')
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         content_type = response.get('Content-Type')
         self.assertEqual(content_type, "application/json")

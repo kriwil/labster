@@ -3,7 +3,7 @@ from labster.views import BaseLabProxyLogView
 
 
 class LogDevice(BaseLabProxyLogView):
-    form_Class = DeviceInfoForm
+    form_class = DeviceInfoForm
 
 
 log_device = LogDevice.as_view()

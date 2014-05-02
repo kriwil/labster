@@ -23,12 +23,17 @@ class BaseLabProxyLogView(APIView):
 
         form = self.form_class(request.POST, user=user, lab_proxy=lab_proxy)
         response_data = {'success': True}
+        status_code = 201
         if form.is_valid():
             form.save()
         else:
+            status_code = 400
             response_data.update({
                 'success': False,
                 'errors': [],
             })
 
-        return HttpResponse(json.dumps(response_data), content_type="application/json")
+        return HttpResponse(
+            json.dumps(response_data),
+            status=status_code,
+            content_type="application/json")

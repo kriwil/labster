@@ -67,9 +67,15 @@ class LabProxyDetail(APIView):
         field_name = field_name.format(**module.location.dict())
 
         request.POST = request.POST.copy()
-        del request.POST['quizblock_id']
-        del request.POST['problem_id']
-        del request.POST['answer']
+        if 'quizblock_id' in request.POST:
+            del request.POST['quizblock_id']
+
+        if 'problem_id' in request.POST:
+            del request.POST['problem_id']
+
+        if 'answer' in request.POST:
+            del request.POST['answer']
+
         request.POST[field_name] = answer
 
         course_id = lab_proxy_data.course.id

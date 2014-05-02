@@ -1,12 +1,11 @@
 import json
 
-from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
 from rest_framework.views import APIView
 
-from labster.models import GameUserSave, UserSave
+from labster.models import UserSave
 from labster.forms import UserSaveForm
 
 
@@ -15,7 +14,7 @@ class SaveDetail(APIView):
     def get(self, request, **kwargs):
         user_id = request.GET.get('user_id')
         lab_proxy_id = kwargs.get('lab_proxy_id')
-        user_save = get_object_or_404(UserSave, user_id=user_id)
+        user_save = get_object_or_404(UserSave, user_id=user_id, lab_proxy_id=lab_proxy_id)
 
         template_name = "game_user_save/get_template.xml"
         context = {

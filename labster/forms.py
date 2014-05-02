@@ -34,7 +34,16 @@ class ErrorInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         self.lab_proxy = kwargs.pop('lab_proxy')
-        super(UserSaveForm, self).__init__(*args, **kwargs)
+        super(ErrorInfoForm, self).__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.required = False
+
+    def clean(self):
+        data = super(ErrorInfoForm, self).clean()
+        values = [value for key, value in data.items()]
+        if not any(values):
+            raise forms.ValidationError("At least on field is required.")
+        return data
 
     def save(self, *args, **kwargs):
         kwargs['commit'] = False
@@ -57,7 +66,7 @@ class DeviceInfoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         self.lab_proxy = kwargs.pop('lab_proxy')
-        super(ErrorInfoForm, self).__init__(*args, **kwargs)
+        super(DeviceInfoForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         kwargs['commit'] = False

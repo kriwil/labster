@@ -2,7 +2,7 @@ import unittest
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from labster.forms import UserSaveForm, ErrorInfoForm
+from labster.forms import UserSaveForm, ErrorInfoForm, DeviceInfoForm
 from labster.models import UserSave
 from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory
 
@@ -67,22 +67,52 @@ class ErrorInfoFormTest(unittest.TestCase):
         form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
         self.assertTrue(form.is_valid())
 
-    def test_without_browser(self):
-        del self.data['browser']
-        form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
-        self.assertTrue(form.is_valid())
-
-    def test_without_os(self):
-        del self.data['os']
-        form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
-        self.assertTrue(form.is_valid())
-
-    def test_without_message(self):
-        del self.data['message']
-        form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
-        self.assertTrue(form.is_valid())
-
     def test_without_anything(self):
         self.data = {}
         form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
         self.assertFalse(form.is_valid())
+
+    def test_save(self):
+        form = ErrorInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
+        form.is_valid()
+        instance = form.save()
+        for key, value in self.data.items():
+            self.assertEqual(getattr(instance, key), value)
+
+
+class DeviceInfoFormTest(unittest.TestCase):
+
+    def setUp(self):
+        self.lab_proxy = LabProxyFactory(lab=LabFactory())
+        self.user = UserFactory(is_superuser=True)
+        self.data = {
+            'device_id': "device_id",
+            'frame_rate': "frame_rate",
+            'type': "type",
+            'os': "os",
+            'ram': "ram",
+            'processor': "processor",
+            'cores': "cores",
+            'gpu': "gpu",
+            'memory': "memory",
+            'fill_rate': "fill_rate",
+            'shader_level': "shader_level",
+            'quality': "quality",
+            'misc': "misc",
+        }
+
+    def test_valid(self):
+        form = DeviceInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
+        self.assertTrue(form.is_valid())
+
+    def test_without_anything(self):
+        self.data = {}
+        form = DeviceInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
+        self.assertFalse(form.is_valid())
+
+    def test_save(self):
+        form = DeviceInfoForm(self.data, user=self.user, lab_proxy=self.lab_proxy)
+        form.is_valid()
+        instance = form.save()
+        for key, value in self.data.items():
+            self.assertEqual(getattr(instance, key), value)

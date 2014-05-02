@@ -136,18 +136,19 @@ pre_save.connect(update_modified_at, sender=LabProxy)
 pre_save.connect(update_modified_at, sender=UserSave)
 
 
-class GameErrorInfo(models.Model):
+class ErrorInfo(models.Model):
     user = models.ForeignKey(User)
-    lab = models.ForeignKey(Lab)
+    lab_proxy = models.ForeignKey(LabProxy)
     browser = models.CharField(max_length=64)
     os = models.CharField(default='', max_length=32)
+    user_agent = models.CharField(default='', max_length=200)
     message = models.TextField(default='')
     date_encountered = models.DateTimeField(default=timezone.now)
 
 
-class UserDeviceInfo(models.Model):
+class DeviceInfo(models.Model):
     user = models.ForeignKey(User)
-    lab = models.ForeignKey(Lab)
+    labProxy = models.ForeignKey(LabProxy)
     device_id = models.CharField(default='', max_length=128)
     frame_rate = models.CharField(default='', max_length=128)
     type = models.CharField(default='', max_length=128)
@@ -162,3 +163,5 @@ class UserDeviceInfo(models.Model):
     date = models.DateTimeField(default=timezone.now)
     quality = models.CharField(default='', max_length=128)
     misc = models.TextField(default='')
+
+    created_at = models.DateTimeField(default=timezone.now)

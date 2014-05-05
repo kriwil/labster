@@ -18,6 +18,9 @@ class Token(models.Model):
     def __unicode__(self):
         return self.name
 
+    def for_header(self):
+        return "Token {}".format(self.key)
+
     def generate_key(self):
         return binascii.hexlify(os.urandom(20)).decode()
 

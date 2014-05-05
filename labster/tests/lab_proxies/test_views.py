@@ -5,7 +5,8 @@ import unittest
 from django.test.client import RequestFactory
 
 from labster.lab_proxies.views import lab_proxy_detail
-from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory
+from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory,\
+    TokenFactory
 
 
 class DummyLocation:
@@ -50,10 +51,14 @@ class LabProxyDetailTest(unittest.TestCase):
         self.lab = LabFactory()
         self.lab_proxy = LabProxyFactory(lab=self.lab)
         self.user = UserFactory(is_superuser=True)
+        self.token = TokenFactory()
+        self.factory = RequestFactory()
 
     @mock.patch('labster.lab_proxies.views.LabProxyDetail._get_lab_proxy_data')
     def test_get(self, mock_lab_proxy_data):
-        request = RequestFactory().get('/')
+        request = self.factory.get('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
+        request.GET = {'user_id': self.user.id}
 
         mock_lab_proxy_data = DummyLabProxyData(
             lab_proxy=self.lab_proxy, request=request)
@@ -64,7 +69,9 @@ class LabProxyDetailTest(unittest.TestCase):
     @mock.patch('labster.lab_proxies.views.invoke_xblock_handler')
     @mock.patch('labster.lab_proxies.views.LabProxyDetail._get_lab_proxy_data')
     def test_post(self, mock_lab_proxy_data, invoke_xblock_handler):
-        request = RequestFactory().post('/')
+        request = self.factory.post('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
+        request.GET = {'user_id': self.user.id}
 
         mock_lab_proxy_data.return_value.get_problem_by_id.return_value = DummyModule()
         mock_lab_proxy_data = DummyLabProxyData(

@@ -5,7 +5,8 @@ from django.test.client import RequestFactory
 
 from labster.game_user_save.views import save_detail
 from labster.models import UserSave
-from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory
+from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory,\
+    TokenFactory
 
 
 class SaveDetailTest(unittest.TestCase):
@@ -15,12 +16,14 @@ class SaveDetailTest(unittest.TestCase):
         self.lab_proxy = LabProxyFactory(lab=self.lab)
         self.user = UserFactory(is_superuser=True)
         self.factory = RequestFactory()
+        self.token = TokenFactory()
 
     def test_get_user_save_exists(self):
         UserSave.objects.create(
             user=self.user, lab_proxy=self.lab_proxy)
 
-        request = self.factory.get('/')
+        request = self.factory.get('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 200)
@@ -29,7 +32,8 @@ class SaveDetailTest(unittest.TestCase):
         self.assertEqual(content_type, "text/xml")
 
     def test_get_user_save_does_not_exist(self):
-        request = self.factory.get('/')
+        request = self.factory.get('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 404)
@@ -38,7 +42,8 @@ class SaveDetailTest(unittest.TestCase):
         UserSave.objects.create(
             user=self.user, lab_proxy=self.lab_proxy)
 
-        request = self.factory.post('/')
+        request = self.factory.post('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 201)
@@ -50,7 +55,8 @@ class SaveDetailTest(unittest.TestCase):
         self.assertTrue(content['success'])
 
     def test_post_user_save_does_not_exist(self):
-        request = self.factory.post('/')
+        request = self.factory.post('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = save_detail(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 201)

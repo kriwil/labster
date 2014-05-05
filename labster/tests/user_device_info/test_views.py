@@ -4,7 +4,8 @@ import unittest
 from django.test.client import RequestFactory
 
 from labster.user_device_info.views import log_device
-from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory
+from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory,\
+    TokenFactory
 
 
 class LogDeviceTest(unittest.TestCase):
@@ -14,9 +15,12 @@ class LogDeviceTest(unittest.TestCase):
         self.lab_proxy = LabProxyFactory(lab=self.lab)
         self.user = UserFactory(is_superuser=True)
         self.factory = RequestFactory()
+        self.token = TokenFactory()
 
     def test_get(self):
-        request = self.factory.get('/', data={'user_id': self.user.id})
+        request = self.factory.get('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
+        request.GET = {'user_id': self.user.id}
         response = log_device(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 405)
 
@@ -36,7 +40,8 @@ class LogDeviceTest(unittest.TestCase):
             'quality': "quality",
             'misc': "misc",
         }
-        request = self.factory.post('/', data=post_data)
+        request = self.factory.post('/', data=post_data, HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = log_device(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 201)
@@ -49,7 +54,8 @@ class LogDeviceTest(unittest.TestCase):
 
     def test_post_invalid(self):
         post_data = {}
-        request = self.factory.post('/', data=post_data)
+        request = self.factory.post('/', data=post_data, HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
         request.GET = {'user_id': self.user.id}
         response = log_device(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 400)

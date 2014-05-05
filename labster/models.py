@@ -1,3 +1,6 @@
+import binascii
+import os
+
 from lxml import etree
 
 from django.db import models
@@ -5,6 +8,23 @@ from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 from django.contrib.auth.models import User
+
+
+class Token(models.Model):
+    name = models.CharField(max_length=100)
+    key = models.CharField(max_length=40, primary_key=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __unicode__(self):
+        return self.name
+
+    def generate_key(self):
+        return binascii.hexlify(os.urandom(20)).decode()
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        super(Token, self).save(*args, **kwargs)
 
 
 class LanguageLab(models.Model):

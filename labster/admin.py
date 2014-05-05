@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from labster.models import LanguageLab, Lab, QuizBlockLab, LabProxy,\
-    ErrorInfo, DeviceInfo, UserSave
+    ErrorInfo, DeviceInfo, UserSave, Token
 from labster.forms import LabAdminForm
 
 
@@ -48,6 +48,11 @@ class DeviceInfoAdmin(admin.ModelAdmin):
         return obj.lab_proxy.lab.name
 
 
+class TokenAdmin(admin.ModelAdmin):
+    exclude = ('key', 'created_at')
+    list_display = ('name', 'key', 'created_at')
+
+
 admin.site.register(LanguageLab)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(QuizBlockLab, BaseAdmin)
@@ -55,3 +60,4 @@ admin.site.register(LabProxy, LabProxyAdmin)
 admin.site.register(ErrorInfo, ErrorInfoAdmin)
 admin.site.register(DeviceInfo, DeviceInfoAdmin)
 admin.site.register(UserSave, UserSaveAdmin)
+admin.site.register(Token, TokenAdmin)

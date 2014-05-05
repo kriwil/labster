@@ -4,10 +4,12 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from courseware.module_render import _invoke_xblock_handler
 
+from labster.authentication import SingleTokenAuthentication
 from labster.lab_proxies import LabProxyData
 from labster.models import LabProxy
 
@@ -24,6 +26,9 @@ class LabProxyDetail(APIView):
     Fetch all quizblocks for spesific lab,
     or answer a problem from quizblocks.
     """
+
+    authentication_classes = (SingleTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def _get_user(self, request, **kwargs):
         user_id = request.GET.get('user_id')

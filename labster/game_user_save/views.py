@@ -3,13 +3,18 @@ import json
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from labster.models import UserSave
+from labster.authentication import SingleTokenAuthentication
 from labster.forms import UserSaveForm
+from labster.models import UserSave
 
 
 class SaveDetail(APIView):
+
+    authentication_classes = (SingleTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, **kwargs):
         user_id = request.GET.get('user_id')

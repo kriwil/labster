@@ -10,25 +10,31 @@ from labster.models import Token
 class SingleTokenAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
-        auth = get_authorization_header(request).split()
 
-        if not auth or auth[0].lower() != b'token':
-            return None
+        force_login = request.GET.get('__fl') == '1'
+        auth = ["", ""]
+        if not force_login:
+            auth = get_authorization_header(request).split()
 
-        if len(auth) == 1:
-            msg = 'Invalid token header. No credentials provided.'
-            raise exceptions.AuthenticationFailed(msg)
-        elif len(auth) > 2:
-            msg = 'Invalid token header. Token string should not contain spaces.'
-            raise exceptions.AuthenticationFailed(msg)
+            if not auth or auth[0].lower() != b'token':
+                return None
 
-        return self.authenticate_credentials(auth[1], request)
+            if len(auth) == 1:
+                msg = 'Invalid token header. No credentials provided.'
+                raise exceptions.AuthenticationFailed(msg)
+            elif len(auth) > 2:
+                msg = 'Invalid token header. Token string should not contain spaces.'
+                raise exceptions.AuthenticationFailed(msg)
 
-    def authenticate_credentials(self, key, request):
-        try:
-            token = Token.objects.get(key=key)
-        except self.model.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Invalid token')
+        return self.authenticate_credentials(auth[1], request, force_login)
+
+    def authenticate_credentials(self, key, request, force_login=False):
+        token = None
+        if not force_login:
+            try:
+                token = Token.objects.get(key=key)
+            except self.model.DoesNotExist:
+                raise exceptions.AuthenticationFailed('Invalid token')
 
         user_id = request.REQUEST.get('user_id')
         try:

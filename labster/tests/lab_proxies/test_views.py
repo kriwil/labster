@@ -4,7 +4,7 @@ import unittest
 
 from django.test.client import RequestFactory
 
-from labster.lab_proxies.views import lab_proxy_detail
+from labster.lab_proxies.views import lab_proxy_detail, lab_proxy_list
 from labster.tests.factories import UserFactory, LabFactory, LabProxyFactory,\
     TokenFactory
 
@@ -81,3 +81,31 @@ class LabProxyDetailTest(unittest.TestCase):
 
         response = lab_proxy_detail(request, lab_proxy_id=self.lab_proxy.id)
         self.assertEqual(response.status_code, 200)
+
+
+class LabProxyListTest(unittest.TestCase):
+
+    def setUp(self):
+        self.user = UserFactory(is_superuser=True)
+        self.token = TokenFactory()
+        self.factory = RequestFactory()
+
+    def test_get(self):
+        request = self.factory.get('/', HTTP_AUTHORIZATION=self.token.for_header)
+        request.user = self.user
+        request.GET = {'user_id': self.user.id}
+        response = lab_proxy_list(request)
+        self.assertEqual(response.status_code, 200)
+
+        content_type = response.get('Content-Type')
+        self.assertEqual(content_type, "text/xml")
+
+    def test_get_no_token(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        request.GET = {'user_id': self.user.id, '__fl': '1'}
+        response = lab_proxy_list(request)
+        self.assertEqual(response.status_code, 200)
+
+        content_type = response.get('Content-Type')
+        self.assertEqual(content_type, "text/xml")

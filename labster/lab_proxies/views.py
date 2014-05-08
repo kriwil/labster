@@ -49,7 +49,7 @@ class LabProxyDetail(APIView):
 
     def get(self, request, **kwargs):
         lab_proxy_data = self._get_lab_proxy_data(request, **kwargs)
-        template_name = "api/questions.xml"
+        template_name = "lab_proxies/detail.xml"
         context = {
             'lab_proxy': lab_proxy_data.lab_proxy,
             'problemset': lab_proxy_data.get_problemset(),
@@ -102,8 +102,8 @@ class LabProxyDetail(APIView):
 
 class LabProxyList(APIView):
 
-    # authentication_classes = (SingleTokenAuthentication,)
-    # permission_classes = (IsAuthenticated,)
+    authentication_classes = (SingleTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_lab_proxies(self):
         objects = LabProxy.objects.all()

@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
@@ -99,4 +100,32 @@ class LabProxyDetail(APIView):
         return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
+class LabProxyList(APIView):
+
+    # authentication_classes = (SingleTokenAuthentication,)
+    # permission_classes = (IsAuthenticated,)
+
+    def get_lab_proxies(self):
+        objects = LabProxy.objects.all()
+        lab_proxies = []
+        for each in objects:
+            item = {
+                'id': each.id,
+                'lab': each.lab.name,
+                'detail_api_url': reverse('labster_api:proxy_detail', args=[each.id]),
+            }
+            lab_proxies.append(item)
+        return lab_proxies
+
+    def get(self, request, **kwargs):
+        template_name = "lab_proxies/list.xml"
+        lab_proxies = self.get_lab_proxies()
+        context = {
+            'lab_proxies': lab_proxies,
+        }
+
+        return render(request, template_name, context, content_type="text/xml")
+
+
 lab_proxy_detail = LabProxyDetail.as_view()
+lab_proxy_list = LabProxyList.as_view()

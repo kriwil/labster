@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<labs>
+    {% for each in lab_proxies %}
+    <lab id="{{ each.id }}">
+        <name>{{ each.lab }}</name>
+        <url>{{ each.detail_api_url }}</url>
+    </lab>
+    {% endfor %}
+</labs>

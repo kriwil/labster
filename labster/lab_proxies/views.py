@@ -105,21 +105,23 @@ class LabProxyList(APIView):
     authentication_classes = (SingleTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get_lab_proxies(self):
+    def get_lab_proxies(self, request):
         objects = LabProxy.objects.all()
         lab_proxies = []
         for each in objects:
+            url = reverse('labster_api:proxy_detail', args=[each.id])
+            url = request.build_absolute_uri(url)
             item = {
                 'id': each.id,
                 'lab': each.lab.name,
-                'detail_api_url': reverse('labster_api:proxy_detail', args=[each.id]),
+                'detail_api_url': url,
             }
             lab_proxies.append(item)
         return lab_proxies
 
     def get(self, request, **kwargs):
         template_name = "lab_proxies/list.xml"
-        lab_proxies = self.get_lab_proxies()
+        lab_proxies = self.get_lab_proxies(request)
         context = {
             'lab_proxies': lab_proxies,
         }

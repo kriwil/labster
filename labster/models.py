@@ -188,3 +188,40 @@ class DeviceInfo(models.Model):
     misc = models.TextField(default='')
 
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class QuizBlock(models.Model):
+    lab = models.ForeignKey(Lab)
+    slug = models.SlugField(max_length=200, unique=True)
+    description = models.TextField(blank=True)
+
+    order = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ('lab__name', 'order', 'created_at')
+
+    def __unicode__(self):
+        return self.slug
+
+
+class Problem(models.Model):
+    quiz_block = models.ForeignKey(QuizBlock)
+
+    TYPE_MULTIPLE_CHOICE = 1
+    TYPE_CHOICES = (
+        (TYPE_MULTIPLE_CHOICE, 'multiple choice'),
+    )
+    problem_type = models.IntegerField(choices=TYPE_CHOICES, blank=True, null=True)
+
+    content_markdown = models.TextField()
+    content_xml = models.TextField()
+
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
+
+pre_save.connect(update_modified_at, sender=QuizBlock)
+pre_save.connect(update_modified_at, sender=Lab)

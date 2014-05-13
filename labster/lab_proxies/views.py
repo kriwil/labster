@@ -109,7 +109,7 @@ class LabProxyList(APIView):
         objects = LabProxy.objects.all()
         lab_proxies = []
         for each in objects:
-            url = reverse('labster_api:proxy_detail', args=[each.id])
+            url = reverse('labster_api_v1:proxy_detail', args=[each.id])
             url = request.build_absolute_uri(url)
             item = {
                 'id': each.id,

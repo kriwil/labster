@@ -72,7 +72,7 @@ class LabAdmin(BaseAdmin):
     inlines = (QuizBlockInlineAdmin,)
 
 
-# admin.site.register(LanguageLab)
+admin.site.register(LanguageLab)
 # admin.site.register(QuizBlockLab, BaseAdmin)
 # admin.site.register(LabProxy, LabProxyAdmin)
 # admin.site.register(ErrorInfo, ErrorInfoAdmin)

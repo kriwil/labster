@@ -17,6 +17,9 @@ setup(
     url='http://www.labster.com/',
     author='Labster',
     author_email='developer@labster.com',
+    install_requires=[
+        'django-cors-headers==0.12',
+    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

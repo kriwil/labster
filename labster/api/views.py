@@ -1,11 +1,13 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
+from labster.api.serializers import LabSerializer
 from labster.models import Lab, QuizBlock, Problem
 
 
 class LabList(ListAPIView):
     model = Lab
     queryset = Lab.objects.all()
+    serializer_class = LabSerializer
 
 
 class LabDetail(RetrieveAPIView):

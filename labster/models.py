@@ -206,13 +206,24 @@ class QuizBlock(models.Model):
     def __unicode__(self):
         return self.slug
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'slug': self.slug,
+            'description': self.description,
+            'order': self.order,
+            'problems': [p.to_json() for p in self.problem_set.all()],
+        }
+
 
 class Problem(models.Model):
     quiz_block = models.ForeignKey(QuizBlock)
 
     TYPE_MULTIPLE_CHOICE = 1
+    TYPE_TEXT_INPUT = 2
     TYPE_CHOICES = (
         (TYPE_MULTIPLE_CHOICE, 'multiple choice'),
+        (TYPE_TEXT_INPUT, 'text input'),
     )
     problem_type = models.IntegerField(choices=TYPE_CHOICES, blank=True, null=True)
 
@@ -221,6 +232,14 @@ class Problem(models.Model):
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'problem_type': self.problem_type,
+            'content_markdown': self.content_markdown,
+            'content_xml': self.content_xml,
+        }
 
 
 pre_save.connect(update_modified_at, sender=QuizBlock)

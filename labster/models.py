@@ -188,8 +188,3 @@ class DeviceInfo(models.Model):
     misc = models.TextField(default='')
 
     created_at = models.DateTimeField(default=timezone.now)
-
-
-class CourseLimitStudent(models.Model):
-    course_id = models.CharField(max_length=255, unique=True)
-    max_student = models.IntegerField(default=0)

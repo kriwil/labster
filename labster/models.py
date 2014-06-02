@@ -107,9 +107,6 @@ class QuizBlockLab(models.Model):
 class LabProxy(models.Model):
 
     lab = models.ForeignKey(Lab)
-    course_id = models.CharField(max_length=255)
-    chapter_id = models.CharField(max_length=100)
-    section_id = models.CharField(max_length=100)
     unit_id = models.CharField(max_length=100)
 
     # not used?
@@ -119,7 +116,7 @@ class LabProxy(models.Model):
     modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        unique_together = ('lab', 'course_id', 'chapter_id', 'section_id', 'unit_id')
+        unique_together = ('lab', 'unit_id')
         verbose_name_plural = 'Lab proxies'
 
     def __unicode__(self):
@@ -192,6 +189,8 @@ class DeviceInfo(models.Model):
 
 class QuizBlock(models.Model):
     lab = models.ForeignKey(Lab)
+    lab_proxy = models.ForeignKey(LabProxy, blank=True, null=True)
+
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True)
 
@@ -244,3 +243,49 @@ class Problem(models.Model):
 
 pre_save.connect(update_modified_at, sender=QuizBlock)
 pre_save.connect(update_modified_at, sender=Lab)
+
+
+def copy_quizblocks(lab_id, lab_proxy):
+    quizblocks = QuizBlock.objects.filter(lab_id=lab_id, lab_proxy=None)
+
+    new_quizblocks = []
+    for quizblock in quizblocks:
+        new_quizblock, _ = QuizBlock.objects.get_or_create(
+            lab_id=lab_id,
+            lab_proxy_id=lab_proxy.id,
+            defaults={
+                'slug': quizblock.slug,
+                'description': quizblock.description,
+                'order': quizblock.order,
+            }
+        )
+
+        copy_problems(old_quizblock=quizblock, new_quizblock=new_quizblock)
+        new_quizblocks.append(new_quizblock)
+
+    return new_quizblocks
+
+
+def copy_problems(old_quizblock, new_quizblock):
+
+    problems = Problem.objects.filter(quizblock_id=old_quizblock.id)
+
+    new_problems = []
+    for problem in problems:
+        new_problem = Problem.objects.create(
+            quizblock_id=new_quizblock.id,
+            problem_type=problem.problem_type,
+            content_markdown=problem.content_markdown,
+            content_xml=problem.content_xml)
+
+        new_problems.append(new_problem)
+
+    return new_problems
+
+
+def create_lab_proxy(lab_id, unit_id):
+    lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, unit_id=unit_id)
+    if not created:
+        copy_quizblocks(lab_id, lab_proxy)
+
+    return lab_proxy

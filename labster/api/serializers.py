@@ -15,6 +15,13 @@ class LabSerializer(serializers.Serializer):
         return [qb.to_json() for qb in obj.quizblock_set.all()]
 
 
-class LabProxySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LabProxy
+
+class LabProxySerializer(serializers.Serializer):
+
+    id = serializers.Field(source='id')
+    unit_id = serializers.Field(source='unit_id')
+
+    quizblocks = serializers.SerializerMethodField('get_quizblocks')
+
+    def get_quizblocks(self, obj):
+        return [qb.to_json() for qb in obj.quizblock_set.all()]

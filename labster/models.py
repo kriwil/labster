@@ -55,6 +55,12 @@ class Lab(models.Model):
     def __unicode__(self):
         return self.name
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
     def get_quizblocks(self):
         return self.quizblocklab_set.all()
 

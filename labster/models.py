@@ -191,7 +191,7 @@ class QuizBlock(models.Model):
     lab = models.ForeignKey(Lab)
     lab_proxy = models.ForeignKey(LabProxy, blank=True, null=True)
 
-    slug = models.SlugField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=200)
     description = models.TextField(blank=True)
 
     order = models.IntegerField(default=0)
@@ -268,12 +268,12 @@ def copy_quizblocks(lab_id, lab_proxy):
 
 def copy_problems(old_quizblock, new_quizblock):
 
-    problems = Problem.objects.filter(quizblock_id=old_quizblock.id)
+    problems = Problem.objects.filter(quiz_block_id=old_quizblock.id)
 
     new_problems = []
     for problem in problems:
         new_problem = Problem.objects.create(
-            quizblock_id=new_quizblock.id,
+            quiz_block_id=new_quizblock.id,
             problem_type=problem.problem_type,
             content_markdown=problem.content_markdown,
             content_xml=problem.content_xml)
@@ -287,5 +287,17 @@ def create_lab_proxy(lab_id, unit_id):
     lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, unit_id=unit_id)
     if not created:
         copy_quizblocks(lab_id, lab_proxy)
+
+    return lab_proxy
+
+
+def update_lab_proxy(lab_proxy_id, lab_id):
+    # delete quizblocks and problems
+    lab_proxy = LabProxy.objects.get(id=lab_proxy_id)
+    lab_proxy.lab_id = lab_id
+    lab_proxy.save()
+
+    QuizBlock.objects.filter(lab_proxy_id=lab_proxy_id).delete()
+    copy_quizblocks(lab_id, lab_proxy)
 
     return lab_proxy

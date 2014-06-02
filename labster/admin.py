@@ -15,7 +15,7 @@ class LabProxyInlineAdmin(admin.TabularInline):
 
 
 class LabProxyAdmin(BaseAdmin):
-    list_display = ('lab', 'course_id', 'created_at', 'modified_at')
+    pass
 
 
 class UserSaveAdmin(BaseAdmin):
@@ -73,8 +73,8 @@ class LabAdmin(BaseAdmin):
 
 
 admin.site.register(LanguageLab)
+admin.site.register(LabProxy, LabProxyAdmin)
 # admin.site.register(QuizBlockLab, BaseAdmin)
-# admin.site.register(LabProxy, LabProxyAdmin)
 # admin.site.register(ErrorInfo, ErrorInfoAdmin)
 # admin.site.register(DeviceInfo, DeviceInfoAdmin)
 # admin.site.register(UserSave, UserSaveAdmin)

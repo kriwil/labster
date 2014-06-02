@@ -3,6 +3,7 @@ from django.conf.urls import patterns, url
 from labster.api.views import LabList, LabDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import ProblemList, ProblemDetail
+from labster.api.views import LabProxyList, LabProxyDetail
 
 
 urlpatterns = patterns('',  # nopep8
@@ -15,4 +16,7 @@ urlpatterns = patterns('',  # nopep8
 
     url('^problems/$', ProblemList.as_view()),
     url('^problems/(?P<pk>\d+)/$', ProblemDetail.as_view()),
+
+    url('^lab-proxies/$', LabProxyList.as_view()),
+    url('^lab-proxies/(?P<pk>\d+)/$', LabProxyDetail.as_view()),
 )

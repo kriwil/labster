@@ -1,8 +1,9 @@
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
 
-from labster.api.serializers import LabSerializer, LabProxySerializer
+from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy
 from labster.models import create_lab_proxy, update_lab_proxy
 
@@ -34,9 +35,10 @@ class ProblemList(ListAPIView):
     queryset = Problem.objects.all()
 
 
-class ProblemDetail(RetrieveAPIView):
+class ProblemDetail(RetrieveUpdateAPIView):
     model = Problem
     queryset = Problem.objects.all()
+    serializer_class = ProblemSerializer
 
 
 class LabProxyList(ListCreateAPIView):

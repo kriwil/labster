@@ -61,6 +61,10 @@ class Lab(models.Model):
             'name': self.name,
         }
 
+    @property
+    def studio_detail_url(self):
+        return "/labster/labs/{}/".format(self.id)
+
     def get_quizblocks(self):
         return self.quizblocklab_set.all()
 
@@ -219,6 +223,10 @@ class QuizBlock(models.Model):
             'order': self.order,
             'problems': [p.to_json() for p in self.problem_set.all()],
         }
+
+    @property
+    def studio_detail_url(self):
+        return "/labster/quiz-blocks/{}/".format(self.id)
 
 
 class Problem(models.Model):

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from labster.models import Problem
+
 
 class LabSerializer(serializers.Serializer):
 
@@ -26,3 +28,10 @@ class LabProxySerializer(serializers.Serializer):
 
     def get_quizblocks(self, obj):
         return [qb.to_json() for qb in obj.quizblock_set.all()]
+
+
+class ProblemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Problem
+        fields = ('id', 'content_markdown', 'content_xml')

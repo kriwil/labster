@@ -76,3 +76,14 @@ def xml_to_markdown(xml_string):
             markdown_string.append("[explanation]")
 
     return "\n".join(markdown_string).strip()
+
+
+def xml_to_html(xml_string):
+    html_string = xml_string
+    html_string = html_string.replace('choice', 'label')
+    html_string = html_string.replace('false">', 'false"><input name="radio-{}" type="radio"> ')
+    html_string = html_string.replace('true">', 'true"><input name="radio-{}" type="radio"> ')
+
+    html_string = html_string.replace('</textline>', '')
+    html_string = html_string.replace('textline', 'input type="text"')
+    return html_string

@@ -32,6 +32,8 @@ class LabProxySerializer(serializers.Serializer):
 
 class ProblemSerializer(serializers.ModelSerializer):
 
+    content_html = serializers.Field(source='content_html')
+
     class Meta:
         model = Problem
-        fields = ('id', 'content_markdown', 'content_xml')
+        fields = ('id', 'content_markdown', 'content_xml', 'content_html')

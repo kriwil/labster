@@ -9,6 +9,8 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+from labster.utils import xml_to_markdown, xml_to_html
+
 
 class Token(models.Model):
     name = models.CharField(max_length=100)
@@ -246,13 +248,22 @@ class Problem(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
+    @property
+    def content_html(self):
+        return xml_to_html(self.content_xml)
+
     def to_json(self):
         return {
             'id': self.id,
             'problem_type': self.problem_type,
             'content_markdown': self.content_markdown,
             'content_xml': self.content_xml,
+            'content_html': self.content_html,
         }
+
+    def save(self, *args, **kwargs):
+        self.content_markdown = xml_to_markdown(self.content_xml)
+        return super(Problem, self).save(*args, **kwargs)
 
 
 pre_save.connect(update_modified_at, sender=QuizBlock)

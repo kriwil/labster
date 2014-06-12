@@ -1,6 +1,6 @@
 import unittest
 
-from labster.utils import xml_to_markdown
+from labster.utils import xml_to_markdown, answer_from_xml
 
 
 md_0 = """
@@ -106,6 +106,7 @@ xml_2 = """
 
 
 class XmlToMarkdownTest(unittest.TestCase):
+
     def test_multiplechoice(self):
         markdown_string = xml_to_markdown(xml_0.strip())
         assert markdown_string.strip() == md_0.strip()
@@ -117,3 +118,16 @@ class XmlToMarkdownTest(unittest.TestCase):
     def test_textinput(self):
         markdown_string = xml_to_markdown(xml_2.strip())
         assert markdown_string.strip() == md_2.strip()
+
+
+class AnswerFromXmlTest(unittest.TestCase):
+
+    def test_multiple_choice():
+        real_answer = "the ipod"
+        answer = answer_from_xml(xml_0)
+        assert answer.lower() == real_answer.lower()
+
+    def test_text_input():
+        real_answer = "michigan"
+        answer = answer_from_xml(xml_2)
+        assert answer.lower() == real_answer.lower()

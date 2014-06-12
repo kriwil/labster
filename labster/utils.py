@@ -87,3 +87,24 @@ def xml_to_html(xml_string):
     html_string = html_string.replace('</textline>', '')
     html_string = html_string.replace('textline', 'input type="text"')
     return html_string
+
+
+def answer_from_xml(xml_string):
+    answer = ""
+
+    root = etree.fromstring(xml_string)
+    mcp = root.find('multiplechoiceresponse')
+    if mcp is not None:
+        choicegroup = mcp.find('choicegroup')
+        choices = choicegroup.findall('choice')
+        for choice in choices:
+            if choice.get('correct') == 'true':
+                answer = choice.text
+                return answer
+
+    sr = root.find('stringresponse')
+    if sr is not None:
+        answer = sr.get('answer', "")
+        return answer
+
+    return answer

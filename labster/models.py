@@ -3,11 +3,12 @@ import os
 
 from lxml import etree
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.utils.functional import cached_property
 
 from labster.utils import xml_to_markdown, xml_to_html, answer_from_xml
 
@@ -330,9 +331,13 @@ def update_lab_proxy(lab_proxy_id, lab_id):
     return lab_proxy
 
 
-# class UserProblem(models.Model):
-#     problem = models.ForeignKey(Problem)
-#     user = models.ForeignKey(User)
-#     correct = models.BooleanField(default=False)
+class UserProblem(models.Model):
+    problem = models.ForeignKey(Problem)
+    user = models.ForeignKey(User)
+    answer = models.CharField(max_length=200, blank=True, default="")
 
-#     created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    @cached_property
+    def is_correct(self):
+        return self.answer.strip().lower() == self.problem.answer.strip().lower()

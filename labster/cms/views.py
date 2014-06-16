@@ -1,7 +1,7 @@
 from edxmako.shortcuts import render_to_response
 from django.shortcuts import get_object_or_404, redirect
 
-from labster.cms.forms import QuizBlockForm
+from labster.cms.forms import QuizBlockForm, ProblemForm
 from labster.models import Lab, QuizBlock, Problem
 
 
@@ -52,5 +52,23 @@ def quiz_block_detail(request, id):
     context = {
         'quiz_block': quiz_block,
         'problems': problems,
+    }
+    return render_to_response(template_name, context)
+
+
+def create_problem(request, quiz_block_id):
+    template_name = "labster/create_problem.html"
+    quiz_block = get_object_or_404(QuizBlock, id=quiz_block_id)
+
+    if request.method == 'POST':
+        form = QuizBlockForm(request.POST, quiz_block=quiz_block)
+        if form.is_valid():
+            problem = form.save()
+            return redirect('labster_problem_detail', id=problem.id)
+
+    form = ProblemForm(quiz_block=quiz_block)
+    context = {
+        'quiz_block': quiz_block,
+        'form': form,
     }
     return render_to_response(template_name, context)

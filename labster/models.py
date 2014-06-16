@@ -4,6 +4,7 @@ import os
 from lxml import etree
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
@@ -68,6 +69,10 @@ class Lab(models.Model):
     def studio_detail_url(self):
         return "/labster/labs/{}/".format(self.id)
 
+    @property
+    def new_quiz_block_url(self):
+        return reverse('labster_create_quiz_block', args=[self.id])
+
     def get_quizblocks(self):
         return self.quizblocklab_set.all()
 
@@ -75,7 +80,8 @@ class Lab(models.Model):
 @receiver(pre_delete, sender=Lab)
 def lab_delete(sender, instance, **kwargs):
     # Also delete the screenshot image file when deleting the Lab
-    instance.screenshot.delete(False)
+    return
+    # instance.screenshot.delete(False)
 
 
 class QuizBlockLab(models.Model):
@@ -156,7 +162,11 @@ class UserSave(models.Model):
 @receiver(pre_delete, sender=UserSave)
 def game_user_save_delete(sender, instance, **kwargs):
     # Also delete the save game file when deleting the GameUserSave
-    instance.save_file.delete(False)
+    return
+    # try:
+    #     instance.save_file.delete(False)
+    # except OSError:
+    #     pass
 
 
 def update_modified_at(sender, instance, **kwargs):
@@ -230,6 +240,11 @@ class QuizBlock(models.Model):
     @property
     def studio_detail_url(self):
         return "/labster/quiz-blocks/{}/".format(self.id)
+
+    def save(self, *args, **kwargs):
+        if not self.order:
+            self.order = QuizBlock.objects.filter(lab=self.lab).count() + 1
+        return super(QuizBlock, self).save(*args, **kwargs)
 
 
 class Problem(models.Model):

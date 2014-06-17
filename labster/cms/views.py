@@ -61,10 +61,10 @@ def create_problem(request, quiz_block_id):
     quiz_block = get_object_or_404(QuizBlock, id=quiz_block_id)
 
     if request.method == 'POST':
-        form = QuizBlockForm(request.POST, quiz_block=quiz_block)
+        form = ProblemForm(request.POST, quiz_block=quiz_block)
         if form.is_valid():
-            problem = form.save()
-            return redirect('labster_problem_detail', id=problem.id)
+            form.save()
+            return redirect('labster_quiz_block_detail', id=quiz_block.id)
 
     form = ProblemForm(quiz_block=quiz_block)
     context = {

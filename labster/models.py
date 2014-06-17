@@ -241,6 +241,10 @@ class QuizBlock(models.Model):
     def studio_detail_url(self):
         return "/labster/quiz-blocks/{}/".format(self.id)
 
+    @property
+    def new_problem_url(self):
+        return reverse('labster_create_problem', args=[self.id])
+
     def save(self, *args, **kwargs):
         if not self.order:
             self.order = QuizBlock.objects.filter(lab=self.lab).count() + 1
@@ -278,10 +282,10 @@ class Problem(models.Model):
             'content_html': self.content_html,
         }
 
-    def save(self, *args, **kwargs):
-        self.content_markdown = xml_to_markdown(self.content_xml)
-        self.answer = answer_from_xml(self.content_xml)
-        return super(Problem, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.content_markdown = xml_to_markdown(self.content_xml)
+    #     self.answer = answer_from_xml(self.content_xml)
+    #     return super(Problem, self).save(*args, **kwargs)
 
 
 pre_save.connect(update_modified_at, sender=QuizBlock)

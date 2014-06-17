@@ -11,7 +11,7 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from labster.utils import xml_to_markdown, xml_to_html, answer_from_xml
+from labster.utils import markdown_to_xml, xml_to_html, answer_from_xml
 
 
 class Token(models.Model):
@@ -262,8 +262,8 @@ class Problem(models.Model):
     )
     problem_type = models.IntegerField(choices=TYPE_CHOICES, blank=True, null=True)
 
-    content_markdown = models.TextField()
-    content_xml = models.TextField()
+    content_markdown = models.TextField(blank=True, default="")
+    content_xml = models.TextField(blank=True, default="")
     answer = models.CharField(max_length=200, blank=True, default="")
 
     created_at = models.DateTimeField(default=timezone.now)
@@ -282,10 +282,12 @@ class Problem(models.Model):
             'content_html': self.content_html,
         }
 
-    # def save(self, *args, **kwargs):
-    #     self.content_markdown = xml_to_markdown(self.content_xml)
-    #     self.answer = answer_from_xml(self.content_xml)
-    #     return super(Problem, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if self.content_markdown:
+            self.content_xml = markdown_to_xml(self.content_markdown)
+        if self.content_xml:
+            self.answer = answer_from_xml(self.content_xml)
+        return super(Problem, self).save(*args, **kwargs)
 
 
 pre_save.connect(update_modified_at, sender=QuizBlock)

@@ -33,9 +33,10 @@ class QuizBlockDetail(RetrieveAPIView):
     queryset = QuizBlock.objects.all()
 
 
-class ProblemList(ListAPIView):
+class ProblemList(ListCreateAPIView):
     model = Problem
     queryset = Problem.objects.all()
+    serializer_class = ProblemSerializer
 
 
 class ProblemDetail(RetrieveUpdateAPIView):

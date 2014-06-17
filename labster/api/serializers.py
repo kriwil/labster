@@ -36,4 +36,5 @@ class ProblemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Problem
-        fields = ('id', 'content_markdown', 'content_xml', 'content_html')
+        fields = ('id', 'content_markdown', 'content_xml', 'content_html', 'quiz_block')
+        write_only_fields = ('content_markdown',)

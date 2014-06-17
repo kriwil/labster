@@ -1,4 +1,7 @@
+import re
+
 from lxml import etree
+import markdown
 
 
 def choicegroup_xml_to_markdown(element_list, element_type='radio'):
@@ -27,11 +30,14 @@ def choicegroup_xml_to_markdown(element_list, element_type='radio'):
 
 
 def xml_to_markdown(xml_string):
+    if not xml_string:
+        return ""
+
     markdown_string = []
     string = xml_string
-    string = string.replace("\n", "")
 
-    root = etree.fromstring(string)
+    parser = etree.XMLParser(remove_blank_text=True)
+    root = etree.XML(string, parser=parser)
     for el in root:
         if el.tag == 'p':
             markdown_string.append(el.text.strip())
@@ -78,7 +84,39 @@ def xml_to_markdown(xml_string):
     return "\n".join(markdown_string).strip()
 
 
+def markdown_to_xml(markdown_string):
+    if not markdown_string:
+        return ""
+
+    xml_string = ""
+    html_string = markdown.markdown(markdown_string)
+
+    # choice
+    html_string = html_string.replace("<p>(", """<multiplechoiceresponse>\n<choicegroup type="MultipleChoice">\n(""")
+    html_string = re.sub(r'^(\(.+)<\/p>$', "\\1\n</choicegroup>\n</multiplechoiceresponse>", html_string, flags=re.M)
+    html_string = re.sub(r'^\((.+)\)\s?(.+)$', """<choice correct="\\1">\\2</choice>""", html_string, flags=re.M)
+    html_string = html_string.replace('correct=" "', 'correct="false"')
+    html_string = html_string.replace('correct="x"', 'correct="true"')
+
+    # text
+    html_string = re.sub(
+        r'^<p>=\s?(.+)<\/p>$',
+        """<stringresponse answer="\\1" type="ci">\n<textline size="20"/>\n</stringresponse>""",
+        html_string, flags=re.M)
+
+    # explanation
+    html_string = html_string.replace("<p>[explanation]\n", """<solution>\n<div class="detailed-solution">\n<p>Explanation</p>\n<p>""")
+    html_string = html_string.replace("\n[explanation]</p>", """</p>\n</div>\n</solution>""")
+
+    xml_string = "<problem>\n{}\n</problem>".format(html_string)
+
+    return xml_string.strip()
+
+
 def xml_to_html(xml_string):
+    if not xml_string:
+        return ""
+
     html_string = xml_string
     html_string = html_string.replace('choice', 'label')
     html_string = html_string.replace('false">', 'false"><input name="radio-{}" type="radio"> ')
@@ -86,12 +124,14 @@ def xml_to_html(xml_string):
 
     html_string = html_string.replace('</textline>', '')
     html_string = html_string.replace('textline', 'input type="text"')
-    return html_string
+    return html_string.strip()
 
 
 def answer_from_xml(xml_string):
-    answer = ""
+    if not xml_string:
+        return ""
 
+    answer = ""
     root = etree.fromstring(xml_string)
     mcp = root.find('multiplechoiceresponse')
     if mcp is not None:
@@ -107,4 +147,4 @@ def answer_from_xml(xml_string):
         answer = sr.get('answer', "")
         return answer
 
-    return answer
+    return answer.strip()

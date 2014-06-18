@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -39,7 +39,7 @@ class ProblemList(ListCreateAPIView):
     serializer_class = ProblemSerializer
 
 
-class ProblemDetail(RetrieveUpdateAPIView):
+class ProblemDetail(RetrieveUpdateDestroyAPIView):
     model = Problem
     queryset = Problem.objects.all()
     serializer_class = ProblemSerializer

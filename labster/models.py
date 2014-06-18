@@ -287,6 +287,11 @@ class Problem(models.Model):
             self.content_xml = markdown_to_xml(self.content_markdown)
         if self.content_xml:
             self.answer = answer_from_xml(self.content_xml)
+            if 'multiplechoiceresponse' in self.content_xml:
+                self.problem_type = self.TYPE_MULTIPLE_CHOICE
+            elif 'stringresponse' in self.content_xml:
+                self.problem_type = self.TYPE_TEXT_INPUT
+
         return super(Problem, self).save(*args, **kwargs)
 
 

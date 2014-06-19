@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
@@ -8,7 +9,7 @@ from rest_framework.views import APIView
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy
-from labster.models import create_lab_proxy, update_lab_proxy
+from labster.models import create_lab_proxy, update_lab_proxy, UserProblem
 
 
 class LabList(ListAPIView):
@@ -70,16 +71,26 @@ class LabProxyDetail(RetrieveAPIView):
     serializer_class = LabProxySerializer
 
 
-class UserProblem(APIView):
+class CreateUserProblem(APIView):
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
-        user = request.user
+
+        # FIXME: use real user
+        # user = request.user
+        user = User.objects.get(email='staff@example.com')
+
         problem_id = data.get('problem_id')
         answer = data.get('answer', "").strip()
 
         problem = get_object_or_404(Problem, id=problem_id)
 
         user_problem = UserProblem.objects.create(problem=problem, user=user, answer=answer)
-        response = {'is_correct': user_problem.is_correct}
+        attempts = UserProblem.objects.filter(problem=problem, user=user).count()
+
+        response = {
+            'is_correct': user_problem.is_correct,
+            'attempts': attempts,
+            'score': 0,
+        }
         return Response(response, status=status.HTTP_201_CREATED)

@@ -118,12 +118,19 @@ def xml_to_html(xml_string):
         return ""
 
     html_string = xml_string
-    html_string = html_string.replace('choice', 'label')
-    html_string = html_string.replace('false">', 'false"><input name="radio-{}" type="radio"> ')
-    html_string = html_string.replace('true">', 'true"><input name="radio-{}" type="radio"> ')
+    html_string = re.sub(
+        r'^<choice correct="(.+)">(.+)<\/choice>$',
+        """<label><input name="radio-input" type="radio" value="\\2" correct="\\1"> \\2</label>""",
+        html_string, flags=re.M)
 
-    html_string = html_string.replace('</textline>', '')
-    html_string = html_string.replace('textline', 'input type="text"')
+    html_string = re.sub(
+        r'^<stringresponse answer="(.+)" type="ci">\n(.+)\n<\/stringresponse>',
+        """<div><input name="text-input" type="text" value="\\1"/></div>""",
+        html_string, flags=re.M)
+
+    # html_string = html_string.replace('</textline>', '')
+    # html_string = html_string.replace('textline', 'input type="text"')
+
     return html_string.strip()
 
 

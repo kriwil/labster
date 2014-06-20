@@ -76,21 +76,24 @@ class CreateUserProblem(APIView):
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
-        # FIXME: use real user
-        # user = request.user
-        user = User.objects.get(email='staff@example.com')
-
+        user_id = data.get('user_id')
         problem_id = data.get('problem_id')
         answer = data.get('answer', "").strip()
+
+        # user = User.objects.get(email='staff@example.com')
+        user = User.objects.get(id=user_id)
 
         problem = get_object_or_404(Problem, id=problem_id)
 
         user_problem = UserProblem.objects.create(problem=problem, user=user, answer=answer)
-        attempts = UserProblem.objects.filter(problem=problem, user=user).count()
+        attempts = UserProblem.objects.filter(problem=problem, user=user)
+        total = attempts.count()
+        correct = attempts.filter(is_correct=True).count()
+        score = float(correct) / float(total)
 
         response = {
             'is_correct': user_problem.is_correct,
-            'attempts': attempts,
-            'score': 0,
+            'attempts': total,
+            'score': score,
         }
         return Response(response, status=status.HTTP_201_CREATED)

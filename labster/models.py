@@ -9,7 +9,6 @@ from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
-from django.utils.functional import cached_property
 
 from labster.utils import markdown_to_xml, xml_to_html, answer_from_xml
 
@@ -361,9 +360,10 @@ class UserProblem(models.Model):
     problem = models.ForeignKey(Problem)
     user = models.ForeignKey(User)
     answer = models.CharField(max_length=200, blank=True, default="")
+    is_correct = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(default=timezone.now)
 
-    @cached_property
-    def is_correct(self):
-        return self.answer.strip().lower() == self.problem.answer.strip().lower()
+    def save(self, *args, **kwargs):
+        self.is_correct = self.answer.strip().lower() == self.problem.answer.strip().lower()
+        return super(UserProblem, self).save(*args, **kwargs)

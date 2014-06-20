@@ -53,13 +53,13 @@ class LabProxyList(ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         lab_id = request.DATA.get('lab_id')
-        unit_id = request.DATA.get('unit_id')
+        location_id = request.DATA.get('location_id')
         lab_proxy_id = request.DATA.get('lab_proxy_id')
 
         if lab_proxy_id:
             lab_proxy = update_lab_proxy(lab_proxy_id, lab_id)
         else:
-            lab_proxy = create_lab_proxy(lab_id, unit_id)
+            lab_proxy = create_lab_proxy(lab_id, location_id)
 
         serializer = LabProxySerializer(lab_proxy)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

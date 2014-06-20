@@ -125,16 +125,13 @@ class QuizBlockLab(models.Model):
 class LabProxy(models.Model):
 
     lab = models.ForeignKey(Lab)
-    unit_id = models.CharField(max_length=100)
-
-    # not used?
-    position = models.CharField(max_length=100, default="", blank=True)
+    location_id = models.CharField(max_length=100)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        unique_together = ('lab', 'unit_id')
+        unique_together = ('lab', 'location_id')
         verbose_name_plural = 'Lab proxies'
 
     def __unicode__(self):
@@ -336,8 +333,8 @@ def copy_problems(old_quizblock, new_quizblock):
     return new_problems
 
 
-def create_lab_proxy(lab_id, unit_id):
-    lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, unit_id=unit_id)
+def create_lab_proxy(lab_id, location_id):
+    lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, location_id=location_id)
     if not created:
         copy_quizblocks(lab_id, lab_proxy)
 

@@ -18,7 +18,7 @@ class LabSerializer(serializers.Serializer):
 class LabProxySerializer(serializers.Serializer):
 
     id = serializers.Field(source='id')
-    unit_id = serializers.Field(source='unit_id')
+    location_id = serializers.Field(source='location_id')
 
     lab = serializers.SerializerMethodField('get_lab')
     quizblocks = serializers.SerializerMethodField('get_quizblocks')

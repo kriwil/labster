@@ -335,8 +335,9 @@ def copy_problems(old_quizblock, new_quizblock):
 
 def create_lab_proxy(lab_id, location_id):
     lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, location_id=location_id)
-    if not created:
-        copy_quizblocks(lab_id, lab_proxy)
+
+    QuizBlock.objects.filter(lab_proxy_id=lab_proxy.id).delete()
+    copy_quizblocks(lab_id, lab_proxy)
 
     return lab_proxy
 

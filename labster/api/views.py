@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy
-from labster.models import create_lab_proxy, update_lab_proxy, UserProblem
+from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
 
 
 class LabList(ListAPIView):
@@ -81,8 +81,7 @@ class CreateUserProblem(APIView):
         answer = data.get('answer', "").strip()
 
         # user = User.objects.get(email='staff@example.com')
-        user = User.objects.get(id=user_id)
-
+        user = get_object_or_404(User, id=user_id)
         problem = get_object_or_404(Problem, id=problem_id)
 
         user_problem = UserProblem.objects.create(problem=problem, user=user, answer=answer)
@@ -97,3 +96,27 @@ class CreateUserProblem(APIView):
             'score': score,
         }
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class CreateUserLabProxy(APIView):
+
+    def post(self, request, *args, **kwargs):
+        data = request.DATA
+
+        user_id = data.get('user_id')
+        lab_proxy_id = data.get('lab_proxy_id')
+        completed = data.get('completed', False)
+
+        user = get_object_or_404(User, id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
+
+        user_lab_proxy, created = UserLabProxy.objects.get_or_create(
+            user=user, lab_proxy=lab_proxy, defaults={'completed': completed})
+
+        response = {
+            'user_lab_proxy_id': user_lab_proxy.id,
+            'completed': user_lab_proxy.completed,
+        }
+
+        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
+        return Response(response, status=http_status)

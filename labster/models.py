@@ -365,3 +365,14 @@ class UserProblem(models.Model):
     def save(self, *args, **kwargs):
         self.is_correct = self.answer.strip().lower() == self.problem.answer.strip().lower()
         return super(UserProblem, self).save(*args, **kwargs)
+
+
+class UserLabProxy(models.Model):
+    user = models.ForeignKey(User)
+    lab_proxy = models.ForeignKey(LabProxy)
+    completed = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'lab_proxy')

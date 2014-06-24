@@ -1,3 +1,4 @@
+from collections import defaultdict
 import binascii
 import os
 
@@ -373,6 +374,32 @@ class UserLabProxy(models.Model):
     completed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(default=timezone.now)
+
+    def get_user_score(self):
+        """
+        the way the score counted is:
+            each problem has score based on attempts,
+            then return the avg of all problems' score
+        """
+
+        score = 0.0
+
+        problems = Problem.objects.filter(quiz_block__lab_proxy=self.lab_proxy).distinct()
+        attempts = UserProblem.objects.filter(problem__in=problems)
+
+        # group attempts by problems
+        attempts_by_problem = defaultdict(list)
+        for attempt in attempts:
+            attempts_by_problem[attempt.problem_id].append(attempt)
+
+        scores = []
+        for problem_id, attempts in attempts_by_problem.items():
+            problem_score = 1.0 / float(len(attempts))
+            scores.append(problem_score)
+
+        if len(scores):
+            score = float(sum(scores)) / float(len(scores))
+        return score
 
     class Meta:
         unique_together = ('user', 'lab_proxy')

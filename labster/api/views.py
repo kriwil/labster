@@ -85,14 +85,13 @@ class CreateUserProblem(APIView):
         problem = get_object_or_404(Problem, id=problem_id)
 
         user_problem = UserProblem.objects.create(problem=problem, user=user, answer=answer)
-        attempts = UserProblem.objects.filter(problem=problem, user=user)
-        total = attempts.count()
-        correct = attempts.filter(is_correct=True).count()
-        score = float(correct) / float(total)
+        user_lab_proxy, created = UserLabProxy.objects.get_or_create(
+            user=user, lab_proxy=problem.quiz_block.lab_proxy)
+
+        score = user_lab_proxy.get_user_score()
 
         response = {
             'is_correct': user_problem.is_correct,
-            'attempts': total,
             'score': score,
         }
         return Response(response, status=status.HTTP_201_CREATED)
@@ -123,6 +122,9 @@ class CreateUserLabProxy(APIView):
 
         user_lab_proxy, created = UserLabProxy.objects.get_or_create(
             user=user, lab_proxy=lab_proxy, defaults={'completed': completed})
+        if not user_lab_proxy.completed:
+            user_lab_proxy.completed = True
+            user_lab_proxy.save()
 
         response = {
             'user_lab_proxy_id': user_lab_proxy.id,

@@ -100,6 +100,17 @@ class CreateUserProblem(APIView):
 
 class CreateUserLabProxy(APIView):
 
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = request.GET.get('lab_proxy_id')
+
+        user_lab_proxy = get_object_or_404(UserLabProxy, lab_proxy_id=lab_proxy_id, user_id=user_id)
+        response = {
+            'id': user_lab_proxy.id,
+            'completed': user_lab_proxy.completed,
+        }
+        return Response(response)
+
     def post(self, request, *args, **kwargs):
         data = request.DATA
 

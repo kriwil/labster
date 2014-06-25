@@ -139,6 +139,10 @@ class LabProxy(models.Model):
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)
 
+    @property
+    def studio_detail_url(self):
+        return "/labster/lab-proxies/{}/".format(self.id)
+
 
 class UserSave(models.Model):
     """

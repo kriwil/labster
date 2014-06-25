@@ -28,6 +28,18 @@ def lab_detail(request, id):
     return render_to_response(template_name, context)
 
 
+def lab_proxy_detail(request, id):
+    template_name = "labster/lab_detail.html"
+    lab_proxy = get_object_or_404(LabProxy, id=id)
+    quiz_blocks = QuizBlock.objects.filter(lab_proxy_id=id)
+
+    context = {
+        'lab': lab_proxy.lab,
+        'quiz_blocks': quiz_blocks,
+    }
+    return render_to_response(template_name, context)
+
+
 def create_quiz_block(request, lab_id):
     template_name = "labster/create_quiz_block.html"
     lab = get_object_or_404(Lab, id=lab_id)

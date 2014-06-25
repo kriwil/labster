@@ -73,7 +73,7 @@ class LabAdmin(BaseAdmin):
 
 
 admin.site.register(LanguageLab)
-# admin.site.register(LabProxy, LabProxyAdmin)
+admin.site.register(LabProxy)
 # admin.site.register(QuizBlockLab, BaseAdmin)
 # admin.site.register(ErrorInfo, ErrorInfoAdmin)
 # admin.site.register(DeviceInfo, DeviceInfoAdmin)

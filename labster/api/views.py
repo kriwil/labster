@@ -122,6 +122,7 @@ class CreateUserLabProxy(APIView):
 
         user_lab_proxy, created = UserLabProxy.objects.get_or_create(
             user=user, lab_proxy=lab_proxy, defaults={'completed': completed})
+
         if not user_lab_proxy.completed:
             user_lab_proxy.completed = True
             user_lab_proxy.save()

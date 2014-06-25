@@ -2,14 +2,16 @@ from edxmako.shortcuts import render_to_response
 from django.shortcuts import get_object_or_404, redirect
 
 from labster.cms.forms import QuizBlockForm, ProblemForm
-from labster.models import Lab, QuizBlock, Problem
+from labster.models import Lab, QuizBlock, Problem, LabProxy
 
 
 def lab_list(request):
     template_name = "labster/lab_list.html"
     labs = Lab.objects.all()
+    lab_proxies = LabProxy.objects.all()
     context = {
         'labs': labs,
+        'lab_proxies': lab_proxies,
     }
     return render_to_response(template_name, context)
 

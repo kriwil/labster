@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
-from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave
+from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
 
 
@@ -135,7 +135,7 @@ class CreateUserLabProxy(APIView):
         return Response(response, status=http_status)
 
 
-class CreateUserSaveProxy(APIView):
+class CreateUserSave(APIView):
 
     def get(self, request, *args, **kwargs):
         user_id = request.GET.get('user_id')
@@ -145,6 +145,7 @@ class CreateUserSaveProxy(APIView):
         response = {
             'id': user_save.id,
             'save_file': user_save.save_file,
+            'lab_proxy_id': user_save.lab_proxy.id,
         }
         return Response(response)
 
@@ -153,7 +154,7 @@ class CreateUserSaveProxy(APIView):
 
         user_id = data.get('user_id')
         lab_proxy_id = data.get('lab_proxy_id')
-        save_file = data.get('save_file')
+        save_file = request.FILES['save_file']
 
         user = get_object_or_404(User, id=user_id)
         lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
@@ -164,6 +165,56 @@ class CreateUserSaveProxy(APIView):
         response = {
             'user_lab_proxy_id': user_save.lab_proxy.id,
             'id': user_save.id,
+        }
+
+        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
+        return Response(response, status=http_status)
+
+
+class CreateErrorInfo(APIView):
+
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = request.GET.get('lab_proxy_id')
+
+        error_info = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
+        response = {
+            'id': error_info.id,
+            'user_lab_proxy_id': error_info.lab_proxy.id,
+            'save_file': error_info.save_file,
+            'browser': error_info.browser,
+            'os' : error_info.os,
+            'user_agent' : error_info.user_agent,
+            'message' : error_info.message,
+            'date_encountered' : error_info.date_encountered,
+        }
+        return Response(response)
+
+    def post(self, request, *args, **kwargs):
+        data = request.DATA
+
+        user_id = data.get('user_id')
+        lab_proxy_id = data.get('lab_proxy_id')
+        browser = request.GET.get('browser')
+        os = request.GET.get('os')
+        user_agent = request.GET.get('user_agent')
+        message = request.GET.get('message')
+
+        user = get_object_or_404(User, id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
+
+        error_info, created = UserSave.objects.get_or_create(
+            user=user, lab_proxy=lab_proxy, save_file=None)        
+
+        response = {
+            'id': error_info.id,
+            'user_lab_proxy_id': error_info.lab_proxy.id,
+            'save_file': error_info.save_file,
+            'browser': error_info.browser,
+            'os' : error_info.os,
+            'user_agent' : error_info.user_agent,
+            'message' : error_info.message,
+            'date_encountered' : error_info.date_encountered,
         }
 
         http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT

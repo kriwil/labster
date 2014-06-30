@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
-from labster.models import Lab, QuizBlock, Problem, LabProxy
+from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
 
 
@@ -129,6 +129,41 @@ class CreateUserLabProxy(APIView):
         response = {
             'user_lab_proxy_id': user_lab_proxy.id,
             'completed': user_lab_proxy.completed,
+        }
+
+        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
+        return Response(response, status=http_status)
+
+
+class CreateUserSaveProxy(APIView):
+
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get('user_id')
+        lab_proxy_id = request.GET.get('lab_proxy_id')
+
+        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
+        response = {
+            'id': user_save.id,
+            'save_file': user_save.save_file,
+        }
+        return Response(response)
+
+    def post(self, request, *args, **kwargs):
+        data = request.DATA
+
+        user_id = data.get('user_id')
+        lab_proxy_id = data.get('lab_proxy_id')
+        save_file = data.get('save_file')
+
+        user = get_object_or_404(User, id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
+
+        user_save, created = UserSave.objects.get_or_create(
+            user=user, lab_proxy=lab_proxy, save_file=save_file)        
+
+        response = {
+            'user_lab_proxy_id': user_save.lab_proxy.id,
+            'id': user_save.id,
         }
 
         http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT

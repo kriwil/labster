@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from labster.models import Problem, UserSave
+from labster.models import Problem, UserSave, ErrorInfo
 
 
 class LabSerializer(serializers.Serializer):
@@ -45,4 +45,11 @@ class UserSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSave
         fields = ('id', 'user', 'lab_proxy', 'save_file')        
+        
+
+class ErrorInfoSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ErrorInfo
+        fields = ('id', 'user', 'lab_proxy', 'browser', 'os', 'message', 'date_encountered')    
         

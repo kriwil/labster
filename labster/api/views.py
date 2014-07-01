@@ -2,15 +2,15 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 
-from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer
+from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
-from labster.models import create_lab_proxy, update_lab_proxy, create_user_save, UserProblem, UserLabProxy
+from labster.models import create_lab_proxy, update_lab_proxy, create_user_save, create_error_info, UserProblem, UserLabProxy
 
 
 class LabList(ListAPIView):
@@ -162,23 +162,7 @@ class CreateUserSave(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class CreateErrorInfo(APIView):
-
-    def get(self, request, *args, **kwargs):
-        user_id = request.GET.get('user_id')
-        lab_proxy_id = request.GET.get('lab_proxy_id')
-
-        error_info = get_object_or_404(ErrorInfo, lab_proxy_id=lab_proxy_id, user_id=user_id)
-        response = {
-            'id': error_info.id,
-            'user_lab_proxy_id': error_info.lab_proxy.id,
-            'browser': error_info.browser,
-            'os' : error_info.os,
-            'user_agent' : error_info.user_agent,
-            'message' : error_info.message,
-            'date_encountered' : error_info.date_encountered,
-        }
-        return Response(response)
+class CreateErrorInfo(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
@@ -193,22 +177,11 @@ class CreateErrorInfo(APIView):
         user = get_object_or_404(User, id=user_id)
         lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
 
-        error_info, created = ErrorInfo.objects.get_or_create(
-            user=user, lab_proxy=lab_proxy, browser=browser, os=os,
-            user_agent=user_agent, message=message)        
+        error_info = create_error_info(lab_proxy, user, browser, 
+            os, user_agent, message)        
 
-        response = {
-            'id': error_info.id,
-            'user_lab_proxy_id': error_info.lab_proxy.id,
-            'browser': error_info.browser,
-            'os' : error_info.os,
-            'user_agent' : error_info.user_agent,
-            'message' : error_info.message,
-            'date_encountered' : error_info.date_encountered,
-        }
-
-        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
-        return Response(response, status=http_status)
+        serializer = ErrorInfoSerializer(error_info)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CreateDeviceInfo(APIView):

@@ -191,6 +191,13 @@ class ErrorInfo(models.Model):
     date_encountered = models.DateTimeField(default=timezone.now)
 
 
+def create_error_info(lab_proxy, user, browser, os, user_agent, message):
+    error_info, created = ErrorInfo.objects.get_or_create(user=user, lab_proxy=lab_proxy, 
+        browser=browser, os=os, user_agent=user_agent, message=message)
+
+    return error_info
+
+
 class DeviceInfo(models.Model):
     user = models.ForeignKey(User)
     labProxy = models.ForeignKey(LabProxy)

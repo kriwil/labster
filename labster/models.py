@@ -170,6 +170,11 @@ def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
 
 
+def create_user_save(lab_proxy, user, save_file):
+    user_save, created = UserSave.objects.get_or_create(user=user, lab_proxy=lab_proxy, save_file=save_file)
+
+    return user_save
+
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
 pre_save.connect(update_modified_at, sender=LabProxy)

@@ -6,10 +6,11 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import JSONParser
 
-from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
+from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
-from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
+from labster.models import create_lab_proxy, update_lab_proxy, create_user_save, UserProblem, UserLabProxy
 
 
 class LabList(ListAPIView):
@@ -142,12 +143,8 @@ class CreateUserSave(APIView):
         lab_proxy_id = request.GET.get('lab_proxy_id')
 
         user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
-        response = {
-            'id': user_save.id,
-            'save_file': user_save.save_file,
-            'lab_proxy_id': user_save.lab_proxy.id,
-        }
-        return Response(response)
+        serializer = UserSaveSerializer(user_save)
+        return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
@@ -159,16 +156,10 @@ class CreateUserSave(APIView):
         user = get_object_or_404(User, id=user_id)
         lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
 
-        user_save, created = UserSave.objects.get_or_create(
-            user=user, lab_proxy=lab_proxy, save_file=save_file)        
+        user_save = create_user_save(lab_proxy, user, save_file)
 
-        response = {
-            'user_lab_proxy_id': user_save.lab_proxy.id,
-            'id': user_save.id,
-        }
-
-        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
-        return Response(response, status=http_status)
+        serializer = UserSaveSerializer(user_save)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CreateErrorInfo(APIView):

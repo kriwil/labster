@@ -219,6 +219,15 @@ class DeviceInfo(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
 
+def create_device_info(lab_proxy, user, device_id, frame_rate, type, os, ram, processor, cores, gpu, memory, fill_rate, shader_level, quality, misc):
+    error_info, created = DeviceInfo.objects.get_or_create(user=user, labProxy=lab_proxy, 
+        device_id=device_id, frame_rate=frame_rate, type=type, os=os, ram=ram, 
+        processor=processor, cores=cores, gpu=gpu, memory=memory, fill_rate=fill_rate, 
+        shader_level=shader_level, quality=quality, misc=misc)
+
+    return error_info
+
+
 class QuizBlock(models.Model):
     lab = models.ForeignKey(Lab)
     lab_proxy = models.ForeignKey(LabProxy, blank=True, null=True)

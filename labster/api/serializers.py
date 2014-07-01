@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from labster.models import Problem, UserSave, ErrorInfo
+from labster.models import Problem, UserSave, ErrorInfo, DeviceInfo
 
 
 class LabSerializer(serializers.Serializer):
@@ -52,4 +52,14 @@ class ErrorInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ErrorInfo
         fields = ('id', 'user', 'lab_proxy', 'browser', 'os', 'message', 'date_encountered')    
+
+
+class DeviceInfoSerializer(serializers.ModelSerializer):    
+        
+    class Meta:
+        model = DeviceInfo
+        fields = ('id', 'user', 'labProxy', 'device_id', 'frame_rate', 'type', 'os',
+                    'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
+                    'shader_level', 'quality', 'misc', 'created_at')
+    
         

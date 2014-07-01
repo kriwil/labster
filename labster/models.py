@@ -170,11 +170,6 @@ def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
 
 
-def create_user_save(lab_proxy, user, save_file):
-    user_save, created = UserSave.objects.get_or_create(user=user, lab_proxy=lab_proxy, save_file=save_file)
-
-    return user_save
-
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=QuizBlockLab)
 pre_save.connect(update_modified_at, sender=LabProxy)
@@ -189,13 +184,6 @@ class ErrorInfo(models.Model):
     user_agent = models.CharField(default='', max_length=200)
     message = models.TextField(default='')
     date_encountered = models.DateTimeField(default=timezone.now)
-
-
-def create_error_info(lab_proxy, user, browser, os, user_agent, message):
-    error_info, created = ErrorInfo.objects.get_or_create(user=user, lab_proxy=lab_proxy, 
-        browser=browser, os=os, user_agent=user_agent, message=message)
-
-    return error_info
 
 
 class DeviceInfo(models.Model):

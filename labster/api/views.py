@@ -1,16 +1,16 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.parsers import JSONParser
 
-from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer
+from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
-from labster.models import create_lab_proxy, update_lab_proxy, create_user_save, create_error_info, UserProblem, UserLabProxy
+from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
 
 
 class LabList(ListAPIView):
@@ -136,8 +136,7 @@ class CreateUserLabProxy(APIView):
         return Response(response, status=http_status)
 
 
-class CreateUserSave(APIView):
-
+class CreateUserSave(ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         user_id = request.GET.get('user_id')
         lab_proxy_id = request.GET.get('lab_proxy_id')
@@ -151,113 +150,27 @@ class CreateUserSave(APIView):
 
         user_id = data.get('user_id')
         lab_proxy_id = data.get('lab_proxy_id')
-        save_file = request.FILES['save_file']
 
         user = get_object_or_404(User, id=user_id)
-        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)    
 
-        user_save = create_user_save(lab_proxy, user, save_file)
+        try:            
+            user_save = UserSave.objects.get(user=user, lab_proxy=lab_proxy)
+            serializer = UserSaveSerializer(instance=user_save, data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
+        except ObjectDoesNotExist:
+            serializer = UserSaveSerializer(data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)        
 
-        serializer = UserSaveSerializer(user_save)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
 class CreateErrorInfo(CreateAPIView):
-
-    def post(self, request, *args, **kwargs):
-        data = request.DATA
-
-        user_id = data.get('user_id')
-        lab_proxy_id = data.get('lab_proxy_id')
-        browser = data.get('browser')
-        os = data.get('os')
-        user_agent = data.get('user_agent')
-        message = data.get('message')
-
-        user = get_object_or_404(User, id=user_id)
-        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
-
-        error_info = create_error_info(lab_proxy, user, browser, 
-            os, user_agent, message)        
-
-        serializer = ErrorInfoSerializer(error_info)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    model = ErrorInfo
+    serializer_class = ErrorInfoSerializer
 
 
-class CreateDeviceInfo(APIView):
-
-    def get(self, request, *args, **kwargs):
-        user_id = request.GET.get('user_id')
-        labProxy_id = request.GET.get('lab_proxy_id')
-
-        device_info = get_object_or_404(DeviceInfo, labProxy_id=labProxy_id, user_id=user_id)
-        response = {
-            'id': device_info.id,
-            'user_lab_proxy_id': device_info.labProxy.id,
-            'device_id': device_info.device_id,
-            'frame_rate': device_info.frame_rate,
-            'os' : device_info.os,
-            'type' : device_info.type,
-            'ram' : device_info.ram,
-            'processor' : device_info.processor,
-            'cores' : device_info.cores,
-            'gpu' : device_info.gpu,
-            'memory' : device_info.memory,
-            'fill_rate' : device_info.fill_rate,
-            'shader_level' : device_info.shader_level,
-            'quality' : device_info.quality,
-            'misc' : device_info.misc,            
-            'created_at' : device_info.created_at,
-        }
-        return Response(response)
-
-    def post(self, request, *args, **kwargs):
-        data = request.DATA
-
-        user_id = data.get('user_id')
-        lab_proxy_id = data.get('lab_proxy_id')
-        device_id = data.get('device_id')
-        os = data.get('os')
-        frame_rate = data.get('frame_rate')
-        type = data.get('type')
-        ram = data.get('ram')
-        processor = data.get('processor')
-        cores = data.get('cores')
-        gpu = data.get('gpu')
-        memory = data.get('memory')
-        fill_rate = data.get('fill_rate')
-        shader_level = data.get('shader_level')
-        quality = data.get('quality')
-        misc = data.get('misc')
-
-        user = get_object_or_404(User, id=user_id)
-        labProxy = get_object_or_404(LabProxy, id=lab_proxy_id)
-
-        device_info, created = DeviceInfo.objects.get_or_create(
-            user=user, labProxy=labProxy, device_id=device_id,
-            os=os, frame_rate=frame_rate, type=type, ram=ram,
-            processor=processor, cores=cores, gpu=gpu, 
-            memory=memory, fill_rate=fill_rate, misc=misc,
-            shader_level=shader_level, quality=quality) 
-
-        response = {
-            'id': device_info.id,
-            'user_lab_proxy_id': device_info.labProxy.id,
-            'device_id': device_info.device_id,
-            'frame_rate': device_info.frame_rate,
-            'os' : device_info.os,
-            'type' : device_info.type,
-            'ram' : device_info.ram,
-            'processor' : device_info.processor,
-            'cores' : device_info.cores,
-            'gpu' : device_info.gpu,
-            'memory' : device_info.memory,
-            'fill_rate' : device_info.fill_rate,
-            'shader_level' : device_info.shader_level,
-            'quality' : device_info.quality,
-            'misc' : device_info.misc,            
-            'created_at' : device_info.created_at,
-        }
-
-        http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
-        return Response(response, status=http_status)
+class CreateDeviceInfo(CreateAPIView):
+    model = DeviceInfo
+    serializer_class = DeviceInfoSerializer

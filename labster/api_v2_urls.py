@@ -12,11 +12,11 @@ urlpatterns = patterns('',  # nopep8
     url('^labs/$', LabList.as_view(), name='lab-list'),
     url('^labs/(?P<pk>\d+)/$', LabDetail.as_view(), name='lab-detail'),
 
-    url('^quizblocks/$', QuizBlockList.as_view()),
-    url('^quizblocks/(?P<pk>\d+)/$', QuizBlockDetail.as_view()),
+    url('^quizblocks/$', QuizBlockList.as_view(), name='quiz-block-list'),
+    url('^quizblocks/(?P<pk>\d+)/$', QuizBlockDetail.as_view(), name='quiz-block-detail'),
 
-    url('^problems/$', ProblemList.as_view()),
-    url('^problems/(?P<pk>\d+)/$', ProblemDetail.as_view()),
+    url('^problems/$', ProblemList.as_view(), name='problem-list'),
+    url('^problems/(?P<pk>\d+)/$', ProblemDetail.as_view(), name='problem-detail'),
 
     url('^lab-proxies/$', LabProxyList.as_view()),
     url('^lab-proxies/(?P<pk>\d+)/$', LabProxyDetail.as_view()),

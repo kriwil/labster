@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from factory.django import DjangoModelFactory
 
-from labster.models import Lab, LabProxy, Token
+from labster.models import Lab, LabProxy, Token, QuizBlock, Problem
 
 
 class UserFactory(DjangoModelFactory):
@@ -14,6 +14,14 @@ class UserFactory(DjangoModelFactory):
 
 class LabFactory(DjangoModelFactory):
     FACTORY_FOR = Lab
+
+
+class QuizBlockFactory(DjangoModelFactory):
+    FACTORY_FOR = QuizBlock
+
+
+class ProblemFactory(DjangoModelFactory):
+    FACTORY_FOR = Problem
 
 
 class LabProxyFactory(DjangoModelFactory):

@@ -10,11 +10,7 @@ from rest_framework.views import APIView
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
-<<<<<<< HEAD
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
-=======
-from labster.models import create_lab_proxy, update_lab_proxy, create_user_save, create_error_info, create_device_info, UserProblem, UserLabProxy
->>>>>>> 562fe7d9eb0f539268c1193b66f053e374385c7b
 
 
 class LabList(ListAPIView):

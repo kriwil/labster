@@ -56,6 +56,9 @@ class LabProxyList(ListCreateAPIView):
         location_id = request.DATA.get('location_id')
         lab_proxy_id = request.DATA.get('lab_proxy')
 
+        if not all([lab_id, location_id]):
+            return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
         if lab_proxy_id:
             lab_proxy = update_lab_proxy(lab_proxy_id, lab_id)
         else:

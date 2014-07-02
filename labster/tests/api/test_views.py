@@ -8,8 +8,9 @@ from rest_framework.test import APIRequestFactory
 from labster.api.views import LabList, LabDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import ProblemList, ProblemDetail
-from labster.models import Lab, QuizBlock, Problem
-from labster.tests.factories import LabFactory, QuizBlockFactory, ProblemFactory
+from labster.api.views import LabProxyList, LabProxyDetail
+from labster.models import Lab, QuizBlock, Problem, LabProxy
+from labster.tests.factories import LabFactory, QuizBlockFactory, ProblemFactory, LabProxyFactory
 
 
 class LabListTest(unittest.TestCase):
@@ -213,3 +214,63 @@ class ProblemDetailTest(unittest.TestCase):
 
         self.assertFalse(
             Problem.objects.filter(id=self.problem.id).exists())
+
+
+class LabProxyListTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = LabProxyList.as_view()
+        self.factory = APIRequestFactory()
+        self.lab = LabFactory()
+        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.url = reverse('labster-api-v2:lab-proxy-list')
+
+    def test_get(self):
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        response.render()
+
+        # HTTP 200
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
+
+        problems = LabProxy.objects.all()
+        self.assertEqual(len(content), problems.count())
+
+    def test_post_invalid(self):
+        request = self.factory.post(self.url)
+        response = self.view(request)
+        response.render()
+
+        # HTTP 400
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_valid(self):
+        post_data = {
+            'lab': self.lab.id,
+            'location_id': "location_id",
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        # HTTP 201
+        self.assertEqual(response.status_code, 201)
+
+
+class LabProxyDetailTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = LabProxyDetail.as_view()
+        self.factory = APIRequestFactory()
+        self.lab = LabFactory()
+        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.url = reverse('labster-api-v2:lab-proxy-detail', kwargs={'pk': self.lab_proxy.id})
+
+    def test_get(self):
+        request = self.factory.get(self.url)
+        response = self.view(request, pk=self.lab_proxy.id)
+        response.render()
+
+        # HTTP 200
+        self.assertEqual(response.status_code, 200)

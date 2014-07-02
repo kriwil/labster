@@ -1,5 +1,6 @@
 import json
 import unittest
+import urllib
 
 from django.core.urlresolvers import reverse
 
@@ -9,10 +10,11 @@ from labster.api.views import LabList, LabDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import LabProxyList, LabProxyDetail
-from labster.api.views import CreateUserProblem
-from labster.models import Lab, QuizBlock, Problem, LabProxy, UserProblem
+from labster.api.views import CreateUserProblem, CreateUserLabProxy
+from labster.models import Lab, QuizBlock, Problem, LabProxy, UserProblem,\
+    UserLabProxy
 from labster.tests.factories import UserFactory, LabFactory, QuizBlockFactory,\
-    ProblemFactory, LabProxyFactory
+    ProblemFactory, LabProxyFactory, UserLabProxyFactory
 
 
 class LabListTest(unittest.TestCase):
@@ -310,3 +312,79 @@ class CreateUserProblemTest(unittest.TestCase):
 
         self.assertTrue(
             UserProblem.objects.filter(user=self.user, problem=self.problem).exists())
+
+
+class CreateUserLabProxyTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = CreateUserLabProxy.as_view()
+        self.factory = APIRequestFactory()
+        self.url = reverse('labster-api-v2:user-lab-proxy')
+        self.lab = LabFactory()
+        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.quiz_block = QuizBlockFactory(lab=self.lab, lab_proxy=self.lab_proxy)
+        self.problem = ProblemFactory(quiz_block=self.quiz_block)
+        self.user = UserFactory()
+
+    def test_get_not_found(self):
+        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
+        self.url = "{}?{}".format(
+            self.url, urllib.urlencode(url_params))
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_found(self):
+        UserLabProxyFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
+        self.url = "{}?{}".format(
+            self.url, urllib.urlencode(url_params))
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_invalid(self):
+        post_data = {}
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_created(self):
+        post_data = {
+            'user': self.user.id,
+            'lab_proxy': self.lab_proxy.id,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserLabProxy.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_exists(self):
+        UserLabProxyFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'user': self.user.id,
+            'lab_proxy': self.lab_proxy.id,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 204)
+
+        self.assertTrue(
+            UserLabProxy.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+        self.assertEqual(
+            UserLabProxy.objects.filter(user=self.user, lab_proxy=self.lab_proxy).count(), 1)

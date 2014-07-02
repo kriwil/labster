@@ -52,9 +52,9 @@ class LabProxyList(ListCreateAPIView):
     serializer_class = LabProxySerializer
 
     def create(self, request, *args, **kwargs):
-        lab_id = request.DATA.get('lab_id')
+        lab_id = request.DATA.get('lab')
         location_id = request.DATA.get('location_id')
-        lab_proxy_id = request.DATA.get('lab_proxy_id')
+        lab_proxy_id = request.DATA.get('lab_proxy')
 
         if lab_proxy_id:
             lab_proxy = update_lab_proxy(lab_proxy_id, lab_id)
@@ -76,8 +76,8 @@ class CreateUserProblem(APIView):
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
-        user_id = data.get('user_id')
-        problem_id = data.get('problem_id')
+        user_id = data.get('user')
+        problem_id = data.get('problem')
         answer = data.get('answer', "").strip()
 
         # user = User.objects.get(email='staff@example.com')
@@ -100,8 +100,8 @@ class CreateUserProblem(APIView):
 class CreateUserLabProxy(APIView):
 
     def get(self, request, *args, **kwargs):
-        user_id = request.GET.get('user_id')
-        lab_proxy_id = request.GET.get('lab_proxy_id')
+        user_id = request.GET.get('user')
+        lab_proxy_id = request.GET.get('lab_proxy')
 
         user_lab_proxy = get_object_or_404(UserLabProxy, lab_proxy_id=lab_proxy_id, user_id=user_id)
         response = {
@@ -113,8 +113,8 @@ class CreateUserLabProxy(APIView):
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
-        user_id = data.get('user_id')
-        lab_proxy_id = data.get('lab_proxy_id')
+        user_id = data.get('user')
+        lab_proxy_id = data.get('lab_proxy')
         completed = data.get('completed', False)
 
         user = get_object_or_404(User, id=user_id)
@@ -128,7 +128,7 @@ class CreateUserLabProxy(APIView):
             user_lab_proxy.save()
 
         response = {
-            'user_lab_proxy_id': user_lab_proxy.id,
+            'user_lab_proxy': user_lab_proxy.id,
             'completed': user_lab_proxy.completed,
         }
 

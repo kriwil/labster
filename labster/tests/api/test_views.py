@@ -9,8 +9,10 @@ from labster.api.views import LabList, LabDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import LabProxyList, LabProxyDetail
-from labster.models import Lab, QuizBlock, Problem, LabProxy
-from labster.tests.factories import LabFactory, QuizBlockFactory, ProblemFactory, LabProxyFactory
+from labster.api.views import CreateUserProblem
+from labster.models import Lab, QuizBlock, Problem, LabProxy, UserProblem
+from labster.tests.factories import UserFactory, LabFactory, QuizBlockFactory,\
+    ProblemFactory, LabProxyFactory
 
 
 class LabListTest(unittest.TestCase):
@@ -274,3 +276,37 @@ class LabProxyDetailTest(unittest.TestCase):
 
         # HTTP 200
         self.assertEqual(response.status_code, 200)
+
+
+class CreateUserProblemTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = CreateUserProblem.as_view()
+        self.factory = APIRequestFactory()
+        self.url = reverse('labster-api-v2:user-problem')
+        self.lab = LabFactory()
+        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.quiz_block = QuizBlockFactory(lab=self.lab, lab_proxy=self.lab_proxy)
+        self.problem = ProblemFactory(quiz_block=self.quiz_block)
+        self.user = UserFactory()
+
+    def test_get(self):
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_post(self):
+        post_data = {
+            'user': self.user.id,
+            'problem': self.problem.id,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserProblem.objects.filter(user=self.user, problem=self.problem).exists())

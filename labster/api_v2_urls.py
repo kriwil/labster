@@ -21,6 +21,6 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxies/$', LabProxyList.as_view(), name='lab-proxy-list'),
     url('^lab-proxies/(?P<pk>\d+)/$', LabProxyDetail.as_view(), name='lab-proxy-detail'),
 
-    url('^user-problem/$', CreateUserProblem.as_view()),
-    url('^user-lab-proxy/$', CreateUserLabProxy.as_view()),
+    url('^user-problem/$', CreateUserProblem.as_view(), name='user-problem'),
+    url('^user-lab-proxy/$', CreateUserLabProxy.as_view(), name='user-lab-proxy'),
 )

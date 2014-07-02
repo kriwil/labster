@@ -9,7 +9,7 @@ from labster.api.views import CreateUserProblem, CreateUserLabProxy
 
 urlpatterns = patterns('',  # nopep8
 
-    url('^labs/$', LabList.as_view()),
+    url('^labs/$', LabList.as_view(), name='lab-list'),
     url('^labs/(?P<pk>\d+)/$', LabDetail.as_view()),
 
     url('^quizblocks/$', QuizBlockList.as_view()),

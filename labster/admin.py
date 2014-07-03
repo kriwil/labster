@@ -33,7 +33,7 @@ class ErrorInfoAdmin(admin.ModelAdmin):
 
 
 class DeviceInfoAdmin(admin.ModelAdmin):
-    list_display = ('user', 'lab', 'device_id', 'frame_rate', 'type', 'os',
+    list_display = ('user', 'lab', 'device_id', 'frame_rate', 'machine_type', 'os',
                     'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
                     'shader_level', 'quality', 'misc')
 
@@ -73,10 +73,10 @@ class LabAdmin(BaseAdmin):
 
 
 admin.site.register(LanguageLab)
-# admin.site.register(LabProxy, LabProxyAdmin)
+admin.site.register(LabProxy, LabProxyAdmin)
 # admin.site.register(QuizBlockLab, BaseAdmin)
 # admin.site.register(ErrorInfo, ErrorInfoAdmin)
-# admin.site.register(DeviceInfo, DeviceInfoAdmin)
+admin.site.register(DeviceInfo, DeviceInfoAdmin)
 # admin.site.register(UserSave, UserSaveAdmin)
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Problem, ProblemAdmin)

@@ -59,7 +59,7 @@ class DeviceInfoForm(forms.ModelForm):
 
     class Meta:
         model = DeviceInfo
-        fields = ('device_id', 'frame_rate', 'type', 'os', 'ram', 'processor',
+        fields = ('device_id', 'frame_rate', 'machine_type', 'os', 'ram', 'processor',
                   'cores', 'gpu', 'memory', 'fill_rate', 'shader_level',
                   'quality', 'misc')
 

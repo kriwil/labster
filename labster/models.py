@@ -188,10 +188,10 @@ class ErrorInfo(models.Model):
 
 class DeviceInfo(models.Model):
     user = models.ForeignKey(User)
-    labProxy = models.ForeignKey(LabProxy)
+    lab_proxy = models.ForeignKey(LabProxy)
     device_id = models.CharField(default='', max_length=128)
     frame_rate = models.CharField(default='', max_length=128)
-    type = models.CharField(default='', max_length=128)
+    machine_type = models.CharField(default='', max_length=128)
     os = models.CharField(default='', max_length=32)
     ram = models.CharField(default='', max_length=32)
     processor = models.CharField(default='', max_length=128)
@@ -205,15 +205,6 @@ class DeviceInfo(models.Model):
     misc = models.TextField(default='')
 
     created_at = models.DateTimeField(default=timezone.now)
-
-
-def create_device_info(lab_proxy, user, device_id, frame_rate, type, os, ram, processor, cores, gpu, memory, fill_rate, shader_level, quality, misc):
-    error_info, created = DeviceInfo.objects.get_or_create(user=user, labProxy=lab_proxy, 
-        device_id=device_id, frame_rate=frame_rate, type=type, os=os, ram=ram, 
-        processor=processor, cores=cores, gpu=gpu, memory=memory, fill_rate=fill_rate, 
-        shader_level=shader_level, quality=quality, misc=misc)
-
-    return error_info
 
 
 class QuizBlock(models.Model):

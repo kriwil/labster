@@ -58,7 +58,7 @@ class DeviceInfoSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = DeviceInfo
-        fields = ('id', 'user', 'labProxy', 'device_id', 'frame_rate', 'type', 'os',
+        fields = ('id', 'user', 'lab_proxy', 'device_id', 'frame_rate', 'machine_type', 'os',
                     'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
                     'shader_level', 'quality', 'misc', 'created_at')
     

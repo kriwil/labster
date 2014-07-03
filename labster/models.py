@@ -126,7 +126,8 @@ class QuizBlockLab(models.Model):
 class LabProxy(models.Model):
 
     lab = models.ForeignKey(Lab)
-    location_id = models.CharField(max_length=100)
+    location_id = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
@@ -137,6 +138,10 @@ class LabProxy(models.Model):
 
     def __unicode__(self):
         return "Proxy for {}".format(self.lab.name)
+
+    @property
+    def studio_detail_url(self):
+        return "/labster/lab-proxies/{}/".format(self.id)
 
 
 class UserSave(models.Model):

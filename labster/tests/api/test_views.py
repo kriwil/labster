@@ -10,11 +10,13 @@ from labster.api.views import LabList, LabDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import LabProxyList, LabProxyDetail
-from labster.api.views import CreateUserProblem, CreateUserLabProxy, CreateErrorInfo
+from labster.api.views import CreateUserProblem, CreateUserLabProxy, \
+    CreateErrorInfo, CreateDeviceInfo
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserProblem,\
-    UserLabProxy, ErrorInfo
+    UserLabProxy, ErrorInfo, DeviceInfo
 from labster.tests.factories import UserFactory, LabFactory, QuizBlockFactory,\
-    ProblemFactory, LabProxyFactory, UserLabProxyFactory, ErrorInfoFactory
+    ProblemFactory, LabProxyFactory, UserLabProxyFactory, ErrorInfoFactory, \
+    DeviceInfoFactory
 
 
 class LabListTest(unittest.TestCase):
@@ -440,4 +442,66 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
 
         self.assertTrue(
-            UserLabProxy.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+            ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+
+class CreateDeviceInfoTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = CreateDeviceInfo.as_view()
+        self.factory = APIRequestFactory()
+        self.url = reverse('labster-api-v2:device-info')
+        self.lab = LabFactory()
+        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.user = UserFactory()
+
+    def test_get_not_allowed(self):
+        # get method is not allowed in ErrorInfoFactory
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
+        self.url = "{}?{}".format(
+            self.url, urllib.urlencode(url_params))
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_post_invalid(self):
+        post_data = {}
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        # all required fields are empty so it returns 400
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_created(self):
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'user': self.user.id,
+            'lab_proxy': self.lab_proxy.id,
+            'device_id': 'this is devicei id',
+            'os': 'Windows',
+            'machine_type': 'Intel',
+            'ram': '1GB',
+            'processor': 'intel dual core',
+            'cores': 'quad core',
+            'gpu': 'NVidia',
+            'memory': '64GB',
+            'fill_rate': '45',
+            'shader_level': 'top',
+            'quality': 'best',
+            'misc': 'this is misc',
+            'frame_rate': '60FPS',
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())

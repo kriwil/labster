@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from factory.django import DjangoModelFactory
 
 from labster.models import Lab, LabProxy, Token, QuizBlock, Problem, \
-    UserLabProxy, ErrorInfo, DeviceInfo
+    UserLabProxy, ErrorInfo, DeviceInfo, UserSave
 
 
 class UserFactory(DjangoModelFactory):
@@ -43,3 +43,7 @@ class ErrorInfoFactory(DjangoModelFactory):
 
 class DeviceInfoFactory(DjangoModelFactory):
     FACTORY_FOR = DeviceInfo
+
+
+class UserSaveFactory(DjangoModelFactory):
+    FACTORY_FOR = UserSave

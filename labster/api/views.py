@@ -142,8 +142,8 @@ class CreateUserLabProxy(APIView):
 
 class CreateUserSave(ListCreateAPIView):
     def get(self, request, *args, **kwargs):
-        user_id = request.GET.get('user_id')
-        lab_proxy_id = request.GET.get('lab_proxy_id')
+        user_id = request.GET.get('user')
+        lab_proxy_id = request.GET.get('lab_proxy')
 
         user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
         serializer = UserSaveSerializer(user_save)
@@ -152,8 +152,8 @@ class CreateUserSave(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
-        user_id = data.get('user_id')
-        lab_proxy_id = data.get('lab_proxy_id')
+        user_id = data.get('user')
+        lab_proxy_id = data.get('lab_proxy')
 
         user = get_object_or_404(User, id=user_id)
         lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)    

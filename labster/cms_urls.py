@@ -2,6 +2,9 @@ from django.conf.urls import patterns, include, url  # noqa
 
 
 urlpatterns = patterns('labster.cms.views',  # nopep8
+    url('^master/$', 'master', name='labster_master'),
+    url('^duplicate-lab/$', 'duplicate_lab', name='labster_duplicate_lab'),
+
     url('^labs/$', 'lab_list'),
     url('^labs/(?P<id>\d+)/$', 'lab_detail'),
     url('^labs/(?P<lab_id>\d+)/create-quiz-block/$', 'create_quiz_block', name='labster_create_quiz_block'),

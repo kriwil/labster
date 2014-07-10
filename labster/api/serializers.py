@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from labster.models import Problem
+from labster.models import Problem, UserSave, ErrorInfo, DeviceInfo
 
 
 class LabSerializer(serializers.Serializer):
@@ -38,3 +38,28 @@ class ProblemSerializer(serializers.ModelSerializer):
         model = Problem
         fields = ('id', 'content_markdown', 'content_xml', 'content_html', 'quiz_block')
         write_only_fields = ('content_markdown',)
+
+
+class UserSaveSerializer(serializers.ModelSerializer):        
+
+    class Meta:
+        model = UserSave
+        fields = ('id', 'user', 'lab_proxy', 'save_file')        
+        
+
+class ErrorInfoSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ErrorInfo
+        fields = ('id', 'user', 'lab_proxy', 'browser', 'os', 'message', 'date_encountered')    
+
+
+class DeviceInfoSerializer(serializers.ModelSerializer):    
+        
+    class Meta:
+        model = DeviceInfo
+        fields = ('id', 'user', 'lab_proxy', 'device_id', 'frame_rate', 'machine_type', 'os',
+                    'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
+                    'shader_level', 'quality', 'misc', 'created_at')
+    
+        

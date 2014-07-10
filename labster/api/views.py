@@ -1,14 +1,15 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework import status
-from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer
-from labster.models import Lab, QuizBlock, Problem, LabProxy
+from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
+from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
 
 
@@ -137,3 +138,43 @@ class CreateUserLabProxy(APIView):
 
         http_status = status.HTTP_201_CREATED if created else status.HTTP_204_NO_CONTENT
         return Response(response, status=http_status)
+
+
+class CreateUserSave(ListCreateAPIView):
+    def get(self, request, *args, **kwargs):
+        user_id = request.GET.get('user')
+        lab_proxy_id = request.GET.get('lab_proxy')
+
+        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
+        serializer = UserSaveSerializer(user_save)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        data = request.DATA
+
+        user_id = data.get('user')
+        lab_proxy_id = data.get('lab_proxy')
+
+        user = get_object_or_404(User, id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)    
+
+        try:            
+            user_save = UserSave.objects.get(user=user, lab_proxy=lab_proxy)
+            serializer = UserSaveSerializer(instance=user_save, data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
+        except ObjectDoesNotExist:
+            serializer = UserSaveSerializer(data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)        
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class CreateErrorInfo(CreateAPIView):
+    model = ErrorInfo
+    serializer_class = ErrorInfoSerializer
+
+
+class CreateDeviceInfo(CreateAPIView):
+    model = DeviceInfo
+    serializer_class = DeviceInfoSerializer

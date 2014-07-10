@@ -193,10 +193,10 @@ class ErrorInfo(models.Model):
 
 class DeviceInfo(models.Model):
     user = models.ForeignKey(User)
-    labProxy = models.ForeignKey(LabProxy)
+    lab_proxy = models.ForeignKey(LabProxy)
     device_id = models.CharField(default='', max_length=128)
     frame_rate = models.CharField(default='', max_length=128)
-    type = models.CharField(default='', max_length=128)
+    machine_type = models.CharField(default='', max_length=128)
     os = models.CharField(default='', max_length=32)
     ram = models.CharField(default='', max_length=32)
     processor = models.CharField(default='', max_length=128)

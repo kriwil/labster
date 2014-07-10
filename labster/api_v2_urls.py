@@ -5,6 +5,7 @@ from labster.api.views import LabProxyList, LabProxyDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import CreateUserProblem, CreateUserLabProxy
+from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
 
 
 urlpatterns = patterns('',  # nopep8
@@ -21,6 +22,11 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxies/$', LabProxyList.as_view(), name='lab-proxy-list'),
     url('^lab-proxies/(?P<pk>\d+)/$', LabProxyDetail.as_view(), name='lab-proxy-detail'),
 
+    url('^user-save/$', CreateUserSave.as_view(), name='user-save'),   
+    url('^error-info/$', CreateErrorInfo.as_view(), name='error-info'),
+    url('^device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
+
     url('^user-problem/$', CreateUserProblem.as_view(), name='user-problem'),
     url('^user-lab-proxy/$', CreateUserLabProxy.as_view(), name='user-lab-proxy'),
+
 )

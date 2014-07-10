@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from labster.models import LanguageLab, Lab, QuizBlockLab, LabProxy,\
     ErrorInfo, DeviceInfo, UserSave, Token, QuizBlock, Problem
-from labster.forms import LabAdminForm
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -68,7 +67,6 @@ class QuizBlockInlineAdmin(admin.TabularInline):
 class LabAdmin(BaseAdmin):
     list_display = ('name', 'description', 'url', 'wiki_url', 'engine_xml', 'screenshot')
     filter_horizontal = ('languages',)
-    form = LabAdminForm
     inlines = (QuizBlockInlineAdmin,)
 
 

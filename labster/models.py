@@ -408,3 +408,9 @@ class UserLabProxy(models.Model):
 
     class Meta:
         unique_together = ('user', 'lab_proxy')
+
+
+def fetch_labs_as_json():
+    labs = Lab.objects.order_by('name')
+    labs_json = [lab.to_json() for lab in labs]
+    return labs_json

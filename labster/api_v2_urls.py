@@ -22,7 +22,7 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxies/$', LabProxyList.as_view(), name='lab-proxy-list'),
     url('^lab-proxies/(?P<pk>\d+)/$', LabProxyDetail.as_view(), name='lab-proxy-detail'),
 
-    url('^user-save/$', CreateUserSave.as_view(), name='user-save'),   
+    url('^user-save/$', CreateUserSave.as_view(), name='user-save'),
     url('^error-info/$', CreateErrorInfo.as_view(), name='error-info'),
     url('^device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
 

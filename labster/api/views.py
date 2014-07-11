@@ -156,13 +156,13 @@ class CreateUserSave(ListCreateAPIView):
         lab_proxy_id = data.get('lab_proxy')
 
         user = get_object_or_404(User, id=user_id)
-        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)    
+        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
 
-        try:            
+        try:
             user_save = UserSave.objects.get(user=user, lab_proxy=lab_proxy)
             serializer = UserSaveSerializer(instance=user_save, data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
         except ObjectDoesNotExist:
-            serializer = UserSaveSerializer(data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)        
+            serializer = UserSaveSerializer(data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
 
         if serializer.is_valid():
             serializer.save()

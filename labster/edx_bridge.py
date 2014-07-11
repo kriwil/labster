@@ -38,27 +38,15 @@ def duplicate_lab_content(user, source_location, parent_location):
     source_store = get_modulestore(source_locator)
     source_item = source_store.get_item(source_locator)
 
-    # delete parent's children first
     parent_store = get_modulestore(parent_locator)
     parent_item = parent_store.get_item(parent_locator)
 
+    # delete parent's children first
     for child in parent_item.get_children():
         store = get_modulestore(child.location)
         item = store.get_item(child.location)
         _xmodule_recurse(item, lambda i: store.delete_item(i.location, delete_all_versions=True))
 
-    def _publish(block):
-        # This is super gross, but prevents us from publishing something that
-        # we shouldn't. Ideally, all modulestores would have a consistant
-        # interface for publishing. However, as of now, only the DraftMongoModulestore
-        # does, so we have to check for the attribute explicitly.
-        store = get_modulestore(block.location)
-        store.publish(block.location, user.id)
-
+    # duplicate quiz_blocks
     for quiz_block in source_item.get_children():
-        duplicated = _duplicate_item(parent_locator, quiz_block.location, quiz_block.display_name, user)
-        item = source_store.get_item(duplicated)
-        _xmodule_recurse(
-            item,
-            _publish
-        )
+        _duplicate_item(parent_locator, quiz_block.location, quiz_block.display_name, user)

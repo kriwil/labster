@@ -9,18 +9,6 @@ from labster.edx_bridge import duplicate_lab_content
 from labster.models import Lab, QuizBlock, Problem, LabProxy
 
 
-def master(request):
-    user = User.objects.prefetch_related("groups").get(id=request.user.id)
-    request.user = user  # keep just one instance of User
-    # get_master_quiz_blocks()
-
-    parent = "location:LabsterX+LAB101+2014_LAB+sequential+32d23ce6ea7c421d9d6159f94a8376c4"  # Racheal Fuller
-    source = "location:LabsterX+LAB101+2014_LAB+sequential+cfa417d79fab4e8a88a4f646988241ea"  # Flossie Wolf
-
-    duplicate_lab_content(request.user, source, parent)
-    return HttpResponse('ok')
-
-
 def duplicate_lab(request):
     # FIXME use 405 instead
     if request.method != 'POST':

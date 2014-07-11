@@ -1,6 +1,4 @@
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse, Http404
 
 from edxmako.shortcuts import render_to_response
 
@@ -10,14 +8,16 @@ from labster.models import Lab, QuizBlock, Problem, LabProxy
 
 
 def duplicate_lab(request):
-    # FIXME use 405 instead
-    if request.method != 'POST':
-        raise Http404
+    redirect_url = request.POST.get('redirect_url')
 
-    # FIXME validate the content
+    if request.method != 'POST':
+        return redirect(redirect_url)
+
     parent_locator = request.POST.get('parent_locator')
     source_locator = request.POST.get('source_locator')
-    redirect_url = request.POST.get('redirect_url')
+
+    if not all([parent_locator, source_locator, redirect_url]):
+        return redirect(redirect_url)
 
     duplicate_lab_content(request.user, source_locator, parent_locator)
     return redirect(redirect_url)

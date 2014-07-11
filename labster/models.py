@@ -63,6 +63,7 @@ class Lab(models.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'template_location': '',
         }
 
     @property

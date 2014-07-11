@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from contentstore.utils import get_modulestore
 from contentstore.views.helpers import _xmodule_recurse
 from contentstore.views.item import _duplicate_item
@@ -13,15 +11,19 @@ def get_master_quiz_blocks():
     course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
     course = get_course_by_id(course_key)
 
-    quiz_blocks_by_lab = defaultdict(list)
+    quiz_blocks_by_lab = {}
 
     for section in course.get_children():
         for lab in section.get_children():  # sub section
             for quiz_blocks in lab.get_children():  # unit
-                quiz_blocks_by_lab[lab.display_name.upper()].append({
-                    'lab': lab,
-                    'quiz_blocks': quiz_blocks,
-                })
+                lab_name = lab.display_name.upper()
+                if lab_name not in quiz_blocks_by_lab:
+                    quiz_blocks_by_lab[lab_name] = {
+                        'lab': lab,
+                        'quiz_blocks': [quiz_blocks],
+                    }
+                else:
+                    quiz_blocks_by_lab[lab_name]['quiz_blocks'].append(quiz_blocks)
 
     return quiz_blocks_by_lab
 

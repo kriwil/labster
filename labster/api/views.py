@@ -89,32 +89,6 @@ class LabProxyDetail(RetrieveAPIView):
     serializer_class = LabProxySerializer
 
 
-class CreateUserProblem(APIView):
-
-    def post(self, request, *args, **kwargs):
-        data = request.DATA
-
-        user_id = data.get('user')
-        problem_id = data.get('problem')
-        answer = data.get('answer', "").strip()
-
-        # user = User.objects.get(email='staff@example.com')
-        user = get_object_or_404(User, id=user_id)
-        problem = get_object_or_404(Problem, id=problem_id)
-
-        user_problem = UserProblem.objects.create(problem=problem, user=user, answer=answer)
-        user_lab_proxy, created = UserLabProxy.objects.get_or_create(
-            user=user, lab_proxy=problem.quiz_block.lab_proxy)
-
-        score = user_lab_proxy.get_user_score()
-
-        response = {
-            'is_correct': user_problem.is_correct,
-            'score': score,
-        }
-        return Response(response, status=status.HTTP_201_CREATED)
-
-
 class CreateUserLabProxy(APIView):
 
     def get(self, request, *args, **kwargs):

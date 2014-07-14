@@ -4,7 +4,7 @@ from labster.api.views import LabList, LabDetail
 from labster.api.views import LabProxyList, LabProxyDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
-from labster.api.views import CreateUserProblem, CreateUserLabProxy
+from labster.api.views import CreateUserLabProxy
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
 from labster.api.views import CourseLab, AnswerProblem
 
@@ -30,7 +30,5 @@ urlpatterns = patterns('',  # nopep8
     url('^error-info/$', CreateErrorInfo.as_view(), name='error-info'),
     url('^device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
 
-    url('^user-problem/$', CreateUserProblem.as_view(), name='user-problem'),
     url('^user-lab-proxy/$', CreateUserLabProxy.as_view(), name='user-lab-proxy'),
-
 )

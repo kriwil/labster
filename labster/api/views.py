@@ -184,7 +184,6 @@ class CreateDeviceInfo(CreateAPIView):
 
 
 def get_lab_by_location(location):
-    location = "location:{}".format(location)
     locator = UsageKey.from_string(location)
     descriptor = modulestore().get_item(locator)
     lab_id = descriptor.lab_id

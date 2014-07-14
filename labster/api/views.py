@@ -1,6 +1,9 @@
+import json
+
 from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import QueryDict
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, ListCreateAPIView
@@ -8,12 +11,20 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from courseware.module_render import _invoke_xblock_handler
 from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
+
+
+def invoke_xblock_handler(*args, **kwargs):
+    """
+    Wrapper so it could be mocked
+    """
+    return _invoke_xblock_handler(*args, **kwargs)
 
 
 class LabList(ListAPIView):
@@ -227,3 +238,46 @@ class CourseLab(APIView):
         if location:
             response_data = get_lab_by_location(location)
         return Response(response_data)
+
+
+class AnswerProblem(APIView):
+    def post(self, request, *args, **kwargs):
+        response_data = {}
+
+        location = kwargs.get('location')
+        locator = UsageKey.from_string(location)
+        problem_id = request.DATA.get('problem')
+        answer = request.DATA.get('answer')
+        problem_locator = UsageKey.from_string(problem_id)
+
+        course_id = locator.course_key.to_deprecated_string()
+        usage_id = problem_locator.to_deprecated_string()
+        usage_id = usage_id.replace('/', ';_')
+        handler = 'xmodule_handler'
+        suffix = 'problem_check'
+        user = request.user
+
+        request.POST = request.POST.copy()
+        field_name = "input_{tag}-{org}-{course}-{category}-{name}_2_1"
+        field_key = {
+            'tag': problem_locator.tag,
+            'org': problem_locator.org,
+            'course': problem_locator.course,
+            'category': problem_locator.category,
+            'name': problem_locator.name,
+        }
+
+        answer = "choice_{}".format(answer)
+
+        field = field_name.format(**field_key)
+        post_data = QueryDict('', mutable=True)
+        post_data[field] = answer
+
+        request.POST = post_data
+        result = invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
+        content = json.loads(result.content)
+        response_data = {
+            'correct': content.get('success') == 'correct',
+        }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)

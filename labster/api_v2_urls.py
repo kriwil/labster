@@ -6,12 +6,13 @@ from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
 from labster.api.views import CreateUserProblem, CreateUserLabProxy
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
-from labster.api.views import CourseLab
+from labster.api.views import CourseLab, AnswerProblem
 
 
 urlpatterns = patterns('',  # nopep8
 
-    url('^course-lab/(?P<location>.*)/$', CourseLab.as_view()),
+    url('^course-lab/(?P<location>[^\/]*)/$', CourseLab.as_view()),
+    url('^course-lab/(?P<location>[^\/]*)/answer-problem/$', AnswerProblem.as_view()),
 
     url('^labs/$', LabList.as_view(), name='lab-list'),
     url('^labs/(?P<pk>\d+)/$', LabDetail.as_view(), name='lab-detail'),

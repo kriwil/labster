@@ -17,7 +17,7 @@ from xmodule.modulestore.django import modulestore
 
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
-from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
+from labster.models import create_lab_proxy, update_lab_proxy, UserLabProxy
 
 
 def invoke_xblock_handler(*args, **kwargs):

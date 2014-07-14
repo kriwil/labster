@@ -1,8 +1,5 @@
-from collections import defaultdict
 import binascii
 import os
-
-from lxml import etree
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -10,8 +7,6 @@ from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
-
-from labster.utils import markdown_to_xml, xml_to_html, answer_from_xml
 
 
 class Token(models.Model):
@@ -78,50 +73,20 @@ class Lab(models.Model):
         return self.quizblocklab_set.all()
 
 
-@receiver(pre_delete, sender=Lab)
-def lab_delete(sender, instance, **kwargs):
-    # Also delete the screenshot image file when deleting the Lab
-    return
-    # instance.screenshot.delete(False)
+class CourseLab(models.Model):
+    """
+    Stores connection between subsection and lab
+    """
 
-
-class QuizBlockLab(models.Model):
     lab = models.ForeignKey(Lab)
-    quiz_block_id = models.CharField(max_length=64, unique=True)
-    order = models.IntegerField(default=0)
-    description = models.CharField(max_length=120, default='')
-    questions = models.TextField(default='', blank=True)
+    location = models.CharField(max_length=200, unique=True)
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
-    class Meta:
-        ordering = ('lab__id', 'order')
-
     def __unicode__(self):
-        return self.quiz_block_id
-
-    @property
-    def xml(self):
-        output = """<quizblock id="{id}" description="{description}">{questions}</quizblock>"""
-        output = output.format(id=self.id, description=self.description,
-                               questions=self.questions)
-        return output
-
-    @property
-    def question_list(self):
-        root = etree.fromstring(self.xml)
-        problems = root.findall('problem')
-        question_list = [etree.tostring(problem).strip() for problem in problems]
-        return question_list
-
-    @property
-    def serialized(self):
-        fields = ['lab_id', 'quiz_block_id', 'order', 'description',
-                  'questions', 'xml']
-
-        data = {each: getattr(self, each) for each in fields}
-        return data
+        return self.location
 
 
 class LabProxy(models.Model):
@@ -162,26 +127,6 @@ class UserSave(models.Model):
         unique_together = ('lab_proxy', 'user')
 
 
-@receiver(pre_delete, sender=UserSave)
-def game_user_save_delete(sender, instance, **kwargs):
-    # Also delete the save game file when deleting the GameUserSave
-    return
-    # try:
-    #     instance.save_file.delete(False)
-    # except OSError:
-    #     pass
-
-
-def update_modified_at(sender, instance, **kwargs):
-    instance.modified_at = timezone.now()
-
-
-pre_save.connect(update_modified_at, sender=Lab)
-pre_save.connect(update_modified_at, sender=QuizBlockLab)
-pre_save.connect(update_modified_at, sender=LabProxy)
-pre_save.connect(update_modified_at, sender=UserSave)
-
-
 class ErrorInfo(models.Model):
     user = models.ForeignKey(User)
     lab_proxy = models.ForeignKey(LabProxy)
@@ -213,205 +158,49 @@ class DeviceInfo(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
 
-class QuizBlock(models.Model):
-    lab = models.ForeignKey(Lab)
-    lab_proxy = models.ForeignKey(LabProxy, blank=True, null=True)
-
-    slug = models.SlugField(max_length=200)
-    description = models.TextField(blank=True)
-
-    order = models.IntegerField(default=0)
-
-    created_at = models.DateTimeField(default=timezone.now)
-    modified_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        ordering = ('lab__name', 'order', 'created_at')
-
-    def __unicode__(self):
-        return self.slug
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'slug': self.slug,
-            'description': self.description,
-            'order': self.order,
-            'problems': [p.to_json() for p in self.problem_set.all()],
-        }
-
-    @property
-    def studio_detail_url(self):
-        return "/labster/quiz-blocks/{}/".format(self.id)
-
-    @property
-    def new_problem_url(self):
-        return reverse('labster_create_problem', args=[self.id])
-
-    def save(self, *args, **kwargs):
-        if not self.order:
-            self.order = QuizBlock.objects.filter(lab=self.lab).count() + 1
-        return super(QuizBlock, self).save(*args, **kwargs)
+@receiver(pre_delete, sender=UserSave)
+def game_user_save_delete(sender, instance, **kwargs):
+    # Also delete the save game file when deleting the GameUserSave
+    return
+    # try:
+    #     instance.save_file.delete(False)
+    # except OSError:
+    #     pass
 
 
-class Problem(models.Model):
-    quiz_block = models.ForeignKey(QuizBlock)
-
-    TYPE_MULTIPLE_CHOICE = 1
-    TYPE_TEXT_INPUT = 2
-    TYPE_CHOICES = (
-        (TYPE_MULTIPLE_CHOICE, 'multiple choice'),
-        (TYPE_TEXT_INPUT, 'text input'),
-    )
-    problem_type = models.IntegerField(choices=TYPE_CHOICES, blank=True, null=True)
-
-    content_markdown = models.TextField(blank=True, default="")
-    content_xml = models.TextField(blank=True, default="")
-    answer = models.CharField(max_length=200, blank=True, default="")
-
-    created_at = models.DateTimeField(default=timezone.now)
-    modified_at = models.DateTimeField(default=timezone.now)
-
-    @property
-    def content_html(self):
-        return xml_to_html(self.content_xml)
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'problem_type': self.problem_type,
-            'content_markdown': self.content_markdown,
-            'content_xml': self.content_xml,
-            'content_html': self.content_html,
-        }
-
-    def save(self, *args, **kwargs):
-        if self.content_markdown:
-            self.content_xml = markdown_to_xml(self.content_markdown)
-        if self.content_xml:
-            self.answer = answer_from_xml(self.content_xml)
-            if 'multiplechoiceresponse' in self.content_xml:
-                self.problem_type = self.TYPE_MULTIPLE_CHOICE
-            elif 'stringresponse' in self.content_xml:
-                self.problem_type = self.TYPE_TEXT_INPUT
-
-        return super(Problem, self).save(*args, **kwargs)
+@receiver(pre_delete, sender=Lab)
+def lab_delete(sender, instance, **kwargs):
+    # Also delete the screenshot image file when deleting the Lab
+    return
+    # instance.screenshot.delete(False)
 
 
-pre_save.connect(update_modified_at, sender=QuizBlock)
-pre_save.connect(update_modified_at, sender=Lab)
-
-
-def copy_quizblocks(lab_id, lab_proxy):
-    quizblocks = QuizBlock.objects.filter(lab_id=lab_id, lab_proxy=None)
-
-    new_quizblocks = []
-    for quizblock in quizblocks:
-        new_quizblock, _ = QuizBlock.objects.get_or_create(
-            lab_id=lab_id,
-            lab_proxy_id=lab_proxy.id,
-            defaults={
-                'slug': quizblock.slug,
-                'description': quizblock.description,
-                'order': quizblock.order,
-            }
-        )
-
-        copy_problems(old_quizblock=quizblock, new_quizblock=new_quizblock)
-        new_quizblocks.append(new_quizblock)
-
-    return new_quizblocks
-
-
-def copy_problems(old_quizblock, new_quizblock):
-
-    problems = Problem.objects.filter(quiz_block_id=old_quizblock.id)
-
-    new_problems = []
-    for problem in problems:
-        new_problem = Problem.objects.create(
-            quiz_block_id=new_quizblock.id,
-            problem_type=problem.problem_type,
-            content_markdown=problem.content_markdown,
-            content_xml=problem.content_xml)
-
-        new_problems.append(new_problem)
-
-    return new_problems
-
-
-def create_lab_proxy(lab_id, location_id):
-    lab_proxy, created = LabProxy.objects.get_or_create(lab_id=lab_id, location_id=location_id)
-
-    QuizBlock.objects.filter(lab_proxy_id=lab_proxy.id).delete()
-    copy_quizblocks(lab_id, lab_proxy)
-
-    return lab_proxy
-
-
-def update_lab_proxy(lab_proxy_id, lab_id):
-    # delete quizblocks and problems
-    lab_proxy = LabProxy.objects.get(id=lab_proxy_id)
-    lab_proxy.lab_id = lab_id
-    lab_proxy.save()
-
-    QuizBlock.objects.filter(lab_proxy_id=lab_proxy_id).delete()
-    copy_quizblocks(lab_id, lab_proxy)
-
-    return lab_proxy
-
-
-class UserProblem(models.Model):
-    problem = models.ForeignKey(Problem)
-    user = models.ForeignKey(User)
-    answer = models.CharField(max_length=200, blank=True, default="")
-    is_correct = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def save(self, *args, **kwargs):
-        self.is_correct = self.answer.strip().lower() == self.problem.answer.strip().lower()
-        return super(UserProblem, self).save(*args, **kwargs)
-
-
-class UserLabProxy(models.Model):
-    user = models.ForeignKey(User)
-    lab_proxy = models.ForeignKey(LabProxy)
-    completed = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def get_user_score(self):
-        """
-        the way the score counted is:
-            each problem has score based on attempts,
-            then return the avg of all problems' score
-        """
-
-        score = 0.0
-
-        problems = Problem.objects.filter(quiz_block__lab_proxy=self.lab_proxy).distinct()
-        attempts = UserProblem.objects.filter(problem__in=problems)
-
-        # group attempts by problems
-        attempts_by_problem = defaultdict(list)
-        for attempt in attempts:
-            attempts_by_problem[attempt.problem_id].append(attempt)
-
-        scores = []
-        for problem_id, attempts in attempts_by_problem.items():
-            problem_score = 1.0 / float(len(attempts))
-            scores.append(problem_score)
-
-        if len(scores):
-            score = float(sum(scores)) / float(len(scores))
-        return score
-
-    class Meta:
-        unique_together = ('user', 'lab_proxy')
+def update_modified_at(sender, instance, **kwargs):
+    instance.modified_at = timezone.now()
 
 
 def fetch_labs_as_json():
     labs = Lab.objects.order_by('name')
     labs_json = [lab.to_json() for lab in labs]
     return labs_json
+
+
+def get_or_create_course_lab(location, lab):
+    location = location.strip()
+    try:
+        course_lab = CourseLab.objects.get(location=location)
+    except CourseLab.DoesNotExist:
+        course_lab = CourseLab(location=location)
+
+    if course_lab.lab != lab:
+        course_lab.lab = lab
+        course_lab.save()
+
+    return course_lab
+
+
+pre_save.connect(update_modified_at, sender=Lab)
+pre_save.connect(update_modified_at, sender=LabProxy)
+pre_save.connect(update_modified_at, sender=UserSave)
+pre_save.connect(update_modified_at, sender=Lab)
+pre_save.connect(update_modified_at, sender=CourseLab)

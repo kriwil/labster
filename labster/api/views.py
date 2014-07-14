@@ -8,6 +8,9 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from opaque_keys.edx.keys import UsageKey
+from xmodule.modulestore.django import modulestore
+
 from labster.api.serializers import LabSerializer, LabProxySerializer, ProblemSerializer, UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import Lab, QuizBlock, Problem, LabProxy, UserSave, ErrorInfo, DeviceInfo
 from labster.models import create_lab_proxy, update_lab_proxy, UserProblem, UserLabProxy
@@ -160,9 +163,9 @@ class CreateUserSave(ListCreateAPIView):
 
         try:
             user_save = UserSave.objects.get(user=user, lab_proxy=lab_proxy)
-            serializer = UserSaveSerializer(instance=user_save, data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
+            serializer = UserSaveSerializer(instance=user_save, data={"user": user_id, "lab_proxy": lab_proxy_id}, files=request.FILES)
         except ObjectDoesNotExist:
-            serializer = UserSaveSerializer(data={"user":user_id, "lab_proxy":lab_proxy_id}, files=request.FILES)
+            serializer = UserSaveSerializer(data={"user": user_id, "lab_proxy": lab_proxy_id}, files=request.FILES)
 
         if serializer.is_valid():
             serializer.save()
@@ -178,3 +181,50 @@ class CreateErrorInfo(CreateAPIView):
 class CreateDeviceInfo(CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
+
+
+def get_lab_by_location(location):
+    location = "location:{}".format(location)
+    locator = UsageKey.from_string(location)
+    descriptor = modulestore().get_item(locator)
+    lab_id = descriptor.lab_id
+    lab = {}
+
+    quiz_blocks = []
+    for _quiz_block in descriptor.get_children():
+        problems = []
+        for _problem in _quiz_block.get_children():
+            problem = {
+                'id': unicode(_problem.location),
+                'content': _problem.data,
+            }
+
+            problems.append(problem)
+
+        quiz_block = {
+            'id': unicode(_quiz_block.location),
+            'slug': _quiz_block.display_name,
+            'problems': problems,
+        }
+
+        quiz_blocks.append(quiz_block)
+
+    lab.update({
+        'lab': {
+            'id': int(lab_id),
+            'quiz_blocks': quiz_blocks,
+        }
+    })
+
+    return lab
+    return
+
+
+class CourseLab(APIView):
+
+    def get(self, request, *args, **kwargs):
+        response_data = {}
+        location = kwargs.get('location')
+        if location:
+            response_data = get_lab_by_location(location)
+        return Response(response_data)

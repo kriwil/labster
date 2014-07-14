@@ -215,6 +215,7 @@ class CourseLab(APIView):
 
 
 class AnswerProblem(APIView):
+
     def post(self, request, *args, **kwargs):
         response_data = {}
 
@@ -223,6 +224,7 @@ class AnswerProblem(APIView):
         problem_id = request.DATA.get('problem')
         answer = request.DATA.get('answer')
         problem_locator = UsageKey.from_string(problem_id)
+        problem_descriptor = modulestore().get_item(problem_locator)
 
         course_id = locator.course_key.to_deprecated_string()
         usage_id = problem_locator.to_deprecated_string()
@@ -241,7 +243,8 @@ class AnswerProblem(APIView):
             'name': problem_locator.name,
         }
 
-        answer = "choice_{}".format(answer)
+        if 'multiplechoiceresponse' in problem_descriptor.data:
+            answer = "choice_{}".format(answer)
 
         field = field_name.format(**field_key)
         post_data = QueryDict('', mutable=True)

@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 
@@ -9,9 +10,15 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.renderers import XMLRenderer
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
-from labster.models import UserSave, ErrorInfo, DeviceInfo
+from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy
+
+from courseware.courses import get_course_by_id
+from course_wiki.utils import course_wiki_slug
+
+from wiki.models import URLPath, Article
 
 
 def invoke_xblock_handler(*args, **kwargs):
@@ -106,7 +113,6 @@ def get_lab_by_location(location):
     })
 
     return lab
-    return
 
 
 class CourseLab(APIView):
@@ -117,6 +123,38 @@ class CourseLab(APIView):
         if location:
             response_data = get_lab_by_location(location)
         return Response(response_data)
+
+
+class CourseWikiDetail(APIView):
+
+    renderer_classes = (XMLRenderer,)
+    media_type = 'application/xml'
+    format = 'xml'
+    charset = 'utf-8'
+
+    def get(self, request, *args, **kwargs):
+        course_id = request.GET.get('course_id')
+
+        try:
+            course = get_course_by_id(course_id)
+        except ValueError:
+            raise Http404
+
+        course_slug = course_wiki_slug(course)
+
+        url_path = URLPath.get_by_path(course_slug, select_related=True)
+
+        results = list(Article.objects.filter(id=url_path.article.id))
+        if results:
+            article = results[0]
+        else:
+            article = None
+
+        response = {
+            'title': course_slug,
+            'content': article.get_cached_content(),
+        }
+        return Response(response)
 
 
 class AnswerProblem(APIView):

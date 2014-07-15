@@ -1,5 +1,7 @@
 from django.conf.urls import patterns, url
 
+from rest_framework.urlpatterns import format_suffix_patterns
+
 from labster.api.views import api_root
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
 from labster.api.views import LabProxyView, AnswerProblem, CourseWikiDetail
@@ -16,3 +18,6 @@ urlpatterns = patterns('',  # nopep8
 
     url('^course-wiki-detail/$', CourseWikiDetail.as_view(), name='course-wiki-detail'),
 )
+
+
+urlpatterns = format_suffix_patterns(urlpatterns, allowed=['xml', 'json', 'html'])

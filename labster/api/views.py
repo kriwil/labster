@@ -6,23 +6,31 @@ from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from courseware.module_render import _invoke_xblock_handler
-from opaque_keys.edx.keys import UsageKey
-from xmodule.modulestore.django import modulestore
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import UserSave, ErrorInfo, DeviceInfo
 
 
 def invoke_xblock_handler(*args, **kwargs):
+    from courseware.module_render import _invoke_xblock_handler
+
     """
     Wrapper so it could be mocked
     """
     return _invoke_xblock_handler(*args, **kwargs)
+
+
+def get_usage_key():
+    from opaque_keys.edx.keys import UsageKey
+    return UsageKey
+
+
+def get_modulestore():
+    from xmodule.modulestore.django import modulestore
+    return modulestore
 
 
 class CreateUserSave(ListCreateAPIView):
@@ -113,9 +121,14 @@ class CourseLab(APIView):
 
 class AnswerProblem(APIView):
 
+    def __init__(self, *args, **kwargs):
+        self.usage_key = get_usage_key()
+        self.modulestore = get_modulestore()
+        super(AnswerProblem, self).__init__(*args, **kwargs)
+
     def get_problem_locator_descriptor(self, problem_id):
-        locator = UsageKey.from_string(problem_id)
-        descriptor = modulestore().get_item(locator)
+        locator = self.usage_key.from_string(problem_id)
+        descriptor = self.modulestore().get_item(locator)
 
         return locator, descriptor
 
@@ -139,7 +152,7 @@ class AnswerProblem(APIView):
 
     def call_xblock_handler(self, request, location, problem_locator, answer):
 
-        locator = UsageKey.from_string(location)
+        locator = self.usage_key.from_string(location)
         course_id = locator.course_key.to_deprecated_string()
         usage_id = problem_locator.to_deprecated_string()
         usage_id = usage_id.replace('/', ';_')

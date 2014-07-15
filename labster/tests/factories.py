@@ -1,6 +1,9 @@
-from django.contrib.auth.models import User
+import json
+import random
 
 from factory.django import DjangoModelFactory
+
+from django.contrib.auth.models import User
 
 from labster.models import Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy
 
@@ -34,3 +37,29 @@ class DeviceInfoFactory(DjangoModelFactory):
 
 class UserSaveFactory(DjangoModelFactory):
     FACTORY_FOR = UserSave
+
+
+class DummyUsageKey:
+    pass
+
+
+class DummyModulestore:
+    pass
+
+
+class DummyXblockResult:
+    content = json.dumps({'correct': True})
+
+
+class DummyProblemLocator:
+    category = 'category'
+    course = 'course'
+    name = 'name'
+    org = 'org'
+    tag = 'tag'
+
+
+def create_lab_proxy(**kwargs):
+    if 'location' not in kwargs:
+        kwargs['location'] = '%030x' % random.randrange(16**30)
+    return LabProxyFactory(**kwargs)

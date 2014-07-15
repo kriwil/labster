@@ -1,7 +1,5 @@
-import json
 import mock
 import os.path
-import random
 import tempfile
 import unittest
 import urllib
@@ -11,29 +9,17 @@ from django.core.urlresolvers import reverse
 from rest_framework.test import APIRequestFactory
 
 from labster.api.views import CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem
-from labster.models import Lab, ErrorInfo, DeviceInfo, UserSave
-from labster.tests.factories import UserFactory, LabFactory, ErrorInfoFactory, \
-    DeviceInfoFactory, UserSaveFactory, LabProxyFactory
-
-
-class DummyUsageKey:
-    pass
-
-
-class DummyModulestore:
-    pass
-
-
-class DummyXblockResult:
-    content = json.dumps({'correct': True})
-
-
-class DummyProblemLocator:
-    category = 'category'
-    course = 'course'
-    name = 'name'
-    org = 'org'
-    tag = 'tag'
+from labster.models import ErrorInfo, DeviceInfo, UserSave
+from labster.tests.factories import (
+    DeviceInfoFactory,
+    DummyProblemLocator,
+    DummyXblockResult,
+    ErrorInfoFactory,
+    LabFactory,
+    UserFactory,
+    UserSaveFactory,
+    create_lab_proxy,
+)
 
 
 class CreateErrorInfoTest(unittest.TestCase):
@@ -43,7 +29,7 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.factory = APIRequestFactory()
         self.url = reverse('labster-api-v2:error-info')
         self.lab = LabFactory()
-        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
 
     def test_get_not_allowed(self):
@@ -69,8 +55,6 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_post_created(self):
-        UserLabProxyFactory(user=self.user, lab_proxy=self.lab_proxy)
-
         post_data = {
             'user': self.user.id,
             'lab_proxy': self.lab_proxy.id,
@@ -89,14 +73,14 @@ class CreateErrorInfoTest(unittest.TestCase):
             ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
 
-class CreateUserSaveTest(unittest.TestCase):
+class CreateDeviceInfoTest(unittest.TestCase):
 
     def setUp(self):
         self.view = CreateDeviceInfo.as_view()
         self.factory = APIRequestFactory()
         self.url = reverse('labster-api-v2:device-info')
         self.lab = LabFactory()
-        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
 
     def test_get_not_allowed(self):
@@ -158,7 +142,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.factory = APIRequestFactory()
         self.url = reverse('labster-api-v2:user-save')
         self.lab = LabFactory()
-        self.lab_proxy = LabProxyFactory(lab=self.lab)
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
         self.temp_file_path = os.path.join(tempfile.gettempdir(), "temp-testfile")
 
@@ -233,13 +217,12 @@ class CreateUserSaveTest(unittest.TestCase):
 class AnswerProblemTest(unittest.TestCase):
 
     def setUp(self):
-        location = '%030x' % random.randrange(16**30)
 
         self.view = AnswerProblem.as_view()
         self.factory = APIRequestFactory()
         self.lab = LabFactory()
         self.user = UserFactory()
-        self.lab_proxy = LabProxyFactory(lab=self.lab, location=location)
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.url = reverse('labster-api-v2:answer-problem', args=[self.lab_proxy.location])
 
     @mock.patch('labster.api.views.get_usage_key')

@@ -113,22 +113,13 @@ class CourseLab(APIView):
 
 class AnswerProblem(APIView):
 
-    def post(self, request, *args, **kwargs):
-        response_data = {}
+    def get_problem_locator_descriptor(self, problem_id):
+        locator = UsageKey.from_string(problem_id)
+        descriptor = modulestore().get_item(locator)
 
-        location = kwargs.get('location')
-        locator = UsageKey.from_string(location)
-        problem_id = request.DATA.get('problem')
-        answer = request.DATA.get('answer')
-        problem_locator = UsageKey.from_string(problem_id)
-        problem_descriptor = modulestore().get_item(problem_locator)
+        return locator, descriptor
 
-        course_id = locator.course_key.to_deprecated_string()
-        usage_id = problem_locator.to_deprecated_string()
-        usage_id = usage_id.replace('/', ';_')
-        handler = 'xmodule_handler'
-        suffix = 'problem_check'
-        user = request.user
+    def get_post_data(self, request, problem_locator, answer):
 
         request.POST = request.POST.copy()
         field_name = "input_{tag}-{org}-{course}-{category}-{name}_2_1"
@@ -140,15 +131,38 @@ class AnswerProblem(APIView):
             'name': problem_locator.name,
         }
 
-        if 'multiplechoiceresponse' in problem_descriptor.data:
-            answer = "choice_{}".format(answer)
-
         field = field_name.format(**field_key)
         post_data = QueryDict('', mutable=True)
         post_data[field] = answer
 
-        request.POST = post_data
-        result = invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
+        return post_data
+
+    def call_xblock_handler(self, request, location, problem_locator, answer):
+
+        locator = UsageKey.from_string(location)
+        course_id = locator.course_key.to_deprecated_string()
+        usage_id = problem_locator.to_deprecated_string()
+        usage_id = usage_id.replace('/', ';_')
+        handler = 'xmodule_handler'
+        suffix = 'problem_check'
+        user = request.user
+        request.POST = self.get_post_data(request, problem_locator, answer)
+
+        return invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
+
+    def post(self, request, *args, **kwargs):
+        response_data = {}
+
+        location = kwargs.get('location')
+        problem_id = request.DATA.get('problem')
+        answer = request.DATA.get('answer')
+
+        problem_locator, problem_descriptor = self.get_problem_locator_descriptor(problem_id)
+
+        if 'multiplechoiceresponse' in problem_descriptor.data:
+            answer = "choice_{}".format(answer)
+
+        result = self.call_xblock_handler(request, location, problem_locator, answer)
         content = json.loads(result.content)
         response_data = {
             'correct': content.get('success') == 'correct',

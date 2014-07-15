@@ -15,11 +15,6 @@ from rest_framework.renderers import XMLRenderer
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy
 
-from courseware.courses import get_course_by_id
-from course_wiki.utils import course_wiki_slug
-
-from wiki.models import URLPath, Article
-
 
 def invoke_xblock_handler(*args, **kwargs):
     from courseware.module_render import _invoke_xblock_handler
@@ -133,6 +128,11 @@ class CourseWikiDetail(APIView):
     charset = 'utf-8'
 
     def get(self, request, *args, **kwargs):
+        from courseware.courses import get_course_by_id
+        from course_wiki.utils import course_wiki_slug
+
+        from wiki.models import URLPath, Article
+
         course_id = request.GET.get('course_id')
 
         try:

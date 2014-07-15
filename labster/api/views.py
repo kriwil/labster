@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
-from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy
+from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy, get_or_create_lab_proxy
 
 
 def invoke_xblock_handler(*args, **kwargs):
@@ -36,11 +36,14 @@ def get_modulestore():
 
 
 class CreateUserSave(ListCreateAPIView):
+
     def get(self, request, *args, **kwargs):
         user_id = request.GET.get('user')
-        lab_proxy_id = request.GET.get('lab_proxy')
+        location = kwargs.get('location')
 
-        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy_id, user_id=user_id)
+        lab_proxy = get_object_or_404(LabProxy, location=location)
+        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user_id)
+
         serializer = UserSaveSerializer(user_save)
         return Response(serializer.data)
 
@@ -48,16 +51,16 @@ class CreateUserSave(ListCreateAPIView):
         data = request.DATA
 
         user_id = data.get('user')
-        lab_proxy_id = data.get('lab_proxy')
+        location = kwargs.get('location')
+        lab_proxy = get_or_create_lab_proxy(location=location)
 
         user = get_object_or_404(User, id=user_id)
-        lab_proxy = get_object_or_404(LabProxy, id=lab_proxy_id)
 
         try:
             user_save = UserSave.objects.get(user=user, lab_proxy=lab_proxy)
-            serializer = UserSaveSerializer(instance=user_save, data={"user": user_id, "lab_proxy": lab_proxy_id}, files=request.FILES)
+            serializer = UserSaveSerializer(instance=user_save, data={"user": user_id, "lab_proxy": lab_proxy.id}, files=request.FILES)
         except ObjectDoesNotExist:
-            serializer = UserSaveSerializer(data={"user": user_id, "lab_proxy": lab_proxy_id}, files=request.FILES)
+            serializer = UserSaveSerializer(data={"user": user_id, "lab_proxy": lab_proxy.id}, files=request.FILES)
 
         if serializer.is_valid():
             serializer.save()
@@ -69,10 +72,16 @@ class CreateErrorInfo(CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
 
+    def pre_save(self, obj):
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+
 
 class CreateDeviceInfo(CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
+
+    def pre_save(self, obj):
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 
 def get_lab_by_location(location):

@@ -27,10 +27,10 @@ class CreateErrorInfoTest(unittest.TestCase):
     def setUp(self):
         self.view = CreateErrorInfo.as_view()
         self.factory = APIRequestFactory()
-        self.url = reverse('labster-api-v2:error-info')
         self.lab = LabFactory()
-        self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+        self.url = reverse('labster-api-v2:error-info', args=[self.lab_proxy.location])
 
     def test_get_not_allowed(self):
         # get method is not allowed in ErrorInfoFactory
@@ -57,14 +57,13 @@ class CreateErrorInfoTest(unittest.TestCase):
     def test_post_created(self):
         post_data = {
             'user': self.user.id,
-            'lab_proxy': self.lab_proxy.id,
             'browser': 'Firefox',
             'os': 'Windows',
             'user_agent': 'user agent',
             'message': 'this is message',
         }
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 201)
@@ -72,16 +71,35 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.assertTrue(
             ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
+    def test_post_created_without_inital_lab_proxy(self):
+        self.url = reverse('labster-api-v2:error-info', args=['somerandomtext'])
+
+        post_data = {
+            'user': self.user.id,
+            'browser': 'Firefox',
+            'os': 'Windows',
+            'user_agent': 'user agent',
+            'message': 'this is message',
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location='somerandomtext')
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            ErrorInfo.objects.filter(user=self.user, lab_proxy__location='somerandomtext').exists())
+
 
 class CreateDeviceInfoTest(unittest.TestCase):
 
     def setUp(self):
         self.view = CreateDeviceInfo.as_view()
         self.factory = APIRequestFactory()
-        self.url = reverse('labster-api-v2:device-info')
         self.lab = LabFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
+        self.url = reverse('labster-api-v2:device-info', args=[self.lab_proxy.location])
 
     def test_get_not_allowed(self):
         # get method is not allowed in ErrorInfoFactory
@@ -99,7 +117,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         # all required fields are empty so it returns 400
@@ -110,7 +128,6 @@ class CreateDeviceInfoTest(unittest.TestCase):
 
         post_data = {
             'user': self.user.id,
-            'lab_proxy': self.lab_proxy.id,
             'device_id': 'this is devicei id',
             'os': 'Windows',
             'machine_type': 'Intel',
@@ -126,7 +143,36 @@ class CreateDeviceInfoTest(unittest.TestCase):
             'frame_rate': '60FPS',
         }
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_without_intial_lab_proxy(self):
+        self.url = reverse('labster-api-v2:device-info', args=['somerandomtext'])
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'user': self.user.id,
+            'device_id': 'this is devicei id',
+            'os': 'Windows',
+            'machine_type': 'Intel',
+            'ram': '1GB',
+            'processor': 'intel dual core',
+            'cores': 'quad core',
+            'gpu': 'NVidia',
+            'memory': '64GB',
+            'fill_rate': '45',
+            'shader_level': 'top',
+            'quality': 'best',
+            'misc': 'this is misc',
+            'frame_rate': '60FPS',
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location='somerandomtext')
         response.render()
 
         self.assertEqual(response.status_code, 201)
@@ -140,18 +186,18 @@ class CreateUserSaveTest(unittest.TestCase):
     def setUp(self):
         self.view = CreateUserSave.as_view()
         self.factory = APIRequestFactory()
-        self.url = reverse('labster-api-v2:user-save')
         self.lab = LabFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
         self.temp_file_path = os.path.join(tempfile.gettempdir(), "temp-testfile")
+        self.url = reverse('labster-api-v2:user-save', args=[self.lab_proxy.location])
 
     def test_get_not_found(self):
         url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 404)
@@ -163,7 +209,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 200)
@@ -171,7 +217,7 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 404)
@@ -179,11 +225,25 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_post_created(self):
         post_data = {
             'user': self.user.id,
-            'lab_proxy': self.lab_proxy.id,
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_without_initial_lab_proxy(self):
+        self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
+        post_data = {
+            'user': self.user.id,
+            'save_file': self.temp_file_path,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 201)
@@ -196,11 +256,10 @@ class CreateUserSaveTest(unittest.TestCase):
 
         post_data = {
             'user': self.user.id,
-            'lab_proxy': self.lab_proxy.id,
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         # whenever we post another user save, it will replace the old data

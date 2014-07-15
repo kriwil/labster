@@ -41,13 +41,13 @@ class ErrorInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ErrorInfo
-        fields = ('id', 'user', 'lab_proxy', 'browser', 'os', 'message', 'date_encountered')
+        fields = ('id', 'user', 'browser', 'os', 'message', 'date_encountered')
 
 
 class DeviceInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeviceInfo
-        fields = ('id', 'user', 'lab_proxy', 'device_id', 'frame_rate', 'machine_type', 'os',
+        fields = ('id', 'user', 'device_id', 'frame_rate', 'machine_type', 'os',
                   'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
                   'shader_level', 'quality', 'misc', 'created_at')

@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from labster.api.views import LabList, LabDetail
+from labster.api.views import LabList, LabDetail, CourseWikiDetail
 from labster.api.views import LabProxyList, LabProxyDetail
 from labster.api.views import ProblemList, ProblemDetail
 from labster.api.views import QuizBlockList, QuizBlockDetail
@@ -31,5 +31,7 @@ urlpatterns = patterns('',  # nopep8
 
     url('^user-problem/$', CreateUserProblem.as_view(), name='user-problem'),
     url('^user-lab-proxy/$', CreateUserLabProxy.as_view(), name='user-lab-proxy'),
+
+    url('^course-wiki-detail/$', CourseWikiDetail.as_view(), name='course-wiki-detail'),
 
 )

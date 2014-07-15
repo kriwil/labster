@@ -73,7 +73,7 @@ class Lab(models.Model):
         return self.quizblocklab_set.all()
 
 
-class CourseLab(models.Model):
+class LabProxy(models.Model):
     """
     Stores connection between subsection and lab
     """
@@ -85,29 +85,8 @@ class CourseLab(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
-    def __unicode__(self):
-        return self.location
-
-
-class LabProxy(models.Model):
-
-    lab = models.ForeignKey(Lab)
-    location_id = models.CharField(max_length=200)
-    is_active = models.BooleanField(default=True)
-
-    created_at = models.DateTimeField(default=timezone.now)
-    modified_at = models.DateTimeField(default=timezone.now)
-
     class Meta:
-        unique_together = ('lab', 'location_id')
         verbose_name_plural = 'Lab proxies'
-
-    def __unicode__(self):
-        return "Proxy for {}".format(self.lab.name)
-
-    @property
-    def studio_detail_url(self):
-        return "/labster/lab-proxies/{}/".format(self.id)
 
 
 class UserSave(models.Model):
@@ -185,22 +164,21 @@ def fetch_labs_as_json():
     return labs_json
 
 
-def get_or_create_course_lab(location, lab):
+def get_or_create_lab_proxy(location, lab):
     location = location.strip()
     try:
-        course_lab = CourseLab.objects.get(location=location)
-    except CourseLab.DoesNotExist:
-        course_lab = CourseLab(location=location)
+        lab_proxy = LabProxy.objects.get(location=location)
+    except LabProxy.DoesNotExist:
+        lab_proxy = LabProxy(location=location)
 
-    if course_lab.lab != lab:
-        course_lab.lab = lab
-        course_lab.save()
+    if lab_proxy.lab != lab:
+        lab_proxy.lab = lab
+        lab_proxy.save()
 
-    return course_lab
+    return lab_proxy
 
 
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=LabProxy)
 pre_save.connect(update_modified_at, sender=UserSave)
 pre_save.connect(update_modified_at, sender=Lab)
-pre_save.connect(update_modified_at, sender=CourseLab)

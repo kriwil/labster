@@ -4,7 +4,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from labster.api.views import api_root
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
-from labster.api.views import LabProxyView, AnswerProblem, CourseWikiDetail
+from labster.api.views import LabProxyView, AnswerProblem, CourseWiki
 
 
 urlpatterns = patterns('',  # nopep8
@@ -16,7 +16,7 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxy/(?P<location>[^\/]+)/error-info/$', CreateErrorInfo.as_view(), name='error-info'),
     url('^lab-proxy/(?P<location>[^\/]+)/device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
 
-    url('^course-wiki-detail/$', CourseWikiDetail.as_view(), name='course-wiki-detail'),
+    url('^course-wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', CourseWiki.as_view(), name='course-wiki'),
 )
 
 

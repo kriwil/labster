@@ -9,7 +9,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
-from rest_framework.renderers import XMLRenderer
+from rest_framework.renderers import XMLRenderer, JSONRenderer
+from rest_framework.parsers import XMLParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
@@ -78,7 +79,17 @@ def api_root(request, format=None):
     })
 
 
-class CreateUserSave(ListCreateAPIView):
+class RendererMixin:
+
+    renderer_classes = (XMLRenderer, JSONRenderer)
+
+
+class ParserMixin:
+
+    parser_classes = (XMLParser, JSONParser)
+
+
+class CreateUserSave(RendererMixin, ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         user_id = request.GET.get('user')
@@ -111,7 +122,7 @@ class CreateUserSave(ListCreateAPIView):
         return Response(serializer.errors, status=400)
 
 
-class CreateErrorInfo(CreateAPIView):
+class CreateErrorInfo(RendererMixin, CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
 
@@ -119,7 +130,7 @@ class CreateErrorInfo(CreateAPIView):
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 
-class CreateDeviceInfo(CreateAPIView):
+class CreateDeviceInfo(RendererMixin, CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
 
@@ -165,9 +176,9 @@ def get_lab_by_location(location):
     return lab
 
 
-class LabProxyView(APIView):
+class LabProxyView(RendererMixin, APIView):
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, format=None, *args, **kwargs):
         response_data = {}
         location = kwargs.get('location')
         if location:
@@ -175,12 +186,7 @@ class LabProxyView(APIView):
         return Response(response_data)
 
 
-class CourseWikiDetail(APIView):
-
-    renderer_classes = (XMLRenderer,)
-    media_type = 'application/xml'
-    format = 'xml'
-    charset = 'utf-8'
+class CourseWikiDetail(RendererMixin, APIView):
 
     def get(self, request, *args, **kwargs):
         from courseware.courses import get_course_by_id
@@ -212,7 +218,7 @@ class CourseWikiDetail(APIView):
         return Response(response)
 
 
-class AnswerProblem(APIView):
+class AnswerProblem(RendererMixin, APIView):
 
     def __init__(self, *args, **kwargs):
         self.usage_key = get_usage_key()

@@ -8,9 +8,9 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
+from rest_framework.renderers import XMLRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.renderers import XMLRenderer
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
 from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy
@@ -76,6 +76,9 @@ class CreateDeviceInfo(CreateAPIView):
 
 
 def get_lab_by_location(location):
+    UsageKey = get_usage_key()
+    modulestore = get_modulestore()
+
     locator = UsageKey.from_string(location)
     descriptor = modulestore().get_item(locator)
     lab_id = descriptor.lab_id
@@ -110,7 +113,7 @@ def get_lab_by_location(location):
     return lab
 
 
-class CourseLab(APIView):
+class LabProxyView(APIView):
 
     def get(self, request, *args, **kwargs):
         response_data = {}

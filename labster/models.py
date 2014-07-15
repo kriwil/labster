@@ -78,7 +78,7 @@ class LabProxy(models.Model):
     Stores connection between subsection and lab
     """
 
-    lab = models.ForeignKey(Lab)
+    lab = models.ForeignKey(Lab, blank=True, null=True)
     location = models.CharField(max_length=200, unique=True)
     is_active = models.BooleanField(default=True)
 
@@ -164,15 +164,20 @@ def fetch_labs_as_json():
     return labs_json
 
 
-def get_or_create_lab_proxy(location, lab):
+def get_or_create_lab_proxy(location, lab=None):
     location = location.strip()
     try:
         lab_proxy = LabProxy.objects.get(location=location)
+        created = False
     except LabProxy.DoesNotExist:
         lab_proxy = LabProxy(location=location)
+        created = True
 
-    if lab_proxy.lab != lab:
+    modified = all([lab is not None, lab_proxy.lab is not lab])
+    if modified:
         lab_proxy.lab = lab
+
+    if created or modified:
         lab_proxy.save()
 
     return lab_proxy

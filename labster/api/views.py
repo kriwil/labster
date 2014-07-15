@@ -7,9 +7,11 @@ from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.renderers import XMLRenderer
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
@@ -33,6 +35,47 @@ def get_usage_key():
 def get_modulestore():
     from xmodule.modulestore.django import modulestore
     return modulestore
+
+
+@api_view(('GET',))
+def api_root(request, format=None):
+    lab_proxy_detail_url = reverse(
+        'labster-api-v2:lab-proxy-detail',
+        request=request,
+        kwargs={'location': 'EDX-COURSE-LOCATION'},
+        format=format)
+
+    answer_problem_url = reverse(
+        'labster-api-v2:answer-problem',
+        request=request,
+        kwargs={'location': 'EDX-COURSE-LOCATION'},
+        format=format)
+
+    user_save_url = reverse(
+        'labster-api-v2:user-save',
+        request=request,
+        kwargs={'location': 'EDX-COURSE-LOCATION'},
+        format=format)
+
+    error_info_url = reverse(
+        'labster-api-v2:error-info',
+        request=request,
+        kwargs={'location': 'EDX-COURSE-LOCATION'},
+        format=format)
+
+    device_info_url = reverse(
+        'labster-api-v2:device-info',
+        request=request,
+        kwargs={'location': 'EDX-COURSE-LOCATION'},
+        format=format)
+
+    return Response({
+        'lab-proxy-detail': lab_proxy_detail_url,
+        'answer-problem': answer_problem_url,
+        'user-save': user_save_url,
+        'error-info': error_info_url,
+        'device-info': device_info_url,
+    })
 
 
 class CreateUserSave(ListCreateAPIView):

@@ -38,6 +38,44 @@ def get_modulestore():
     return modulestore
 
 
+def get_lab_by_location(location):
+    UsageKey = get_usage_key()
+    modulestore = get_modulestore()
+
+    locator = UsageKey.from_string(location)
+    descriptor = modulestore().get_item(locator)
+    lab_id = descriptor.lab_id
+    lab = {}
+
+    quiz_blocks = []
+    for _quiz_block in descriptor.get_children():
+        problems = []
+        for _problem in _quiz_block.get_children():
+            problem = {
+                'id': unicode(_problem.location),
+                'content': _problem.data,
+            }
+
+            problems.append(problem)
+
+        quiz_block = {
+            'id': unicode(_quiz_block.location),
+            'slug': _quiz_block.display_name,
+            'problems': problems,
+        }
+
+        quiz_blocks.append(quiz_block)
+
+    lab.update({
+        'lab': {
+            'id': int(lab_id),
+            'quiz_blocks': quiz_blocks,
+        }
+    })
+
+    return lab
+
+
 @api_view(('GET',))
 def api_root(request, format=None):
     lab_proxy_detail_url = reverse(
@@ -136,44 +174,6 @@ class CreateDeviceInfo(RendererMixin, CreateAPIView):
 
     def pre_save(self, obj):
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
-
-
-def get_lab_by_location(location):
-    UsageKey = get_usage_key()
-    modulestore = get_modulestore()
-
-    locator = UsageKey.from_string(location)
-    descriptor = modulestore().get_item(locator)
-    lab_id = descriptor.lab_id
-    lab = {}
-
-    quiz_blocks = []
-    for _quiz_block in descriptor.get_children():
-        problems = []
-        for _problem in _quiz_block.get_children():
-            problem = {
-                'id': unicode(_problem.location),
-                'content': _problem.data,
-            }
-
-            problems.append(problem)
-
-        quiz_block = {
-            'id': unicode(_quiz_block.location),
-            'slug': _quiz_block.display_name,
-            'problems': problems,
-        }
-
-        quiz_blocks.append(quiz_block)
-
-    lab.update({
-        'lab': {
-            'id': int(lab_id),
-            'quiz_blocks': quiz_blocks,
-        }
-    })
-
-    return lab
 
 
 class LabProxyView(RendererMixin, APIView):

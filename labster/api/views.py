@@ -123,20 +123,18 @@ class LabProxyView(APIView):
         return Response(response_data)
 
 
-class CourseWikiDetail(APIView):
+class CourseWiki(APIView):
 
     renderer_classes = (XMLRenderer,)
     media_type = 'application/xml'
     format = 'xml'
     charset = 'utf-8'
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, course_id, *args, **kwargs):
         from courseware.courses import get_course_by_id
         from course_wiki.utils import course_wiki_slug
 
         from wiki.models import URLPath, Article
-
-        course_id = request.GET.get('course_id')
 
         try:
             course = get_course_by_id(course_id)

@@ -1,13 +1,13 @@
 from django.conf.urls import patterns, url
 
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
-from labster.api.views import CourseLab, AnswerProblem, CourseWikiDetail
+from labster.api.views import LabProxyView, AnswerProblem, CourseWikiDetail
 
 
 urlpatterns = patterns('',  # nopep8
 
-    url('^course-lab/(?P<location>[^\/]*)/$', CourseLab.as_view()),
-    url('^course-lab/(?P<location>[^\/]*)/answer-problem/$', AnswerProblem.as_view(), name='answer-problem'),
+    url('^lab-proxy/(?P<location>[^\/]*)/$', LabProxyView.as_view()),
+    url('^lab-proxy/(?P<location>[^\/]*)/answer-problem/$', AnswerProblem.as_view(), name='answer-problem'),
 
     url('^user-save/$', CreateUserSave.as_view(), name='user-save'),
     url('^error-info/$', CreateErrorInfo.as_view(), name='error-info'),

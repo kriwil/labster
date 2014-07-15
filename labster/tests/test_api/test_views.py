@@ -13,7 +13,7 @@ from rest_framework.test import APIRequestFactory
 from labster.api.views import CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem
 from labster.models import Lab, ErrorInfo, DeviceInfo, UserSave
 from labster.tests.factories import UserFactory, LabFactory, ErrorInfoFactory, \
-    DeviceInfoFactory, UserSaveFactory, CourseLabFactory
+    DeviceInfoFactory, UserSaveFactory, LabProxyFactory
 
 
 class DummyUsageKey:
@@ -239,8 +239,8 @@ class AnswerProblemTest(unittest.TestCase):
         self.factory = APIRequestFactory()
         self.lab = LabFactory()
         self.user = UserFactory()
-        self.course_lab = CourseLabFactory(lab=self.lab, location=location)
-        self.url = reverse('labster-api-v2:answer-problem', args=[self.course_lab.location])
+        self.lab_proxy = LabProxyFactory(lab=self.lab, location=location)
+        self.url = reverse('labster-api-v2:answer-problem', args=[self.lab_proxy.location])
 
     @mock.patch('labster.api.views.get_usage_key')
     @mock.patch('labster.api.views.get_modulestore')

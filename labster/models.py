@@ -9,10 +9,18 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
 
+PLATFORM_NAME = 'platform'
+
+
 class Token(models.Model):
-    name = models.CharField(max_length=100)
-    key = models.CharField(max_length=40, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+    key = models.CharField(max_length=40, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
+
+    @classmethod
+    def get_for_platform(self):
+        obj, _ = self.objects.get_or_create(name=PLATFORM_NAME)
+        return obj
 
     def __unicode__(self):
         return self.name

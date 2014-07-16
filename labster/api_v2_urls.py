@@ -4,7 +4,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from labster.api.views import APIRoot
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
-from labster.api.views import LabProxyView, AnswerProblem, CourseWiki
+from labster.api.views import LabProxyView, AnswerProblem, CourseWiki, CourseWikiArticle
 
 
 urlpatterns = patterns('',  # nopep8
@@ -17,6 +17,8 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxy/(?P<location>[^\/]+)/device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
 
     url('^course-wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', CourseWiki.as_view(), name='course-wiki'),
+    # since article can have children it might conflict with course-wiki, so I add keyword article in the end
+    url('^course-wiki-article/(?P<article_slug>.+/|)$', CourseWikiArticle.as_view(), name='course-wiki-article'),
 )
 
 

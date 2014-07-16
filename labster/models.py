@@ -121,7 +121,7 @@ class ErrorInfo(models.Model):
     os = models.CharField(default='', max_length=32)
     user_agent = models.CharField(default='', max_length=200)
     message = models.TextField(default='')
-    date_encountered = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class DeviceInfo(models.Model):

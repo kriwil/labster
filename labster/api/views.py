@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
-from rest_framework.parsers import XMLParser, JSONParser
+from rest_framework.parsers import FormParser, XMLParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import XMLRenderer, JSONRenderer
 from rest_framework.response import Response
@@ -82,7 +82,7 @@ class RendererMixin:
 
 
 class ParserMixin:
-    parser_classes = (XMLParser, JSONParser)
+    parser_classes = (FormParser, MultiPartParser, XMLParser, JSONParser)
 
 
 class AuthMixin:

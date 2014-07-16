@@ -6,7 +6,7 @@ import urllib
 
 from django.core.urlresolvers import reverse
 
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from labster.api.views import CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem
 from labster.models import ErrorInfo, DeviceInfo, UserSave
@@ -40,6 +40,7 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
@@ -48,6 +49,7 @@ class CreateErrorInfoTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
@@ -63,6 +65,7 @@ class CreateErrorInfoTest(unittest.TestCase):
             'message': 'this is message',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -82,6 +85,7 @@ class CreateErrorInfoTest(unittest.TestCase):
             'message': 'this is message',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location='somerandomtext')
         response.render()
 
@@ -109,6 +113,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
@@ -117,6 +122,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -143,6 +149,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
             'frame_rate': '60FPS',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -172,6 +179,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
             'frame_rate': '60FPS',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location='somerandomtext')
         response.render()
 
@@ -197,6 +205,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -209,6 +218,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -217,6 +227,7 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -228,6 +239,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -243,6 +255,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -259,6 +272,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -291,6 +305,7 @@ class AnswerProblemTest(unittest.TestCase):
         invoke_xblock_handler.return_value = DummyXblockResult()
 
         request = self.factory.post(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
@@ -301,6 +316,7 @@ class AnswerProblemTest(unittest.TestCase):
     @mock.patch('labster.api.views.invoke_xblock_handler')
     def test_get_post_data(self, invoke_xblock_handler, modulestore, usage_key):
         request = self.factory.post(self.url)
+        force_authenticate(request, user=UserFactory())
         problem_locator = DummyProblemLocator()
         answer = "1"
         AnswerProblem().get_post_data(request, problem_locator, answer)

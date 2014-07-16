@@ -7,15 +7,16 @@ from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
-from rest_framework.renderers import XMLRenderer, JSONRenderer
 from rest_framework.parsers import XMLParser, JSONParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import XMLRenderer, JSONRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
+from labster.authentication import SingleTokenAuthentication
 from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy, get_or_create_lab_proxy
 
 
@@ -76,58 +77,63 @@ def get_lab_by_location(location):
     return lab
 
 
-@api_view(('GET',))
-def api_root(request, format=None):
-    lab_proxy_detail_url = reverse(
-        'labster-api-v2:lab-proxy-detail',
-        request=request,
-        kwargs={'location': 'EDX-COURSE-LOCATION'},
-        format=format)
-
-    answer_problem_url = reverse(
-        'labster-api-v2:answer-problem',
-        request=request,
-        kwargs={'location': 'EDX-COURSE-LOCATION'},
-        format=format)
-
-    user_save_url = reverse(
-        'labster-api-v2:user-save',
-        request=request,
-        kwargs={'location': 'EDX-COURSE-LOCATION'},
-        format=format)
-
-    error_info_url = reverse(
-        'labster-api-v2:error-info',
-        request=request,
-        kwargs={'location': 'EDX-COURSE-LOCATION'},
-        format=format)
-
-    device_info_url = reverse(
-        'labster-api-v2:device-info',
-        request=request,
-        kwargs={'location': 'EDX-COURSE-LOCATION'},
-        format=format)
-
-    return Response({
-        'lab-proxy-detail': lab_proxy_detail_url,
-        'answer-problem': answer_problem_url,
-        'user-save': user_save_url,
-        'error-info': error_info_url,
-        'device-info': device_info_url,
-    })
-
-
 class RendererMixin:
-
     renderer_classes = (XMLRenderer, JSONRenderer)
 
 
 class ParserMixin:
-
     parser_classes = (XMLParser, JSONParser)
 
 
-class CreateUserSave(RendererMixin, ListCreateAPIView):
+class AuthMixin:
+    authentication_classes = (SingleTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+
+class APIRoot(RendererMixin, AuthMixin, APIView):
+
+    def get(self, request, *args, **kwargs):
+        format = kwargs.get('format')
+        lab_proxy_detail_url = reverse(
+            'labster-api-v2:lab-proxy-detail',
+            request=request,
+            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            format=format)
+
+        answer_problem_url = reverse(
+            'labster-api-v2:answer-problem',
+            request=request,
+            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            format=format)
+
+        user_save_url = reverse(
+            'labster-api-v2:user-save',
+            request=request,
+            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            format=format)
+
+        error_info_url = reverse(
+            'labster-api-v2:error-info',
+            request=request,
+            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            format=format)
+
+        device_info_url = reverse(
+            'labster-api-v2:device-info',
+            request=request,
+            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            format=format)
+
+        return Response({
+            'lab-proxy-detail': lab_proxy_detail_url,
+            'answer-problem': answer_problem_url,
+            'user-save': user_save_url,
+            'error-info': error_info_url,
+            'device-info': device_info_url,
+        })
+
+
+class CreateUserSave(RendererMixin, AuthMixin, ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         user_id = request.GET.get('user')
@@ -160,7 +166,7 @@ class CreateUserSave(RendererMixin, ListCreateAPIView):
         return Response(serializer.errors, status=400)
 
 
-class CreateErrorInfo(RendererMixin, CreateAPIView):
+class CreateErrorInfo(RendererMixin, AuthMixin, CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
 
@@ -168,7 +174,7 @@ class CreateErrorInfo(RendererMixin, CreateAPIView):
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 
-class CreateDeviceInfo(RendererMixin, CreateAPIView):
+class CreateDeviceInfo(RendererMixin, AuthMixin, CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
 
@@ -176,7 +182,7 @@ class CreateDeviceInfo(RendererMixin, CreateAPIView):
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 
-class LabProxyView(RendererMixin, APIView):
+class LabProxyView(RendererMixin, AuthMixin, APIView):
 
     def get(self, request, format=None, *args, **kwargs):
         response_data = {}
@@ -186,7 +192,7 @@ class LabProxyView(RendererMixin, APIView):
         return Response(response_data)
 
 
-class CourseWiki(RendererMixin, APIView):
+class CourseWiki(RendererMixin, AuthMixin, APIView):
 
     def get(self, request, course_id, *args, **kwargs):
         from courseware.courses import get_course_by_id
@@ -216,7 +222,7 @@ class CourseWiki(RendererMixin, APIView):
         return Response(response)
 
 
-class AnswerProblem(RendererMixin, APIView):
+class AnswerProblem(RendererMixin, AuthMixin, APIView):
 
     def __init__(self, *args, **kwargs):
         self.usage_key = get_usage_key()

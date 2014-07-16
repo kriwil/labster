@@ -23,7 +23,7 @@ class UserSaveAdmin(BaseAdmin):
 
 
 class ErrorInfoAdmin(admin.ModelAdmin):
-    list_display = ('user', 'lab', 'browser', 'os', 'message', 'date_encountered')
+    list_display = ('user', 'lab', 'browser', 'os', 'message', 'created_at')
 
     def lab(self, obj):
         return obj.lab_proxy.lab.name

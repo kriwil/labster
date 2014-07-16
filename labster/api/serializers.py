@@ -41,7 +41,9 @@ class ErrorInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ErrorInfo
-        fields = ('id', 'user', 'browser', 'os', 'message', 'date_encountered')
+        fields = (
+            'id', 'user', 'browser', 'user_agent', 'os', 'message', 'created_at')
+        read_only_fields = ('user', 'created_at')
 
 
 class DeviceInfoSerializer(serializers.ModelSerializer):

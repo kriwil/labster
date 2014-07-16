@@ -46,19 +46,8 @@ class CreateErrorInfoTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 405)
 
-    def test_post_invalid(self):
-        post_data = {}
-        request = self.factory.post(self.url, post_data)
-        force_authenticate(request, user=UserFactory())
-        response = self.view(request)
-        response.render()
-
-        # all required fields are empty so it returns 400
-        self.assertEqual(response.status_code, 400)
-
     def test_post_created(self):
         post_data = {
-            'user': self.user.id,
             'browser': 'Firefox',
             'os': 'Windows',
             'user_agent': 'user agent',
@@ -74,11 +63,27 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.assertTrue(
             ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
+    def test_post_created_missing_data(self):
+        post_data = {
+            'browser': '',
+            'os': '',
+            'user_agent': '',
+            'message': '',
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
     def test_post_created_without_inital_lab_proxy(self):
         self.url = reverse('labster-api-v2:error-info', args=['somerandomtext'])
 
         post_data = {
-            'user': self.user.id,
             'browser': 'Firefox',
             'os': 'Windows',
             'user_agent': 'user agent',

@@ -117,10 +117,10 @@ class UserSave(models.Model):
 class ErrorInfo(models.Model):
     user = models.ForeignKey(User)
     lab_proxy = models.ForeignKey(LabProxy)
-    browser = models.CharField(max_length=64)
-    os = models.CharField(default='', max_length=32)
-    user_agent = models.CharField(default='', max_length=200)
-    message = models.TextField(default='')
+    browser = models.CharField(max_length=64, blank=True, default="")
+    os = models.CharField(max_length=32, blank=True, default="")
+    user_agent = models.CharField(max_length=200, blank=True, default="")
+    message = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(default=timezone.now)
 
 

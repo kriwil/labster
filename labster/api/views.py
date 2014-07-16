@@ -171,6 +171,7 @@ class CreateErrorInfo(RendererMixin, AuthMixin, CreateAPIView):
     serializer_class = ErrorInfoSerializer
 
     def pre_save(self, obj):
+        obj.user = self.request.user
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 

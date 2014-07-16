@@ -180,6 +180,7 @@ class CreateDeviceInfo(RendererMixin, AuthMixin, CreateAPIView):
     serializer_class = DeviceInfoSerializer
 
     def pre_save(self, obj):
+        obj.user = self.request.user
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 

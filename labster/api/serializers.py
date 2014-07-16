@@ -50,6 +50,8 @@ class DeviceInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeviceInfo
-        fields = ('id', 'user', 'device_id', 'frame_rate', 'machine_type', 'os',
-                  'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
-                  'shader_level', 'quality', 'misc', 'created_at')
+        fields = (
+            'id', 'user', 'device_id', 'frame_rate', 'machine_type', 'os',
+            'ram', 'processor', 'cores', 'gpu', 'memory', 'fill_rate',
+            'shader_level', 'quality', 'misc', 'created_at')
+        read_only_fields = ('user', 'created_at')

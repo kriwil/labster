@@ -124,21 +124,10 @@ class CreateDeviceInfoTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 405)
 
-    def test_post_invalid(self):
-        post_data = {}
-        request = self.factory.post(self.url, post_data)
-        force_authenticate(request, user=UserFactory())
-        response = self.view(request, location=self.lab_proxy.location)
-        response.render()
-
-        # all required fields are empty so it returns 400
-        self.assertEqual(response.status_code, 400)
-
     def test_post_created(self):
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         post_data = {
-            'user': self.user.id,
             'device_id': 'this is devicei id',
             'os': 'Windows',
             'machine_type': 'Intel',
@@ -163,12 +152,39 @@ class CreateDeviceInfoTest(unittest.TestCase):
         self.assertTrue(
             DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
+    def test_post_created_empty_data(self):
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'cores': '',
+            'device_id': '',
+            'fill_rate': '',
+            'frame_rate': '',
+            'gpu': '',
+            'machine_type': '',
+            'memory': '',
+            'misc': '',
+            'os': '',
+            'processor': '',
+            'quality': '',
+            'ram': '',
+            'shader_level': '',
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
     def test_post_created_without_intial_lab_proxy(self):
         self.url = reverse('labster-api-v2:device-info', args=['somerandomtext'])
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         post_data = {
-            'user': self.user.id,
             'device_id': 'this is devicei id',
             'os': 'Windows',
             'machine_type': 'Intel',

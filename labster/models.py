@@ -9,10 +9,18 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
 
+PLATFORM_NAME = 'platform'
+
+
 class Token(models.Model):
-    name = models.CharField(max_length=100)
-    key = models.CharField(max_length=40, primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+    key = models.CharField(max_length=40, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
+
+    @classmethod
+    def get_for_platform(self):
+        obj, _ = self.objects.get_or_create(name=PLATFORM_NAME)
+        return obj
 
     def __unicode__(self):
         return self.name
@@ -109,30 +117,30 @@ class UserSave(models.Model):
 class ErrorInfo(models.Model):
     user = models.ForeignKey(User)
     lab_proxy = models.ForeignKey(LabProxy)
-    browser = models.CharField(max_length=64)
-    os = models.CharField(default='', max_length=32)
-    user_agent = models.CharField(default='', max_length=200)
-    message = models.TextField(default='')
-    date_encountered = models.DateTimeField(default=timezone.now)
+    browser = models.CharField(max_length=64, blank=True, default="")
+    os = models.CharField(max_length=32, blank=True, default="")
+    user_agent = models.CharField(max_length=200, blank=True, default="")
+    message = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class DeviceInfo(models.Model):
     user = models.ForeignKey(User)
     lab_proxy = models.ForeignKey(LabProxy)
-    device_id = models.CharField(default='', max_length=128)
-    frame_rate = models.CharField(default='', max_length=128)
-    machine_type = models.CharField(default='', max_length=128)
-    os = models.CharField(default='', max_length=32)
-    ram = models.CharField(default='', max_length=32)
-    processor = models.CharField(default='', max_length=128)
-    cores = models.CharField(default='', max_length=128)
-    gpu = models.CharField(default='', max_length=128)
-    memory = models.CharField(default='', max_length=128)
-    fill_rate = models.CharField(default='', max_length=128)
-    shader_level = models.CharField(default='', max_length=128)
-    date = models.DateTimeField(default=timezone.now)
-    quality = models.CharField(default='', max_length=128)
-    misc = models.TextField(default='')
+
+    cores = models.CharField(default="", max_length=128, blank=True)
+    device_id = models.CharField(default="", max_length=128, blank=True)
+    fill_rate = models.CharField(default="", max_length=128, blank=True)
+    frame_rate = models.CharField(default="", max_length=128, blank=True)
+    gpu = models.CharField(default="", max_length=128, blank=True)
+    machine_type = models.CharField(default="", max_length=128, blank=True)
+    memory = models.CharField(default="", max_length=128, blank=True)
+    misc = models.TextField(default="", blank=True)
+    os = models.CharField(default="", max_length=32, blank=True)
+    processor = models.CharField(default="", max_length=128, blank=True)
+    quality = models.CharField(default="", max_length=128, blank=True)
+    ram = models.CharField(default="", max_length=32, blank=True)
+    shader_level = models.CharField(default="", max_length=128, blank=True)
 
     created_at = models.DateTimeField(default=timezone.now)
 

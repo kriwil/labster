@@ -6,7 +6,7 @@ import urllib
 
 from django.core.urlresolvers import reverse
 
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, force_authenticate
 
 from labster.api.views import CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem
 from labster.models import ErrorInfo, DeviceInfo, UserSave
@@ -40,29 +40,38 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
         self.assertEqual(response.status_code, 405)
 
-    def test_post_invalid(self):
-        post_data = {}
-        request = self.factory.post(self.url, post_data)
-        response = self.view(request)
-        response.render()
-
-        # all required fields are empty so it returns 400
-        self.assertEqual(response.status_code, 400)
-
     def test_post_created(self):
         post_data = {
-            'user': self.user.id,
             'browser': 'Firefox',
             'os': 'Windows',
             'user_agent': 'user agent',
             'message': 'this is message',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_missing_data(self):
+        post_data = {
+            'browser': '',
+            'os': '',
+            'user_agent': '',
+            'message': '',
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -75,13 +84,13 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.url = reverse('labster-api-v2:error-info', args=['somerandomtext'])
 
         post_data = {
-            'user': self.user.id,
             'browser': 'Firefox',
             'os': 'Windows',
             'user_agent': 'user agent',
             'message': 'this is message',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location='somerandomtext')
         response.render()
 
@@ -109,25 +118,16 @@ class CreateDeviceInfoTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
         self.assertEqual(response.status_code, 405)
 
-    def test_post_invalid(self):
-        post_data = {}
-        request = self.factory.post(self.url, post_data)
-        response = self.view(request, location=self.lab_proxy.location)
-        response.render()
-
-        # all required fields are empty so it returns 400
-        self.assertEqual(response.status_code, 400)
-
     def test_post_created(self):
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         post_data = {
-            'user': self.user.id,
             'device_id': 'this is devicei id',
             'os': 'Windows',
             'machine_type': 'Intel',
@@ -143,6 +143,35 @@ class CreateDeviceInfoTest(unittest.TestCase):
             'frame_rate': '60FPS',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_empty_data(self):
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'cores': '',
+            'device_id': '',
+            'fill_rate': '',
+            'frame_rate': '',
+            'gpu': '',
+            'machine_type': '',
+            'memory': '',
+            'misc': '',
+            'os': '',
+            'processor': '',
+            'quality': '',
+            'ram': '',
+            'shader_level': '',
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -156,7 +185,6 @@ class CreateDeviceInfoTest(unittest.TestCase):
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         post_data = {
-            'user': self.user.id,
             'device_id': 'this is devicei id',
             'os': 'Windows',
             'machine_type': 'Intel',
@@ -172,6 +200,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
             'frame_rate': '60FPS',
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location='somerandomtext')
         response.render()
 
@@ -197,6 +226,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -209,6 +239,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = "{}?{}".format(
             self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -217,6 +248,7 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -228,6 +260,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -243,6 +276,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -259,6 +293,7 @@ class CreateUserSaveTest(unittest.TestCase):
             'save_file': self.temp_file_path,
         }
         request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
@@ -291,6 +326,7 @@ class AnswerProblemTest(unittest.TestCase):
         invoke_xblock_handler.return_value = DummyXblockResult()
 
         request = self.factory.post(self.url)
+        force_authenticate(request, user=UserFactory())
         response = self.view(request)
         response.render()
 
@@ -301,6 +337,7 @@ class AnswerProblemTest(unittest.TestCase):
     @mock.patch('labster.api.views.invoke_xblock_handler')
     def test_get_post_data(self, invoke_xblock_handler, modulestore, usage_key):
         request = self.factory.post(self.url)
+        force_authenticate(request, user=UserFactory())
         problem_locator = DummyProblemLocator()
         answer = "1"
         AnswerProblem().get_post_data(request, problem_locator, answer)

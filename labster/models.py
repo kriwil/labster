@@ -138,7 +138,6 @@ class DeviceInfo(models.Model):
     memory = models.CharField(default='', max_length=128)
     fill_rate = models.CharField(default='', max_length=128)
     shader_level = models.CharField(default='', max_length=128)
-    date = models.DateTimeField(default=timezone.now)
     quality = models.CharField(default='', max_length=128)
     misc = models.TextField(default='')
 

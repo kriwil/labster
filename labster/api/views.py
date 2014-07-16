@@ -224,7 +224,7 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
         return Response(response)
 
 
-class CourseWikiArticle(APIView):
+class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
 
     renderer_classes = (XMLRenderer,)
     media_type = 'application/xml'

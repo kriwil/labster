@@ -167,6 +167,38 @@ class CourseWiki(APIView):
         return Response(response)
 
 
+class CourseWikiArticle(APIView):
+
+    renderer_classes = (XMLRenderer,)
+    media_type = 'application/xml'
+    format = 'xml'
+    charset = 'utf-8'
+
+    def get(self, request, article_slug, *args, **kwargs):
+        from wiki.models import URLPath, Article
+
+        # since we already have article slug we don't need to search the course
+        # article slug is unique
+        try:
+            url_path = URLPath.get_by_path(article_slug, select_related=True)
+        except ObjectDoesNotExist:
+            raise Http404
+
+        # list all the articles
+        results = list(Article.objects.filter(id=url_path.article.id))
+
+        if results:
+            article = results[0]
+        else:
+            article = None
+
+        response = {
+            'title': article_slug,
+            'content': article.get_cached_content(),
+        }
+        return Response(response)
+
+
 class AnswerProblem(APIView):
 
     def __init__(self, *args, **kwargs):

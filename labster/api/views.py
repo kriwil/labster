@@ -79,6 +79,7 @@ def get_lab_by_location(location):
 
 class RendererMixin:
     renderer_classes = (XMLRenderer, JSONRenderer)
+    charset = 'utf-8'
 
 
 class ParserMixin:
@@ -234,9 +235,6 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
 class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
 
     renderer_classes = (XMLRenderer,)
-    media_type = 'application/xml'
-    format = 'xml'
-    charset = 'utf-8'
 
     def get(self, request, article_slug, *args, **kwargs):
         from wiki.models import URLPath, Article

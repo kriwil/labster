@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
-from rest_framework.parsers import FormParser, XMLParser, JSONParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import XMLRenderer, JSONRenderer
 from rest_framework.response import Response
@@ -82,7 +82,7 @@ class RendererMixin:
 
 
 class ParserMixin:
-    parser_classes = (FormParser, MultiPartParser, XMLParser, JSONParser)
+    parser_classes = (FormParser, MultiPartParser,)
 
 
 class AuthMixin:
@@ -173,7 +173,7 @@ class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateErrorInfo(RendererMixin, AuthMixin, CreateAPIView):
+class CreateErrorInfo(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
 
@@ -182,7 +182,7 @@ class CreateErrorInfo(RendererMixin, AuthMixin, CreateAPIView):
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
 
-class CreateDeviceInfo(RendererMixin, AuthMixin, CreateAPIView):
+class CreateDeviceInfo(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
 
@@ -263,7 +263,7 @@ class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
         return Response(response)
 
 
-class AnswerProblem(RendererMixin, AuthMixin, APIView):
+class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
 
     def __init__(self, *args, **kwargs):
         self.usage_key = get_usage_key()

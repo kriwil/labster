@@ -32,9 +32,12 @@ class LabProxySerializer(serializers.Serializer):
 
 class UserSaveSerializer(serializers.ModelSerializer):
 
+    save_file = serializers.FileField(required=True, allow_empty_file=True)
+
     class Meta:
         model = UserSave
-        fields = ('id', 'user', 'lab_proxy', 'save_file')
+        fields = ('id', 'user', 'save_file')
+        read_only_fields = ('user',)
 
 
 class ErrorInfoSerializer(serializers.ModelSerializer):

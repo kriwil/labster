@@ -1,9 +1,8 @@
 import mock
 import os.path
-import tempfile
 import unittest
-import urllib
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 
 from rest_framework.test import APIRequestFactory, force_authenticate
@@ -212,7 +211,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.lab = LabFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user = UserFactory()
-        self.temp_file_path = os.path.join(tempfile.gettempdir(), "temp-testfile")
+        self.user_save_file = SimpleUploadedFile("file.txt", "this is the content")
         self.url = reverse('labster-api-v2:user-save', args=[self.lab_proxy.location])
 
     def test_get_not_found(self):
@@ -224,7 +223,7 @@ class CreateUserSaveTest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_found(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.temp_file_path)
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.user_save_file)
 
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
@@ -240,14 +239,13 @@ class CreateUserSaveTest(unittest.TestCase):
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
     def test_post_created(self):
         post_data = {
-            'user': self.user.id,
-            'save_file': self.temp_file_path,
+            'save_file': self.user_save_file,
         }
-        request = self.factory.post(self.url, post_data)
+        request = self.factory.post(self.url, post_data, format='multipart')
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
@@ -260,10 +258,9 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_post_created_without_initial_lab_proxy(self):
         self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
         post_data = {
-            'user': self.user.id,
-            'save_file': self.temp_file_path,
+            'save_file': self.user_save_file,
         }
-        request = self.factory.post(self.url, post_data)
+        request = self.factory.post(self.url, post_data, format='multipart')
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
@@ -274,19 +271,18 @@ class CreateUserSaveTest(unittest.TestCase):
             UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
     def test_post_exists(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.temp_file_path)
+        x = UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.user_save_file)
 
         post_data = {
-            'user': self.user.id,
-            'save_file': self.temp_file_path,
+            'save_file': self.user_save_file,
         }
-        request = self.factory.post(self.url, post_data)
+        request = self.factory.post(self.url, post_data, format='multipart')
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         # whenever we post another user save, it will replace the old data
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 204)
 
         self.assertTrue(
             UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())

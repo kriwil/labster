@@ -36,9 +36,6 @@ class CreateErrorInfoTest(unittest.TestCase):
         # get method is not allowed in ErrorInfoFactory
         ErrorInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
-        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
-        self.url = "{}?{}".format(
-            self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
         response = self.view(request)
@@ -114,9 +111,6 @@ class CreateDeviceInfoTest(unittest.TestCase):
         # get method is not allowed in ErrorInfoFactory
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
 
-        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
-        self.url = "{}?{}".format(
-            self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
         response = self.view(request)
@@ -222,9 +216,6 @@ class CreateUserSaveTest(unittest.TestCase):
         self.url = reverse('labster-api-v2:user-save', args=[self.lab_proxy.location])
 
     def test_get_not_found(self):
-        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
-        self.url = "{}?{}".format(
-            self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
@@ -235,9 +226,6 @@ class CreateUserSaveTest(unittest.TestCase):
     def test_get_found(self):
         UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.temp_file_path)
 
-        url_params = {'user': self.user.id, 'lab_proxy': self.lab_proxy.id}
-        self.url = "{}?{}".format(
-            self.url, urllib.urlencode(url_params))
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)

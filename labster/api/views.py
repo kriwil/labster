@@ -7,6 +7,7 @@ from django.http import QueryDict
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -16,7 +17,6 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from labster.api.serializers import UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer
-from labster.authentication import SingleTokenAuthentication
 from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy, get_or_create_lab_proxy
 
 
@@ -86,7 +86,7 @@ class ParserMixin:
 
 
 class AuthMixin:
-    authentication_classes = (SingleTokenAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
 

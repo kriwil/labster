@@ -38,7 +38,7 @@ class CreateErrorInfoTest(unittest.TestCase):
 
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 405)
@@ -113,7 +113,7 @@ class CreateDeviceInfoTest(unittest.TestCase):
 
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
-        response = self.view(request)
+        response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
         self.assertEqual(response.status_code, 405)

@@ -207,11 +207,12 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
     def get(self, request, course_id, *args, **kwargs):
         from courseware.courses import get_course_by_id
         from course_wiki.utils import course_wiki_slug
+        from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
         from wiki.models import URLPath, Article
 
         try:
-            course = get_course_by_id(course_id)
+            course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(course_id))
         except ValueError:
             raise Http404
 
@@ -227,7 +228,7 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
 
         response = {
             'title': course_slug,
-            'content': article.get_cached_content(),
+            'content': article.render(),
         }
         return Response(response)
 
@@ -256,7 +257,7 @@ class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
 
         response = {
             'title': article_slug,
-            'content': article.get_cached_content(),
+            'content': article.render(),
         }
         return Response(response)
 

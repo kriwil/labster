@@ -8,7 +8,7 @@ class BaseAdmin(admin.ModelAdmin):
 
 
 class LabAdmin(BaseAdmin):
-    pass
+    fields = ('name', 'description',)
 
 
 class LabProxyAdmin(BaseAdmin):

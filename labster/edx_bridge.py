@@ -1,9 +1,8 @@
-from contentstore.utils import get_modulestore
-from contentstore.views.helpers import _xmodule_recurse
 from contentstore.views.item import _duplicate_item
 from courseware.courses import get_course_by_id
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
+from xmodule.modulestore.django import modulestore
 
 
 def get_master_quiz_blocks():
@@ -33,19 +32,15 @@ def get_lab_by_name(name):
 
 
 def duplicate_lab_content(user, source_location, parent_location):
+    store = modulestore()
     parent_locator = UsageKey.from_string(parent_location)
     source_locator = UsageKey.from_string(source_location)
-    source_store = get_modulestore(source_locator)
-    source_item = source_store.get_item(source_locator)
-
-    parent_store = get_modulestore(parent_locator)
-    parent_item = parent_store.get_item(parent_locator)
+    source_item = store.get_item(source_locator)
+    parent_item = store.get_item(parent_locator)
 
     # delete parent's children first
     for child in parent_item.get_children():
-        store = get_modulestore(child.location)
-        item = store.get_item(child.location)
-        _xmodule_recurse(item, lambda i: store.delete_item(i.location, delete_all_versions=True))
+        store.delete_item(child.location, user.id)
 
     # duplicate quiz_blocks
     for quiz_block in source_item.get_children():

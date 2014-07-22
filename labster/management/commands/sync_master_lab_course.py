@@ -14,12 +14,16 @@ from student.models import CourseEnrollment
 from student.roles import CourseInstructorRole, CourseStaffRole
 from student.roles import CourseRole
 
-
-COURSE_ID = "LabsterX/LAB101/2014_LAB"
-ADMIN_USER_ID = 4
+from labster.constants import COURSE_ID, ADMIN_USER_ID
 
 
 class Command(BaseCommand):
+    """
+    Management command to sync master course
+
+    Check cms/djangoapps/contentstore/views/course.py:create_new_course()
+    to see how course is created
+    """
 
     def handle(self, *args, **options):
         try:

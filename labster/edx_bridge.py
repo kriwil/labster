@@ -4,10 +4,11 @@ from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from xmodule.modulestore.django import modulestore
 
+from labster.constants import COURSE_ID
+
 
 def get_master_quiz_blocks():
-    course_id = "LabsterX/LAB101/2014_LAB"
-    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    course_key = SlashSeparatedCourseKey.from_deprecated_string(COURSE_ID)
     course = get_course_by_id(course_key)
 
     quiz_blocks_by_lab = {}

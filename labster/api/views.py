@@ -205,10 +205,9 @@ class LabProxyView(RendererMixin, AuthMixin, APIView):
 class CourseWiki(RendererMixin, AuthMixin, APIView):
 
     def get(self, request, course_id, *args, **kwargs):
-        from courseware.courses import get_course_by_id
         from course_wiki.utils import course_wiki_slug
+        from courseware.courses import get_course_by_id
         from opaque_keys.edx.locations import SlashSeparatedCourseKey
-
         from wiki.models import URLPath, Article
 
         try:

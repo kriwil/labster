@@ -219,10 +219,9 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
 
         url_path = URLPath.get_by_path(course_slug, select_related=True)
 
-        results = list(Article.objects.filter(id=url_path.article.id))
-        if results:
-            article = results[0]
-        else:
+        try:
+            article = Article.objects.get(id=url_path.article.id)
+        except Article.DoesNotExist:
             article = None
 
         response = {

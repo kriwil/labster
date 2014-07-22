@@ -224,9 +224,18 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
         except Article.DoesNotExist:
             article = None
 
+        # ref:
+        # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178
+        content_markdown = article.current_revision.content
+
         response = {
-            'title': course_slug,
-            'content': article.render(),
+            'id': url_path.article.id,
+            'slug': course_slug,
+            'title': unicode(article),
+            'content': {
+                'html': article.render(),
+                'markdown': content_markdown,
+            },
         }
         return Response(response)
 

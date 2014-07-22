@@ -211,6 +211,8 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
         from wiki.models import URLPath, Article
 
         try:
+            # ref:
+            # https://github.com/Bodekaer/Labster.EdX/blob/cfcbdc01453150f1025e59c9b6a9a03ace390f4a/lms/djangoapps/course_wiki/views.py#L39
             course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(course_id))
         except ValueError:
             raise Http404
@@ -254,17 +256,23 @@ class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
         except ObjectDoesNotExist:
             raise Http404
 
-        # list all the articles
-        results = list(Article.objects.filter(id=url_path.article.id))
+        try:
+            article = Article.objects.get(id=url_path.article.id)
+        except Article.DoesNotExist:
+            article = None        
 
-        if results:
-            article = results[0]
-        else:
-            article = None
+        # ref:
+        # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178
+        content_markdown = article.current_revision.content
 
         response = {
-            'title': article_slug,
-            'content': article.render(),
+            'id': url_path.article.id,
+            'slug': article_slug,
+            'title': unicode(article),
+            'content': {
+                'html': article.render(),
+                'markdown': content_markdown,
+            },
         }
         return Response(response)
 

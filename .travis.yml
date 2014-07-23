@@ -2,11 +2,5 @@ language: python
 python:
   - "2.7"
 install:
-  - pip install -e git+https://github.com/edx/XBlock.git@3b6e4218bd326f84dbeb0baed7b2b7813ffea3dd#egg=XBlock
-  - pip install -e git+https://github.com/edx/acid-block.git@459aff7b63db8f2c5decd1755706c1a64fb4ebb1#egg=acid-xblock
-  - pip install -e git+https://github.com/edx/xblock-sdk.git@29720c0a3c7148b09cc38ef1291ff6946577ec98#egg=xblock-sdk
-  - pip install cookiecutter==0.7.1
-  - pip install djangorestframework==2.3.14
-  - pip install factory-boy==2.4.1
-  - pip install Pillow==2.5.1
+  - pip install -r requirements.txt
 script: python manage.py test labster

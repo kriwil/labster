@@ -19,6 +19,7 @@ diff_quality_pylint.html
 doc/_build
 htmlcov
 local_settings.py
+media
 nosetests.xml
 pep8.report
 pylint.report

@@ -15,10 +15,10 @@ tests
 
   # create virtualenv (run once)
   virtualenv env
+  source env/bin/activate
 
   # install requiements (run once)
   pip install -r requirements.txt
 
   # run the tests
-  source env/bin/activate
   python manage.py test labster

@@ -8,34 +8,17 @@ Labster app for edX
 - sudo su edxapp
 - pip install -e /path/to/labster/
 
-edX
----
-
-::
-
-  # lms/envs/common.py
-  FEATURES = {
-    ...
-    'LABSTER': True,
-  }
-  
-  ...
-  
-  # put this at the bottom
-  if FEATURES.get('LABSTER'):
-    INSTALLED_APPS += ('labster',)
-    
-  
-  # lms/urls.py
-  if settings.FEATURES.get('LABSTER'):
-    urlpatterns += (
-      url('^labster/', include('labster.urls')),
-    )
-
 tests
 -----
 
 ::
 
-  # from edX
-  python manage.py lms test labster --settings=devstack
+  # create virtualenv (run once)
+  virtualenv env
+
+  # install requiements (run once)
+  pip install -r requirements.txt
+
+  # run the tests
+  source env/bin/activate
+  python manage.py test labster

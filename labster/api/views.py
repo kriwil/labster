@@ -137,11 +137,12 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
 class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
-        user = self.request.QUERY_PARAMS.get('user', None)
+        # http://www.django-rest-framework.org/api-guide/requests#user
+        user = request.user
         location = kwargs.get('location')
 
-        lab_proxy = get_object_or_404(LabProxy, location=location)
-        user_save = get_object_or_404(UserSave, user=user, lab_proxy=lab_proxy)
+        lab_proxy = get_object_or_404(LabProxy, location=location)        
+        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
 
         serializer = UserSaveSerializer(user_save)
         return Response(serializer.data)

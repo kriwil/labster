@@ -8,3 +8,4 @@ install:
   - pip install cookiecutter==0.7.1
   - pip install djangorestframework==2.3.14
   - pip install factory-boy==2.4.1
+script: python manage.py test labster.tests

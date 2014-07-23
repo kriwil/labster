@@ -59,6 +59,19 @@ class CreateErrorInfoTest(unittest.TestCase):
         self.assertTrue(
             ErrorInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
+    def test_post_not_authenticated(self):
+        post_data = {
+            'browser': 'Firefox',
+            'os': 'Windows',
+            'user_agent': 'user agent',
+            'message': 'this is message',
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
     def test_post_created_missing_data(self):
         post_data = {
             'browser': '',
@@ -144,6 +157,30 @@ class CreateDeviceInfoTest(unittest.TestCase):
 
         self.assertTrue(
             DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_not_authenticated(self):
+        DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        post_data = {
+            'device_id': 'this is devicei id',
+            'os': 'Windows',
+            'machine_type': 'Intel',
+            'ram': '1GB',
+            'processor': 'intel dual core',
+            'cores': 'quad core',
+            'gpu': 'NVidia',
+            'memory': '64GB',
+            'fill_rate': '45',
+            'shader_level': 'top',
+            'quality': 'best',
+            'misc': 'this is misc',
+            'frame_rate': '60FPS',
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
 
     def test_post_created_empty_data(self):
         DeviceInfoFactory(user=self.user, lab_proxy=self.lab_proxy)
@@ -232,6 +269,15 @@ class CreateUserSaveTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_get_not_authenticated(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.user_save_file)
+
+        request = self.factory.get(self.url)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
     def test_post_invalid(self):
         post_data = {}
         request = self.factory.post(self.url, post_data)
@@ -254,6 +300,16 @@ class CreateUserSaveTest(unittest.TestCase):
 
         self.assertTrue(
             UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_not_authenticated(self):
+        post_data = {
+            'save_file': self.user_save_file,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
 
     def test_post_created_without_initial_lab_proxy(self):
         self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
@@ -315,6 +371,18 @@ class AnswerProblemTest(unittest.TestCase):
         response.render()
 
         self.assertEqual(response.status_code, 201)
+
+    @mock.patch('labster.api.views.get_usage_key')
+    @mock.patch('labster.api.views.get_modulestore')
+    @mock.patch('labster.api.views.invoke_xblock_handler')
+    def test_post_without_authentication(self, invoke_xblock_handler, modulestore, usage_key):
+        invoke_xblock_handler.return_value = DummyXblockResult()
+
+        request = self.factory.post(self.url)
+        response = self.view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
 
     @mock.patch('labster.api.views.get_usage_key')
     @mock.patch('labster.api.views.get_modulestore')

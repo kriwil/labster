@@ -48,16 +48,18 @@ class LanguageLab(models.Model):
 class Lab(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(default='')
+    engine_xml = models.CharField(max_length=128)
+
+    # lab can have many languages
+    languages = models.ManyToManyField(LanguageLab)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
     url = models.URLField(max_length=120, blank=True, default="")
     wiki_url = models.URLField(max_length=120, blank=True, default="")
     screenshot = models.ImageField(upload_to='labster/lab/images', blank=True)
     questions = models.TextField(default='', blank=True)
-    engine_xml = models.CharField(max_length=128, blank=True, default='')
-    # lab can have many languages
-    languages = models.ManyToManyField(LanguageLab, blank=True)
-
-    created_at = models.DateTimeField(default=timezone.now)
-    modified_at = models.DateTimeField(default=timezone.now)
 
     def __unicode__(self):
         return self.name

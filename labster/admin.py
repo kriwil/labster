@@ -8,7 +8,8 @@ class BaseAdmin(admin.ModelAdmin):
 
 
 class LabAdmin(BaseAdmin):
-    fields = ('name', 'description',)
+    fields = ('name', 'description', 'engine_xml', 'languages')
+    filter_horizontal = ('languages',)
 
 
 class LabProxyAdmin(BaseAdmin):

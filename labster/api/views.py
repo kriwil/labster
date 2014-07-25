@@ -141,7 +141,7 @@ class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         user = request.user
         location = kwargs.get('location')
 
-        lab_proxy = get_object_or_404(LabProxy, location=location)        
+        lab_proxy = get_object_or_404(LabProxy, location=location)
         user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
 
         serializer = UserSaveSerializer(user_save)
@@ -260,7 +260,7 @@ class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
         try:
             article = Article.objects.get(id=url_path.article.id)
         except Article.DoesNotExist:
-            article = None        
+            article = None
 
         # ref:
         # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178

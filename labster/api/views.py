@@ -55,6 +55,7 @@ def get_lab_by_location(location):
             problem = {
                 'id': unicode(_problem.location),
                 'content': _problem.data,
+                'tags': _problem.tags,
             }
 
             problems.append(problem)

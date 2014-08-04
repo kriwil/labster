@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -133,6 +134,38 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
             'error-info': error_info_url,
             'device-info': device_info_url,
         })
+
+
+class UserAuth(RendererMixin, APIView):
+
+    def post(self, request, *args, **kwargs):
+        email = request.DATA.get('email')
+        password = request.DATA.get('password')
+        response_data = {}
+        http_status = status.HTTP_200_OK
+
+        if not email or not password:
+            response_data['status'] = False
+
+        else:
+            try:
+                user = User.objects.get(email=email)
+            except:
+                response_data['status'] = False
+            else:
+                response_data['status'] = user.check_password(password)
+
+        if response_data['status']:
+            token, _ = Token.objects.get_or_create(user=user)
+            response_data.update({
+                'user_id': user.id,
+                'token': token.key,
+            })
+
+        else:
+            http_status = status.HTTP_400_BAD_REQUEST
+
+        return Response(response_data, status=http_status)
 
 
 class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):

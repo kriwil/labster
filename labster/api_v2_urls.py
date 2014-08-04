@@ -5,11 +5,13 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from labster.api.views import APIRoot
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
 from labster.api.views import LabProxyView, AnswerProblem, CourseWiki, CourseWikiArticle
+from labster.api.views import UserAuth
 
 
 urlpatterns = patterns('',  # nopep8
 
     url('^$', APIRoot.as_view(), name='root'),
+    url('auth/$', UserAuth.as_view(), name='auth'),
     url('^lab-proxy/(?P<location>[^\/]+)/$', LabProxyView.as_view(), name='lab-proxy-detail'),
     url('^lab-proxy/(?P<location>[^\/]+)/answer-problem/$', AnswerProblem.as_view(), name='answer-problem'),
     url('^lab-proxy/(?P<location>[^\/]+)/user-save/$', CreateUserSave.as_view(), name='user-save'),

@@ -1,5 +1,4 @@
 import mock
-import os.path
 import unittest
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -7,7 +6,10 @@ from django.core.urlresolvers import reverse
 
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from labster.api.views import CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem
+from labster.api.views import (
+    CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem,
+    PlayLab, FinishLab,
+)
 from labster.models import ErrorInfo, DeviceInfo, UserSave
 from labster.tests.factories import (
     DeviceInfoFactory,
@@ -327,7 +329,7 @@ class CreateUserSaveTest(unittest.TestCase):
             UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
 
     def test_post_exists(self):
-        x = UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.user_save_file)
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, save_file=self.user_save_file)
 
         post_data = {
             'save_file': self.user_save_file,
@@ -346,6 +348,237 @@ class CreateUserSaveTest(unittest.TestCase):
         # this should be 1 because we are replacing the old data with the new one
         self.assertEqual(
             UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).count(), 1)
+
+
+class PlayLabTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = PlayLab.as_view()
+        self.factory = APIRequestFactory()
+        self.lab = LabFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+        self.user = UserFactory()
+        self.url = reverse('labster-api-v2:play-lab', args=[self.lab_proxy.location])
+
+    def test_get_not_found(self):
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_found(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_not_authenticated(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        request = self.factory.get(self.url)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_post_invalid(self):
+        post_data = {}
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_created(self):
+        post_data = {
+            'play': 1,
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_not_authenticated(self):
+        post_data = {
+            'play': 1,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_post_created_without_initial_lab_proxy(self):
+        self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
+        post_data = {
+            'play': 1,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_exists(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, play_count=10, is_finished=True)
+
+        post_data = {
+            'play': 1,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        # whenever we post another user save, it will replace the old data
+        self.assertEqual(response.status_code, 204)
+
+        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_saves.count(), 1)
+
+        self.assertEqual(user_saves[0].play_count, 11)
+        self.assertEqual(user_saves[0].is_finished, False)
+
+    def test_post_exists_not_finished(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, play_count=10, is_finished=False)
+
+        post_data = {
+            'play': 1,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        # whenever we post another user save, it will replace the old data
+        self.assertEqual(response.status_code, 204)
+
+        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_saves.count(), 1)
+
+        self.assertEqual(user_saves[0].play_count, 10)
+        self.assertEqual(user_saves[0].is_finished, False)
+
+
+class FinishLabTest(unittest.TestCase):
+
+    def setUp(self):
+        self.view = FinishLab.as_view()
+        self.factory = APIRequestFactory()
+        self.lab = LabFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+        self.user = UserFactory()
+        self.url = reverse('labster-api-v2:finish-lab', args=[self.lab_proxy.location])
+
+    def test_get_not_found(self):
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_found(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_not_authenticated(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+
+        request = self.factory.get(self.url)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_post_invalid(self):
+        post_data = {}
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_created(self):
+        post_data = {
+            'is_finished': True,
+        }
+        request = self.factory.post(self.url, post_data)
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_created_not_authenticated(self):
+        post_data = {
+            'is_finished': True,
+        }
+        request = self.factory.post(self.url, post_data)
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_post_created_without_initial_lab_proxy(self):
+        self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
+        post_data = {
+            'is_finished': True,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertTrue(
+            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+
+    def test_post_exists(self):
+        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
+
+        post_data = {
+            'is_finished': True,
+        }
+        request = self.factory.post(self.url, post_data, format='multipart')
+        force_authenticate(request, user=UserFactory())
+        response = self.view(request, location=self.lab_proxy.location)
+        response.render()
+
+        # whenever we post another user save, it will replace the old data
+        self.assertEqual(response.status_code, 204)
+
+        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_saves.count(), 1)
+
+        self.assertEqual(user_saves[0].is_finished, True)
 
 
 class AnswerProblemTest(unittest.TestCase):

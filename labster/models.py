@@ -109,6 +109,8 @@ class UserSave(models.Model):
     lab_proxy = models.ForeignKey(LabProxy)
     user = models.ForeignKey(User)
     save_file = models.FileField(blank=True, null=True, upload_to='labster/lab/save_file')
+    play_count = models.IntegerField(default=0)
+    is_finished = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 

@@ -40,6 +40,31 @@ class UserSaveSerializer(serializers.ModelSerializer):
         read_only_fields = ('user',)
 
 
+class PlayLabSerializer(serializers.ModelSerializer):
+
+    play = serializers.IntegerField(required=True, write_only=True)
+
+    class Meta:
+        model = UserSave
+        fields = ('id', 'user', 'play_count', 'play')
+        read_only_fields = ('user', 'play_count')
+
+
+class FinishLabSerializer(serializers.ModelSerializer):
+
+    is_finished = serializers.BooleanField(required=True)
+
+    class Meta:
+        model = UserSave
+        fields = ('id', 'user', 'is_finished')
+        read_only_fields = ('user',)
+
+    def validate_is_finished(self, attrs, source):
+        if attrs.get(source) is False:
+            raise serializers.ValidationError("is_finished is required")
+        return attrs
+
+
 class ErrorInfoSerializer(serializers.ModelSerializer):
 
     class Meta:

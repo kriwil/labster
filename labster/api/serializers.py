@@ -40,6 +40,16 @@ class UserSaveSerializer(serializers.ModelSerializer):
         read_only_fields = ('user',)
 
 
+class PlayLabSerializer(serializers.ModelSerializer):
+
+    play = serializers.IntegerField(required=True, write_only=True)
+
+    class Meta:
+        model = UserSave
+        fields = ('id', 'user', 'play_count', 'play')
+        read_only_fields = ('user', 'play_count')
+
+
 class ErrorInfoSerializer(serializers.ModelSerializer):
 
     class Meta:

@@ -5,7 +5,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from labster.api.views import APIRoot
 from labster.api.views import CreateUserSave, CreateErrorInfo, CreateDeviceInfo
 from labster.api.views import LabProxyView, AnswerProblem, CourseWiki, CourseWikiArticle
-from labster.api.views import UserAuth
+from labster.api.views import UserAuth, PlayLab
 
 
 urlpatterns = patterns('',  # nopep8
@@ -17,6 +17,7 @@ urlpatterns = patterns('',  # nopep8
     url('^lab-proxy/(?P<location>[^\/]+)/user-save/$', CreateUserSave.as_view(), name='user-save'),
     url('^lab-proxy/(?P<location>[^\/]+)/error-info/$', CreateErrorInfo.as_view(), name='error-info'),
     url('^lab-proxy/(?P<location>[^\/]+)/device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
+    url('^lab-proxy/(?P<location>[^\/]+)/play-lab/$', PlayLab.as_view(), name='play-lab'),
 
     url('^course-wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', CourseWiki.as_view(), name='course-wiki'),
     # since article can have children it might conflict with course-wiki, so I add keyword article in the end

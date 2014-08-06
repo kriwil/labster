@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 
 from labster.api.serializers import (
     UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer,
-    PlayLabSerializer)
+    PlayLabSerializer, FinishLabSerializer)
 from labster.models import UserSave, ErrorInfo, DeviceInfo, LabProxy, get_or_create_lab_proxy
 
 
@@ -228,8 +228,9 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         obj.user = self.request.user
         obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
 
-        if data.get('play') == '1':
+        if obj.is_finished and data.get('play') == '1':
             obj.play_count += 1
+            obj.is_finished = False
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
@@ -246,6 +247,47 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
             user_save, new_object = None, True
 
         serializer = PlayLabSerializer(instance=user_save, data=data)
+        if serializer.is_valid():
+            self.pre_save(serializer.object, data=data)
+            serializer.save()
+            http_status = status.HTTP_201_CREATED if new_object else status.HTTP_204_NO_CONTENT
+            return Response(serializer.data, status=http_status)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
+
+    def get(self, request, *args, **kwargs):
+        # http://www.django-rest-framework.org/api-guide/requests#user
+        user = request.user
+        location = kwargs.get('location')
+
+        lab_proxy = get_object_or_404(LabProxy, location=location)
+        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
+
+        serializer = FinishLabSerializer(user_save)
+        return Response(serializer.data)
+
+    def pre_save(self, obj, data=None):
+        obj.user = self.request.user
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+
+    def post(self, request, *args, **kwargs):
+        data = request.DATA
+
+        user = request.user
+        location = kwargs.get('location')
+        lab_proxy = get_or_create_lab_proxy(location=location)
+
+        user = get_object_or_404(User, id=user.id)
+
+        try:
+            user_save, new_object = UserSave.objects.get(user=user, lab_proxy=lab_proxy), False
+        except ObjectDoesNotExist:
+            user_save, new_object = None, True
+
+        serializer = FinishLabSerializer(instance=user_save, data=data)
         if serializer.is_valid():
             self.pre_save(serializer.object, data=data)
             serializer.save()

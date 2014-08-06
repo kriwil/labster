@@ -48,7 +48,7 @@ class LanguageLab(models.Model):
 class Lab(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(default='')
-    engine_xml = models.CharField(max_length=128)
+    engine_xml = models.CharField(max_length=128, blank=True, default="")
 
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)

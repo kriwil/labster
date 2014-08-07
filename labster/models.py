@@ -109,13 +109,43 @@ class UserSave(models.Model):
     lab_proxy = models.ForeignKey(LabProxy)
     user = models.ForeignKey(User)
     save_file = models.FileField(blank=True, null=True, upload_to='labster/lab/save_file')
-    play_count = models.IntegerField(default=0)
-    is_finished = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 
+    # these will be deleted
+    play_count = models.IntegerField(default=0)
+    is_finished = models.BooleanField(default=False)
+
     class Meta:
         unique_together = ('lab_proxy', 'user')
+
+
+class UserAttemptManager(models.Manager):
+    def latest_for_user(self, lab_proxy, user):
+        try:
+            return self.get_query_set().filter(
+                lab_proxy=lab_proxy, user=user).latest('created_at')
+        except self.model.DoesNotExist:
+            return None
+
+
+class UserAttempt(models.Model):
+    lab_proxy = models.ForeignKey(LabProxy)
+    user = models.ForeignKey(User)
+    is_finished = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    modified_at = models.DateTimeField(default=timezone.now)
+
+    objects = UserAttemptManager()
+
+    def mark_finished(self):
+        self.is_finished = True
+        self.save()
+
+    def get_total_play_count(self):
+        return UserAttempt.objects.filter(
+            user=self.user, lab_proxy=self.lab_proxy).count()
 
 
 class ErrorInfo(models.Model):

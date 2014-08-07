@@ -5,7 +5,7 @@ from factory.django import DjangoModelFactory
 
 from django.contrib.auth.models import User
 
-from labster.models import Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy
+from labster.models import Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy, UserAttempt
 
 
 class UserFactory(DjangoModelFactory):
@@ -37,6 +37,10 @@ class DeviceInfoFactory(DjangoModelFactory):
 
 class UserSaveFactory(DjangoModelFactory):
     FACTORY_FOR = UserSave
+
+
+class UserAttemptFactory(DjangoModelFactory):
+    FACTORY_FOR = UserAttempt
 
 
 class DummyUsageKey:

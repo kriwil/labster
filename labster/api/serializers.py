@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from labster.models import UserSave, ErrorInfo, DeviceInfo
+from labster.models import UserSave, ErrorInfo, DeviceInfo, UserAttempt
 
 
 class LabSerializer(serializers.Serializer):
@@ -40,14 +40,14 @@ class UserSaveSerializer(serializers.ModelSerializer):
         read_only_fields = ('user',)
 
 
-class PlayLabSerializer(serializers.ModelSerializer):
+class UserAttemptSerializer(serializers.ModelSerializer):
 
     play = serializers.IntegerField(required=True, write_only=True)
 
     class Meta:
-        model = UserSave
-        fields = ('id', 'user', 'play_count', 'play')
-        read_only_fields = ('user', 'play_count')
+        model = UserAttempt
+        fields = ('id', 'user', 'is_finished', 'play')
+        read_only_fields = ('user', 'is_finished')
 
 
 class FinishLabSerializer(serializers.ModelSerializer):
@@ -55,7 +55,7 @@ class FinishLabSerializer(serializers.ModelSerializer):
     is_finished = serializers.BooleanField(required=True)
 
     class Meta:
-        model = UserSave
+        model = UserAttempt
         fields = ('id', 'user', 'is_finished')
         read_only_fields = ('user',)
 

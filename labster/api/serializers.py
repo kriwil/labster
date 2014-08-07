@@ -55,7 +55,7 @@ class FinishLabSerializer(serializers.ModelSerializer):
     is_finished = serializers.BooleanField(required=True)
 
     class Meta:
-        model = UserSave
+        model = UserAttempt
         fields = ('id', 'user', 'is_finished')
         read_only_fields = ('user',)
 

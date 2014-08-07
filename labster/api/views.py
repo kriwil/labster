@@ -267,9 +267,11 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         location = kwargs.get('location')
 
         lab_proxy = get_object_or_404(LabProxy, location=location)
-        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
+        user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
+        if not user_attempt:
+            raise Http404
 
-        serializer = FinishLabSerializer(user_save)
+        serializer = FinishLabSerializer(user_attempt)
         return Response(serializer.data)
 
     def pre_save(self, obj, data=None):
@@ -284,17 +286,15 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         lab_proxy = get_or_create_lab_proxy(location=location)
 
         user = get_object_or_404(User, id=user.id)
+        user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
+        if not user_attempt:
+            raise Http404
 
-        try:
-            user_save, new_object = UserSave.objects.get(user=user, lab_proxy=lab_proxy), False
-        except ObjectDoesNotExist:
-            user_save, new_object = None, True
-
-        serializer = FinishLabSerializer(instance=user_save, data=data)
+        serializer = FinishLabSerializer(instance=user_attempt, data=data)
         if serializer.is_valid():
             self.pre_save(serializer.object, data=data)
             serializer.save()
-            http_status = status.HTTP_201_CREATED if new_object else status.HTTP_204_NO_CONTENT
+            http_status = status.HTTP_204_NO_CONTENT
             return Response(serializer.data, status=http_status)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

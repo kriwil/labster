@@ -425,7 +425,7 @@ class PlayLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_post_created_without_initial_lab_proxy(self):
-        self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
+        self.url = reverse('labster-api-v2:play-lab', args=['somerandomtext'])
         post_data = {
             'play': 1,
         }
@@ -476,7 +476,7 @@ class FinishLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_found(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
@@ -486,7 +486,7 @@ class FinishLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_not_authenticated(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         request = self.factory.get(self.url)
         response = self.view(request, location=self.lab_proxy.location)
@@ -495,6 +495,8 @@ class FinishLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_post_invalid(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
+
         post_data = {}
         request = self.factory.post(self.url, post_data)
         force_authenticate(request, user=UserFactory())
@@ -512,10 +514,7 @@ class FinishLabTest(unittest.TestCase):
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
-        self.assertEqual(response.status_code, 201)
-
-        self.assertTrue(
-            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+        self.assertEqual(response.status_code, 404)
 
     def test_post_created_not_authenticated(self):
         post_data = {
@@ -528,27 +527,24 @@ class FinishLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_post_created_without_initial_lab_proxy(self):
-        self.url = reverse('labster-api-v2:user-save', args=['somerandomtext'])
+        self.url = reverse('labster-api-v2:finish-lab', args=['somerandomtext'])
         post_data = {
             'is_finished': True,
         }
-        request = self.factory.post(self.url, post_data, format='multipart')
+        request = self.factory.post(self.url, post_data)
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
 
-        self.assertEqual(response.status_code, 201)
-
-        self.assertTrue(
-            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+        self.assertEqual(response.status_code, 404)
 
     def test_post_exists(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
 
         post_data = {
             'is_finished': True,
         }
-        request = self.factory.post(self.url, post_data, format='multipart')
+        request = self.factory.post(self.url, post_data)
         force_authenticate(request, user=UserFactory())
         response = self.view(request, location=self.lab_proxy.location)
         response.render()
@@ -556,10 +552,10 @@ class FinishLabTest(unittest.TestCase):
         # whenever we post another user save, it will replace the old data
         self.assertEqual(response.status_code, 204)
 
-        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
-        self.assertEqual(user_saves.count(), 1)
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
 
-        self.assertEqual(user_saves[0].is_finished, True)
+        self.assertEqual(user_attempts[0].is_finished, True)
 
 
 class AnswerProblemTest(unittest.TestCase):

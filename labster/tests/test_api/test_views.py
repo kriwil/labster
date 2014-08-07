@@ -8,9 +8,9 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from labster.api.views import (
     CreateErrorInfo, CreateDeviceInfo, CreateUserSave, AnswerProblem,
-    PlayLab, FinishLab,
+    PlayLab, FinishLab
 )
-from labster.models import ErrorInfo, DeviceInfo, UserSave
+from labster.models import ErrorInfo, DeviceInfo, UserSave, UserAttempt
 from labster.tests.factories import (
     DeviceInfoFactory,
     DummyProblemLocator,
@@ -19,6 +19,7 @@ from labster.tests.factories import (
     LabFactory,
     UserFactory,
     UserSaveFactory,
+    UserAttemptFactory,
     create_lab_proxy,
 )
 
@@ -369,7 +370,7 @@ class PlayLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_found(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         request = self.factory.get(self.url)
         force_authenticate(request, user=UserFactory())
@@ -379,7 +380,7 @@ class PlayLabTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_not_authenticated(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         request = self.factory.get(self.url)
         response = self.view(request, location=self.lab_proxy.location)
@@ -407,8 +408,11 @@ class PlayLabTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
 
-        self.assertTrue(
-            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
+
+        user_attempt = user_attempts[0]
+        self.assertFalse(user_attempt.is_finished)
 
     def test_post_created_not_authenticated(self):
         post_data = {
@@ -432,31 +436,11 @@ class PlayLabTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
 
-        self.assertTrue(
-            UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy).exists())
-
-    def test_post_exists(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, play_count=10, is_finished=True)
-
-        post_data = {
-            'play': 1,
-        }
-        request = self.factory.post(self.url, post_data, format='multipart')
-        force_authenticate(request, user=UserFactory())
-        response = self.view(request, location=self.lab_proxy.location)
-        response.render()
-
-        # whenever we post another user save, it will replace the old data
-        self.assertEqual(response.status_code, 204)
-
-        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
-        self.assertEqual(user_saves.count(), 1)
-
-        self.assertEqual(user_saves[0].play_count, 11)
-        self.assertEqual(user_saves[0].is_finished, False)
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
 
     def test_post_exists_not_finished(self):
-        UserSaveFactory(user=self.user, lab_proxy=self.lab_proxy, play_count=10, is_finished=False)
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 
         post_data = {
             'play': 1,
@@ -467,13 +451,10 @@ class PlayLabTest(unittest.TestCase):
         response.render()
 
         # whenever we post another user save, it will replace the old data
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 201)
 
-        user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
-        self.assertEqual(user_saves.count(), 1)
-
-        self.assertEqual(user_saves[0].play_count, 10)
-        self.assertEqual(user_saves[0].is_finished, False)
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 2)
 
 
 class FinishLabTest(unittest.TestCase):

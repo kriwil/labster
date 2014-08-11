@@ -257,3 +257,66 @@ class CreateUserSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
         self.assertEqual(user_saves.count(), 1)
 
         self.assertEqual(user_saves[0].id, user_save.id)
+
+
+class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
+
+    def setUp(self):
+        self.lab = LabFactory()
+        self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+
+        self.url = reverse('labster-api-v2:play-lab', args=[self.lab_proxy.location])
+        self.headers = get_auth_header(self.user)
+
+    def test_get_found(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
+        response = self.client.get(self.url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_invalid(self):
+        post_data = {}
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_created(self):
+        post_data = {
+            'play': 1,
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
+
+        user_attempt = user_attempts[0]
+        self.assertEqual(user_attempt.get_total_play_count(), 1)
+        self.assertFalse(user_attempt.is_finished)
+
+    def test_post_created_without_intial_lab(self):
+        lab_proxy_location = 'somerandomtext'
+        self.url = reverse('labster-api-v2:play-lab', args=[lab_proxy_location])
+        post_data = {
+            'play': 1,
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        user_attempts = UserAttempt.objects.filter(
+            user=self.user, lab_proxy__location=lab_proxy_location)
+        self.assertEqual(user_attempts.count(), 1)
+
+        user_attempt = user_attempts[0]
+        self.assertEqual(user_attempt.get_total_play_count(), 1)
+        self.assertFalse(user_attempt.is_finished)
+
+    def test_post_exists_not_finished(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
+        post_data = {
+            'play': 1,
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 2)

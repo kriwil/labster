@@ -1,14 +1,17 @@
+import mock
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.test.client import RequestFactory
 
 from rest_framework.authtoken.models import Token
 
+from labster.api.views import AnswerProblem
 from labster.models import ErrorInfo, DeviceInfo, UserSave, UserAttempt
 from labster.tests.factories import (
     DummyProblemLocator,
     DummyXblockResult,
-    ErrorInfoFactory,
     LabFactory,
     UserFactory,
     UserSaveFactory,
@@ -361,3 +364,43 @@ class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
         self.assertEqual(user_attempts[0].id, user_attempt.id)
         self.assertEqual(user_attempts[0].is_finished, True)
+
+
+class AnswerProblemTest(TestCase):
+
+    def setUp(self):
+        self.lab = LabFactory()
+        self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+
+        self.url = reverse('labster-api-v2:answer-problem', args=[self.lab_proxy.location])
+        self.headers = get_auth_header(self.user)
+
+    @mock.patch('labster.api.views.get_usage_key')
+    @mock.patch('labster.api.views.get_modulestore')
+    @mock.patch('labster.api.views.invoke_xblock_handler')
+    def test_post(self, invoke_xblock_handler, modulestore, usage_key):
+        invoke_xblock_handler.return_value = DummyXblockResult()
+
+        response = self.client.post(self.url, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+    @mock.patch('labster.api.views.get_usage_key')
+    @mock.patch('labster.api.views.get_modulestore')
+    @mock.patch('labster.api.views.invoke_xblock_handler')
+    def test_post_without_authentication(self, invoke_xblock_handler, modulestore, usage_key):
+        invoke_xblock_handler.return_value = DummyXblockResult()
+
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    @mock.patch('labster.api.views.get_usage_key')
+    @mock.patch('labster.api.views.get_modulestore')
+    @mock.patch('labster.api.views.invoke_xblock_handler')
+    def test_get_post_data(self, invoke_xblock_handler, modulestore, usage_key):
+        request = RequestFactory().request()
+        problem_locator = DummyProblemLocator()
+        answer = "1"
+        post_data = AnswerProblem().get_post_data(request, problem_locator, answer)
+        self.assertIn('input_tag-org-course-category-name_2_1', post_data)
+        self.assertEqual(post_data.get('input_tag-org-course-category-name_2_1'), '1')

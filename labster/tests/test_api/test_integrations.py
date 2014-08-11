@@ -6,7 +6,6 @@ from rest_framework.authtoken.models import Token
 
 from labster.models import ErrorInfo, DeviceInfo, UserSave, UserAttempt
 from labster.tests.factories import (
-    DeviceInfoFactory,
     DummyProblemLocator,
     DummyXblockResult,
     ErrorInfoFactory,
@@ -320,3 +319,45 @@ class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
         user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
         self.assertEqual(user_attempts.count(), 2)
+
+
+class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
+
+    def setUp(self):
+        self.lab = LabFactory()
+        self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+
+        self.url = reverse('labster-api-v2:finish-lab', args=[self.lab_proxy.location])
+        self.headers = get_auth_header(self.user)
+
+    def test_get_found(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
+        response = self.client.get(self.url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_not_found(self):
+        post_data = {}
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_invalid(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
+
+        post_data = {}
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_exists(self):
+        user_attempt = UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy, is_finished=False)
+        post_data = {
+            'is_finished': True,
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 204)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
+
+        self.assertEqual(user_attempts[0].id, user_attempt.id)
+        self.assertEqual(user_attempts[0].is_finished, True)

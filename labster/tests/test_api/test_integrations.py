@@ -101,3 +101,95 @@ class CreateErrorInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
         for key, value in post_data.items():
             self.assertEqual(getattr(error_info, key), value)
 
+
+class CreateDeviceInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
+
+    def setUp(self):
+        self.lab = LabFactory()
+        self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+        self.url = reverse('labster-api-v2:device-info', args=[self.lab_proxy.location])
+
+        self.headers = get_auth_header(self.user)
+
+    def test_post_created(self):
+        post_data = {
+            'cores': 'quad core',
+            'device_id': 'this is devicei id',
+            'fill_rate': '45',
+            'frame_rate': '60FPS',
+            'gpu': 'NVidia',
+            'machine_type': 'Intel',
+            'memory': '64GB',
+            'misc': 'this is misc',
+            'os': 'Windows',
+            'processor': 'intel dual core',
+            'quality': 'best',
+            'ram': '1GB',
+            'shader_level': 'top',
+        }
+
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertTrue(device_infos.exists())
+
+        device_info = device_infos[0]
+        for key, value in post_data.items():
+            self.assertEqual(getattr(device_info, key), value)
+
+    def test_post_empty_data(self):
+
+        post_data = {
+            'cores': '',
+            'device_id': '',
+            'fill_rate': '',
+            'frame_rate': '',
+            'gpu': '',
+            'machine_type': '',
+            'memory': '',
+            'misc': '',
+            'os': '',
+            'processor': '',
+            'quality': '',
+            'ram': '',
+            'shader_level': '',
+        }
+
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertTrue(device_infos.exists())
+
+        device_info = device_infos[0]
+        for key, value in post_data.items():
+            self.assertEqual(getattr(device_info, key), value)
+
+    def test_post_created_without_initial_lab_proxy(self):
+        self.url = reverse('labster-api-v2:device-info', args=['somerandomtext'])
+        post_data = {
+            'cores': 'quad core',
+            'device_id': 'this is devicei id',
+            'fill_rate': '45',
+            'frame_rate': '60FPS',
+            'gpu': 'NVidia',
+            'machine_type': 'Intel',
+            'memory': '64GB',
+            'misc': 'this is misc',
+            'os': 'Windows',
+            'processor': 'intel dual core',
+            'quality': 'best',
+            'ram': '1GB',
+            'shader_level': 'top',
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy__location='somerandomtext')
+        self.assertTrue(device_infos.exists())
+
+        device_info = device_infos[0]
+        for key, value in post_data.items():
+            self.assertEqual(getattr(device_info, key), value)

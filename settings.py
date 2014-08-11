@@ -196,4 +196,8 @@ WORKBENCH = {
 }
 
 
-INSTALLED_APPS += ('labster',)
+INSTALLED_APPS += (
+    'rest_framework',
+    'rest_framework.authtoken',
+    'labster',
+)

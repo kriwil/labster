@@ -401,6 +401,8 @@ class AnswerProblemTest(TestCase):
         request = RequestFactory().request()
         problem_locator = DummyProblemLocator()
         answer = "1"
-        post_data = AnswerProblem().get_post_data(request, problem_locator, answer)
+        time_spent = "10.13"
+        post_data = AnswerProblem().get_post_data(request, problem_locator, answer, time_spent)
         self.assertIn('input_tag-org-course-category-name_2_1', post_data)
         self.assertEqual(post_data.get('input_tag-org-course-category-name_2_1'), '1')
+        self.assertEqual(post_data.get('time_spent'), time_spent)

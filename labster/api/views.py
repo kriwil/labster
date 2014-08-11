@@ -416,7 +416,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
 
         return locator, descriptor
 
-    def get_post_data(self, request, problem_locator, answer):
+    def get_post_data(self, request, problem_locator, answer, time_spent):
 
         request.POST = request.POST.copy()
         field_name = "input_{tag}-{org}-{course}-{category}-{name}_2_1"
@@ -431,10 +431,11 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         field = field_name.format(**field_key)
         post_data = QueryDict('', mutable=True)
         post_data[field] = answer
+        post_data['time_spent'] = time_spent
 
         return post_data
 
-    def call_xblock_handler(self, request, location, problem_locator, answer):
+    def call_xblock_handler(self, request, location, problem_locator, answer, time_spent):
 
         locator = self.usage_key.from_string(location)
         course_id = locator.course_key.to_deprecated_string()
@@ -443,7 +444,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         handler = 'xmodule_handler'
         suffix = 'problem_check'
         user = request.user
-        request.POST = self.get_post_data(request, problem_locator, answer)
+        request.POST = self.get_post_data(request, problem_locator, answer, time_spent)
 
         return invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
 
@@ -453,13 +454,14 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         location = kwargs.get('location')
         problem_id = request.DATA.get('problem')
         answer = request.DATA.get('answer')
+        time_spent = request.DATA.get('time_spent')
 
         problem_locator, problem_descriptor = self.get_problem_locator_descriptor(problem_id)
 
         if 'multiplechoiceresponse' in problem_descriptor.data:
             answer = "choice_{}".format(answer)
 
-        result = self.call_xblock_handler(request, location, problem_locator, answer)
+        result = self.call_xblock_handler(request, location, problem_locator, answer, time_spent)
         content = json.loads(result.content)
         response_data = {
             'correct': content.get('success') == 'correct',

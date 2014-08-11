@@ -42,7 +42,7 @@ class UserSaveSerializer(serializers.ModelSerializer):
 
 class UserAttemptSerializer(serializers.ModelSerializer):
 
-    play = serializers.IntegerField(required=True, write_only=True)
+    play = serializers.IntegerField(required=True)
 
     class Meta:
         model = UserAttempt

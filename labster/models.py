@@ -139,6 +139,10 @@ class UserAttempt(models.Model):
 
     objects = UserAttemptManager()
 
+    @property
+    def play(self):
+        return 0
+
     def mark_finished(self):
         self.is_finished = True
         self.save()

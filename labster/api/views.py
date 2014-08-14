@@ -102,31 +102,31 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
     def get(self, request, *args, **kwargs):
         format = kwargs.get('format')
         lab_proxy_detail_url = reverse(
-            'labster-api-v2:lab-proxy-detail',
+            'labster-api:lab-proxy-detail',
             request=request,
             kwargs={'location': 'EDX-COURSE-LOCATION'},
             format=format)
 
         answer_problem_url = reverse(
-            'labster-api-v2:answer-problem',
+            'labster-api:answer-problem',
             request=request,
             kwargs={'location': 'EDX-COURSE-LOCATION'},
             format=format)
 
-        user_save_url = reverse(
-            'labster-api-v2:user-save',
+        save_url = reverse(
+            'labster-api:save',
             request=request,
             kwargs={'location': 'EDX-COURSE-LOCATION'},
             format=format)
 
-        error_info_url = reverse(
-            'labster-api-v2:error-info',
+        error_url = reverse(
+            'labster-api:error',
             request=request,
             kwargs={'location': 'EDX-COURSE-LOCATION'},
             format=format)
 
-        device_info_url = reverse(
-            'labster-api-v2:device-info',
+        device_url = reverse(
+            'labster-api:device',
             request=request,
             kwargs={'location': 'EDX-COURSE-LOCATION'},
             format=format)
@@ -134,9 +134,9 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
         return Response({
             'lab-proxy-detail': lab_proxy_detail_url,
             'answer-problem': answer_problem_url,
-            'user-save': user_save_url,
-            'error-info': error_info_url,
-            'device-info': device_info_url,
+            'save': save_url,
+            'error': error_url,
+            'device': device_url,
         })
 
 
@@ -172,7 +172,7 @@ class UserAuth(RendererMixin, APIView):
         return Response(response_data, status=http_status)
 
 
-class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
+class CreateSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
@@ -187,14 +187,14 @@ class CreateUserSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
         user = request.user
-        location = kwargs.get('location')
-        lab_proxy = get_or_create_lab_proxy(location=location)
+        lab_id = kwargs.get('lab_id')
+        lab_proxy = get_or_create_lab_proxy(location=lab_id)
 
         user = get_object_or_404(User, id=user.id)
 
@@ -218,9 +218,9 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
         user = request.user
-        location = kwargs.get('location')
+        lab_id = kwargs.get('lab_id')
 
-        lab_proxy = get_object_or_404(LabProxy, location=location)
+        lab_proxy = get_object_or_404(LabProxy, location=lab_id)
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
         if not user_attempt:
             raise Http404
@@ -230,7 +230,7 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj, data=None):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
 
         if obj.is_finished and data.get('play') == '1':
             obj.play_count += 1
@@ -240,8 +240,8 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         data = request.DATA.copy()
 
         user = request.user
-        location = kwargs.get('location')
-        lab_proxy = get_or_create_lab_proxy(location=location)
+        lab_id = kwargs.get('lab_id')
+        lab_proxy = get_or_create_lab_proxy(location=lab_id)
 
         user = get_object_or_404(User, id=user.id)
         data.update({
@@ -264,9 +264,9 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
         user = request.user
-        location = kwargs.get('location')
+        lab_id = kwargs.get('lab_id')
 
-        lab_proxy = get_object_or_404(LabProxy, location=location)
+        lab_proxy = get_object_or_404(LabProxy, location=lab_id)
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
         if not user_attempt:
             raise Http404
@@ -276,14 +276,14 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj, data=None):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
         user = request.user
-        location = kwargs.get('location')
-        lab_proxy = get_or_create_lab_proxy(location=location)
+        lab_id = kwargs.get('lab_id')
+        lab_proxy = get_or_create_lab_proxy(location=lab_id)
 
         user = get_object_or_404(User, id=user.id)
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
@@ -300,35 +300,35 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateErrorInfo(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
+class CreateError(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
 
 
-class CreateDeviceInfo(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
+class CreateDevice(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('location'))
+        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
 
 
 class LabProxyView(RendererMixin, AuthMixin, APIView):
 
     def get(self, request, format=None, *args, **kwargs):
         response_data = {}
-        location = kwargs.get('location')
-        if location:
-            response_data = get_lab_by_location(location)
+        lab_id = kwargs.get('lab_id')
+        if lab_id:
+            response_data = get_lab_by_location(lab_id)
         return Response(response_data)
 
 
-class CourseWiki(RendererMixin, AuthMixin, APIView):
+class Wiki(RendererMixin, AuthMixin, APIView):
 
     def get(self, request, course_id, *args, **kwargs):
         from course_wiki.utils import course_wiki_slug
@@ -368,7 +368,7 @@ class CourseWiki(RendererMixin, AuthMixin, APIView):
         return Response(response)
 
 
-class CourseWikiArticle(RendererMixin, AuthMixin, APIView):
+class ArticleSlug(RendererMixin, AuthMixin, APIView):
 
     renderer_classes = (XMLRenderer,)
 
@@ -451,7 +451,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
     def post(self, request, *args, **kwargs):
         response_data = {}
 
-        location = kwargs.get('location')
+        lab_id = kwargs.get('lab_id')
         problem_id = request.DATA.get('problem')
         answer = request.DATA.get('answer')
         time_spent = request.DATA.get('time_spent')
@@ -461,7 +461,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         if 'multiplechoiceresponse' in problem_descriptor.data:
             answer = "choice_{}".format(answer)
 
-        result = self.call_xblock_handler(request, location, problem_locator, answer, time_spent)
+        result = self.call_xblock_handler(request, lab_id, problem_locator, answer, time_spent)
         content = json.loads(result.content)
         response_data = {
             'correct': content.get('success') == 'correct',

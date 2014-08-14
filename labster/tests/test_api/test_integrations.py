@@ -52,13 +52,13 @@ class AuthPostOnlyMixin(object):
         self.assertEqual(response.status_code, 401)
 
 
-class CreateErrorInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
+class CreateErrorTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
     def setUp(self):
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
-        self.url = reverse('labster-api-v2:error-info', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:error', args=[self.lab_proxy.location])
 
         self.headers = get_auth_header(self.user)
 
@@ -98,7 +98,7 @@ class CreateErrorInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
             self.assertEqual(getattr(error_info, key), value)
 
     def test_post_created_without_initial_lab_proxy(self):
-        self.url = reverse('labster-api-v2:error-info', args=['somerandomtext'])
+        self.url = reverse('labster-api:error', args=['somerandomtext'])
         post_data = {
             'browser': 'Firefox',
             'os': 'Windows',
@@ -116,13 +116,13 @@ class CreateErrorInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
             self.assertEqual(getattr(error_info, key), value)
 
 
-class CreateDeviceInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
+class CreateDeviceTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
     def setUp(self):
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
-        self.url = reverse('labster-api-v2:device-info', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:device', args=[self.lab_proxy.location])
 
         self.headers = get_auth_header(self.user)
 
@@ -182,7 +182,7 @@ class CreateDeviceInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
             self.assertEqual(getattr(device_info, key), value)
 
     def test_post_created_without_initial_lab_proxy(self):
-        self.url = reverse('labster-api-v2:device-info', args=['somerandomtext'])
+        self.url = reverse('labster-api:error', args=['somerandomtext'])
         post_data = {
             'cores': 'quad core',
             'device_id': 'this is devicei id',
@@ -201,7 +201,7 @@ class CreateDeviceInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
         response = self.client.post(self.url, post_data, **self.headers)
         self.assertEqual(response.status_code, 201)
 
-        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy__location='somerandomtext')
+        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy='somerandomtext')
         self.assertTrue(device_infos.exists())
 
         device_info = device_infos[0]
@@ -209,7 +209,7 @@ class CreateDeviceInfoTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
             self.assertEqual(getattr(device_info, key), value)
 
 
-class CreateUserSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
+class CreateSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
     def setUp(self):
         self.lab = LabFactory()
@@ -217,7 +217,7 @@ class CreateUserSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
         self.lab_proxy = create_lab_proxy(lab=self.lab)
         self.user_save_file = SimpleUploadedFile("file.txt", "this is the content")
 
-        self.url = reverse('labster-api-v2:user-save', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:save', args=[self.lab_proxy.location])
         self.headers = get_auth_header(self.user)
 
     def test_get_found(self):
@@ -228,7 +228,7 @@ class CreateUserSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
     def test_post_created_without_initial_lab_proxy(self):
         lab_proxy_location = 'somerandomtext'
-        self.url = reverse('labster-api-v2:user-save', args=[lab_proxy_location])
+        self.url = reverse('labster-api:save', args=[lab_proxy_location])
         post_data = {
             'save_file': self.user_save_file,
         }
@@ -268,7 +268,7 @@ class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
 
-        self.url = reverse('labster-api-v2:play-lab', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:play-lab', args=[self.lab_proxy.location])
         self.headers = get_auth_header(self.user)
 
     def test_get_found(self):
@@ -297,7 +297,7 @@ class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
     def test_post_created_without_intial_lab(self):
         lab_proxy_location = 'somerandomtext'
-        self.url = reverse('labster-api-v2:play-lab', args=[lab_proxy_location])
+        self.url = reverse('labster-api:play-lab', args=[lab_proxy_location])
         post_data = {
             'play': 1,
         }
@@ -331,7 +331,7 @@ class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
 
-        self.url = reverse('labster-api-v2:finish-lab', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:finish-lab', args=[self.lab_proxy.location])
         self.headers = get_auth_header(self.user)
 
     def test_get_found(self):
@@ -373,7 +373,7 @@ class AnswerProblemTest(TestCase):
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
 
-        self.url = reverse('labster-api-v2:answer-problem', args=[self.lab_proxy.location])
+        self.url = reverse('labster-api:answer-problem', args=[self.lab_proxy.location])
         self.headers = get_auth_header(self.user)
 
     @mock.patch('labster.api.views.get_usage_key')

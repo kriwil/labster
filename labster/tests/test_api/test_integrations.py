@@ -182,7 +182,7 @@ class CreateDeviceTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
             self.assertEqual(getattr(device_info, key), value)
 
     def test_post_created_without_initial_lab_proxy(self):
-        self.url = reverse('labster-api:error', args=['somerandomtext'])
+        self.url = reverse('labster-api:device', args=['somerandomtext'])
         post_data = {
             'cores': 'quad core',
             'device_id': 'this is devicei id',
@@ -201,7 +201,7 @@ class CreateDeviceTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
         response = self.client.post(self.url, post_data, **self.headers)
         self.assertEqual(response.status_code, 201)
 
-        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy='somerandomtext')
+        device_infos = DeviceInfo.objects.filter(user=self.user, lab_proxy__location='somerandomtext')
         self.assertTrue(device_infos.exists())
 
         device_info = device_infos[0]

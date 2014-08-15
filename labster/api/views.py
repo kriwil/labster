@@ -104,31 +104,31 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
         lab_proxy_detail_url = reverse(
             'labster-api:lab-proxy-detail',
             request=request,
-            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            kwargs={'lab_id': 'LAB-ID'},
             format=format)
 
         answer_problem_url = reverse(
             'labster-api:answer-problem',
             request=request,
-            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            kwargs={'lab_id': 'LAB-ID'},
             format=format)
 
         save_url = reverse(
             'labster-api:save',
             request=request,
-            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            kwargs={'lab_id': 'LAB-ID'},
             format=format)
 
         error_url = reverse(
-            'labster-api:error',
+            'labster-api:log-error',
             request=request,
-            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            kwargs={'lab_id': 'LAB-ID'},
             format=format)
 
         device_url = reverse(
-            'labster-api:device',
+            'labster-api:log-device',
             request=request,
-            kwargs={'location': 'EDX-COURSE-LOCATION'},
+            kwargs={'lab_id': 'LAB-ID'},
             format=format)
 
         return Response({
@@ -177,9 +177,9 @@ class CreateSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
         user = request.user
-        location = kwargs.get('lab_id')
+        lab_id = kwargs.get('lab_id')
 
-        lab_proxy = get_object_or_404(LabProxy, location=location)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
         user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
 
         serializer = UserSaveSerializer(user_save)
@@ -187,16 +187,16 @@ class CreateSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
+        lab_id = self.kwargs.get('lab_id')
+        obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
         user = request.user
         lab_id = kwargs.get('lab_id')
-        lab_proxy = get_or_create_lab_proxy(location=lab_id)
 
-        user = get_object_or_404(User, id=user.id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
         try:
             user_save, new_object = UserSave.objects.get(user=user, lab_proxy=lab_proxy), False
@@ -220,7 +220,7 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
         user = request.user
         lab_id = kwargs.get('lab_id')
 
-        lab_proxy = get_object_or_404(LabProxy, location=lab_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
         if not user_attempt:
             raise Http404
@@ -230,7 +230,7 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj, data=None):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
+        obj.lab_proxy = get_object_or_404(LabProxy, id=self.kwargs.get('lab_id'))
 
         if obj.is_finished and data.get('play') == '1':
             obj.play_count += 1
@@ -241,7 +241,7 @@ class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
         user = request.user
         lab_id = kwargs.get('lab_id')
-        lab_proxy = get_or_create_lab_proxy(location=lab_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
         user = get_object_or_404(User, id=user.id)
         data.update({
@@ -264,9 +264,10 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
         user = request.user
-        lab_id = kwargs.get('lab_id')
 
-        lab_proxy = get_object_or_404(LabProxy, location=lab_id)
+        lab_id = kwargs.get('lab_id')
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
         if not user_attempt:
             raise Http404
@@ -276,14 +277,15 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
 
     def pre_save(self, obj, data=None):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
+        lab_id = self.kwargs.get('lab_id')
+        obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
     def post(self, request, *args, **kwargs):
         data = request.DATA
 
         user = request.user
         lab_id = kwargs.get('lab_id')
-        lab_proxy = get_or_create_lab_proxy(location=lab_id)
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
         user = get_object_or_404(User, id=user.id)
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
@@ -306,7 +308,8 @@ class CreateError(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
+        lab_id = self.kwargs.get('lab_id')
+        obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
 
 class CreateDevice(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
@@ -315,7 +318,8 @@ class CreateDevice(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
 
     def pre_save(self, obj):
         obj.user = self.request.user
-        obj.lab_proxy = get_or_create_lab_proxy(location=self.kwargs.get('lab_id'))
+        lab_id = self.kwargs.get('lab_id')
+        obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
 
 class LabProxyView(RendererMixin, AuthMixin, APIView):
@@ -324,7 +328,8 @@ class LabProxyView(RendererMixin, AuthMixin, APIView):
         response_data = {}
         lab_id = kwargs.get('lab_id')
         if lab_id:
-            response_data = get_lab_by_location(lab_id)
+            lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+            response_data = get_lab_by_location(lab_proxy.location)
         return Response(response_data)
 
 

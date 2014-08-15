@@ -12,21 +12,14 @@ urlpatterns = patterns('',  # nopep8
 
     url('^$', APIRoot.as_view(), name='root'),
     url('auth/$', UserAuth.as_view(), name='auth'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/$', LabProxyView.as_view(), name='lab-proxy-detail'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/answer-problem/$', AnswerProblem.as_view(), name='answer-problem'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/user-save/$', CreateUserSave.as_view(), name='user-save'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/error-info/$', CreateErrorInfo.as_view(), name='error-info'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/device-info/$', CreateDeviceInfo.as_view(), name='device-info'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/play-lab/$', PlayLab.as_view(), name='play-lab'),
-    # url('^lab-proxy/(?P<location>[^\/]+)/finish-lab/$', FinishLab.as_view(), name='finish-lab'),
 
-    url('^labs/(?P<lab_id>[^\/]+)/questions/$', LabProxyView.as_view(), name='lab-proxy-detail'),
-    url('^labs/(?P<lab_id>[^\/]+)/answer/$', AnswerProblem.as_view(), name='answer-problem'),
-    url('^labs/(?P<lab_id>[^\/]+)/save/$', CreateSave.as_view(), name='save'),
-    url('^labs/(?P<lab_id>[^\/]+)/error/$', CreateError.as_view(), name='error'),
-    url('^labs/(?P<lab_id>[^\/]+)/device/$', CreateDevice.as_view(), name='device'),
-    url('^labs/(?P<lab_id>[^\/]+)/play-lab/$', PlayLab.as_view(), name='play-lab'),
-    url('^labs/(?P<lab_id>[^\/]+)/finish-lab/$', FinishLab.as_view(), name='finish-lab'),
+    url('^labs/(?P<lab_id>\d+)/questions/$', LabProxyView.as_view(), name='lab-proxy-detail'),
+    url('^labs/(?P<lab_id>\d+)/answer/$', AnswerProblem.as_view(), name='answer-problem'),
+    url('^labs/(?P<lab_id>\d+)/save/$', CreateSave.as_view(), name='save'),
+    url('^labs/(?P<lab_id>\d+)/log/error/$', CreateError.as_view(), name='log-error'),
+    url('^labs/(?P<lab_id>\d+)/log/device/$', CreateDevice.as_view(), name='log-device'),
+    url('^labs/(?P<lab_id>\d+)/play-lab/$', PlayLab.as_view(), name='play-lab'),
+    url('^labs/(?P<lab_id>\d+)/finish-lab/$', FinishLab.as_view(), name='finish-lab'),
 
     url('^wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', Wiki.as_view(), name='wiki'),
     # since article can have children it might conflict with course-wiki, so I add keyword article in the end

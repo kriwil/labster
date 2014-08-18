@@ -1,17 +1,15 @@
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
-from contentstore.views.course import _users_assign_default_role
+from contentstore.utils import (
+    add_instructor,
+    initialize_permissions,
+)
 from courseware.courses import get_course_by_id
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import InvalidLocationError
 
-from django_comment_common.utils import seed_permissions_roles
-
-from student import auth
-from student.models import CourseEnrollment
-from student.roles import CourseInstructorRole, CourseStaffRole
 from student.roles import CourseRole
 
 from labster.constants import COURSE_ID, ADMIN_USER_ID
@@ -21,7 +19,7 @@ class Command(BaseCommand):
     """
     Management command to sync master course
 
-    Check cms/djangoapps/contentstore/views/course.py:create_new_course()
+    Check cms/djangoapps/contentstore/views/course.py:_create_new_course()
     to see how course is created
     """
 
@@ -33,34 +31,28 @@ class Command(BaseCommand):
             org, number, run = COURSE_ID.split('/')
 
             course_key = SlashSeparatedCourseKey(org, number, run)
-
-            metadata = {'display_name': display_name}
+            fields = {'display_name': display_name}
 
             wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
             definition_data = {'wiki_slug': wiki_slug}
+            fields.update(definition_data)
 
             if CourseRole.course_group_already_exists(course_key):
                 raise InvalidLocationError()
 
-            fields = {}
-            fields.update(definition_data)
-            fields.update(metadata)
-
             new_course = modulestore().create_course(
                 course_key.org,
-                course_key.offering,
+                course_key.course,
+                course_key.run,
+                user.id,
                 fields=fields,
             )
 
-            CourseInstructorRole(new_course.id).add_users(user)
-            auth.add_users(user, CourseStaffRole(new_course.id), user)
+            # Make sure user has instructor and staff access to the new course
+            add_instructor(new_course.id, user, user)
 
-            seed_permissions_roles(new_course.id)
-
-            CourseEnrollment.enroll(user, new_course.id)
-            _users_assign_default_role(new_course.id)
-
-            course_item = new_course
+            # Initialize permissions for user in the new course
+            initialize_permissions(new_course.id, user)
 
         except InvalidLocationError:
             self.stdout.write("course {} exists\n".format(COURSE_ID))

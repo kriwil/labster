@@ -414,9 +414,15 @@ class LabSettings(LabsterRendererMixin, AuthMixin, APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-class CreateError(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
+class CreateError(LabsterRendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = ErrorInfo
     serializer_class = ErrorInfoSerializer
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Error",
+            'root_attributes': {},
+        }
 
     def pre_save(self, obj):
         obj.user = self.request.user
@@ -424,9 +430,15 @@ class CreateError(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
         obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
 
-class CreateDevice(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
+class CreateDevice(LabsterRendererMixin, ParserMixin, AuthMixin, CreateAPIView):
     model = DeviceInfo
     serializer_class = DeviceInfoSerializer
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Device",
+            'root_attributes': {},
+        }
 
     def pre_save(self, obj):
         obj.user = self.request.user

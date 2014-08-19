@@ -22,6 +22,7 @@ from labster.api.serializers import (
     UserAttemptSerializer, FinishLabSerializer)
 from labster.models import (
     UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt)
+from labster.parsers.problem_parsers import MultipleChoiceProblemParser
 from labster.renderers import LabsterXMLRenderer
 
 
@@ -81,6 +82,63 @@ def get_lab_by_location(location):
     })
 
     return lab
+
+
+def get_lab_by_location_for_xml(location):
+    lab_by_location = get_lab_by_location(location)
+
+    response_data = {
+        'name': "QuizBlocks",
+        'attrib': {},
+        'children': [],
+    }
+
+    for quiz_block in lab_by_location['lab']['quiz_blocks']:
+        qb_element = {
+            'name': "QuizBlock",
+            'attrib': {
+                'Id': quiz_block['slug'],
+            },
+            'children': [],
+        }
+
+        for problem in quiz_block['problems']:
+            parsed_problem = MultipleChoiceProblemParser(problem['content'])
+
+            options = parsed_problem.options
+            options_element = {
+                'name': "Options",
+                'attrib': {},
+                'children': [],
+            }
+
+            for each in options:
+                attrib = {'Sentence': each['text']}
+                if each['is_correct']:
+                    attrib['IsCorrectAnswer'] = "true"
+                option = {
+                    'name': "Option",
+                    'attrib': attrib,
+                    'children': [],
+                }
+                options_element['children'].append(option)
+
+            quiz_element = {
+                'name': "Quiz",
+                'attrib': {
+                    'Id': problem['id'],
+                    'Sentence': str(parsed_problem.problem).encode('string_escape'),
+                    'CorrectMessage': str(parsed_problem.solution).encode('string_escape'),
+                    'WrongMessage': "No. This is incorrect - please try again!",
+                },
+                'children': [options_element],
+            }
+
+            qb_element['children'].append(quiz_element)
+
+        response_data['children'].append(qb_element)
+
+    return response_data
 
 
 class RendererMixin:
@@ -358,14 +416,26 @@ class CreateDevice(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):
         obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
 
-class LabProxyView(RendererMixin, AuthMixin, APIView):
+class LabProxyView(LabsterRendererMixin, AuthMixin, APIView):
+
+    def get_root_attributes(self):
+        return {
+            'Id': self.kwargs.get('lab_id'),
+        }
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Lab",
+            'root_attributes': self.get_root_attributes(),
+        }
+
+    def get_response_data(self, lab_id):
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+        return get_lab_by_location_for_xml(lab_proxy.location)
 
     def get(self, request, format=None, *args, **kwargs):
-        response_data = {}
         lab_id = kwargs.get('lab_id')
-        if lab_id:
-            lab_proxy = get_object_or_404(LabProxy, id=lab_id)
-            response_data = get_lab_by_location(lab_proxy.location)
+        response_data = self.get_response_data(lab_id)
         return Response(response_data)
 
 

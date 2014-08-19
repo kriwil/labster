@@ -5,10 +5,6 @@ from rest_framework.compat import StringIO
 from rest_framework.renderers import XMLRenderer
 
 
-class LabProxyRenderer(XMLRenderer):
-    pass
-
-
 class LabsterXMLRenderer(XMLRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):

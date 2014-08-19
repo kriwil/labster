@@ -243,18 +243,36 @@ class UserAuth(RendererMixin, APIView):
         return Response(response_data, status=http_status)
 
 
-class CreateSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
+class CreateSave(LabsterRendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
+
+    def get_root_attributes(self):
+        file_url = ""
+        if self.user_save:
+            file_url = self.user_save.save_file.url
+        return {
+            'FileUrl': file_url,
+        }
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Save",
+            'root_attributes': self.get_root_attributes(),
+        }
 
     def get(self, request, *args, **kwargs):
         # http://www.django-rest-framework.org/api-guide/requests#user
         user = request.user
         lab_id = kwargs.get('lab_id')
+        http_status = status.HTTP_200_OK
 
-        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
-        user_save = get_object_or_404(UserSave, lab_proxy_id=lab_proxy.id, user_id=user.id)
+        try:
+            lab_proxy = LabProxy.objects.get(id=lab_id)
+            self.user_save = UserSave.objects.get(lab_proxy_id=lab_proxy.id, user_id=user.id)
+        except (LabProxy.DoesNotExist, UserSave.DoesNotExist):
+            http_status = status.HTTP_404_NOT_FOUND
 
-        serializer = UserSaveSerializer(user_save)
-        return Response(serializer.data)
+        response_data = {}
+        return Response(response_data, status=http_status)
 
     def pre_save(self, obj):
         obj.user = self.request.user
@@ -279,9 +297,9 @@ class CreateSave(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
             self.pre_save(serializer.object)
             serializer.save()
             http_status = status.HTTP_201_CREATED if new_object else status.HTTP_204_NO_CONTENT
-            return Response(serializer.data, status=http_status)
+            return Response({}, status=http_status)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):

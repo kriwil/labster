@@ -45,4 +45,4 @@ def duplicate_lab_content(user, source_location, parent_location):
 
     # duplicate quiz_blocks
     for quiz_block in source_item.get_children():
-        _duplicate_item(parent_locator, quiz_block.location, quiz_block.display_name, user)
+        _duplicate_item(parent_locator, quiz_block.location, user=user, display_name=quiz_block.display_name)

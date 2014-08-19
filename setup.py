@@ -19,6 +19,7 @@ setup(
     author_email='developer@labster.com',
     install_requires=[
         'django-cors-headers==0.12',
+        'html2text==2014.7.3',
     ],
     classifiers=[
         'Environment :: Web Environment',

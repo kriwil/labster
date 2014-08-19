@@ -56,9 +56,9 @@ class Command(BaseCommand):
 
         except InvalidLocationError:
             self.stdout.write("course {} exists\n".format(COURSE_ID))
-            course_item = get_course_by_id(course_key)
+            # course_item = get_course_by_id(course_key)
 
-        self.stdout.write("name: {}\n".format(course_item.display_name))
+        self.stdout.write("name: {}\n".format(new_course.display_name))
         # for section in course_item.get_children():
         #     for sub_section in section.get_children():
         #         print sub_section

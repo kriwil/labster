@@ -53,12 +53,12 @@ class Command(BaseCommand):
 
             # Initialize permissions for user in the new course
             initialize_permissions(new_course.id, user)
+            self.stdout.write("name: {}\n".format(new_course.display_name))
 
         except InvalidLocationError:
             self.stdout.write("course {} exists\n".format(COURSE_ID))
             # course_item = get_course_by_id(course_key)
 
-        self.stdout.write("name: {}\n".format(new_course.display_name))
         # for section in course_item.get_children():
         #     for sub_section in section.get_children():
         #         print sub_section

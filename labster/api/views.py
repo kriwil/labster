@@ -21,8 +21,8 @@ from labster.api.serializers import (
     UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer,
     UserAttemptSerializer, FinishLabSerializer)
 from labster.models import (
-    UserSave, ErrorInfo, DeviceInfo, LabProxy, get_or_create_lab_proxy,
-    UserAttempt)
+    UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt)
+from labster.renderers import LabsterXMLRenderer
 
 
 def invoke_xblock_handler(*args, **kwargs):
@@ -86,6 +86,19 @@ def get_lab_by_location(location):
 class RendererMixin:
     renderer_classes = (XMLRenderer, JSONRenderer)
     charset = 'utf-8'
+
+
+class LabsterRendererMixin(object):
+    renderer_classes = (LabsterXMLRenderer,)
+    charset = 'utf-8'
+
+    def get_labster_renderer_context(self):
+        return {}
+
+    def get_renderer_context(self):
+        ctx = super(LabsterRendererMixin, self).get_renderer_context()
+        ctx.update(self.get_labster_renderer_context())
+        return ctx
 
 
 class ParserMixin:
@@ -300,6 +313,29 @@ class FinishLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
             return Response(serializer.data, status=http_status)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LabSettings(LabsterRendererMixin, AuthMixin, APIView):
+
+    def get_root_attributes(self):
+        return {
+            'EngineXML': "",
+            'NavigationNode': "Classic",
+            'CameraMode': "Standard",
+            'InputMode': "Mouse",
+            'DebugOculus': "true",
+            'OuputDebugLog': "true",
+        }
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Settings",
+            'root_attributes': self.get_root_attributes(),
+        }
+
+    def get(self, request, *args, **kwargs):
+        response_data = {}
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class CreateError(RendererMixin, ParserMixin, AuthMixin, CreateAPIView):

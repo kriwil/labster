@@ -5,7 +5,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from labster.api.views import APIRoot
 from labster.api.views import CreateSave, CreateError, CreateDevice
 from labster.api.views import LabProxyView, AnswerProblem, Wiki, ArticleSlug
-from labster.api.views import UserAuth, PlayLab, FinishLab
+from labster.api.views import UserAuth, PlayLab, FinishLab, LabSettings
 
 
 urlpatterns = patterns('',  # nopep8
@@ -16,6 +16,7 @@ urlpatterns = patterns('',  # nopep8
     url('^labs/(?P<lab_id>\d+)/questions/$', LabProxyView.as_view(), name='lab-proxy-detail'),
     url('^labs/(?P<lab_id>\d+)/answer/$', AnswerProblem.as_view(), name='answer-problem'),
     url('^labs/(?P<lab_id>\d+)/save/$', CreateSave.as_view(), name='save'),
+    url('^labs/(?P<lab_id>\d+)/settings/$', LabSettings.as_view(), name='lab-proxy-settings'),
     url('^labs/(?P<lab_id>\d+)/log/error/$', CreateError.as_view(), name='log-error'),
     url('^labs/(?P<lab_id>\d+)/log/device/$', CreateDevice.as_view(), name='log-device'),
     url('^labs/(?P<lab_id>\d+)/play-lab/$', PlayLab.as_view(), name='play-lab'),

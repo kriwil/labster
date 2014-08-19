@@ -469,7 +469,47 @@ class LabProxyView(LabsterRendererMixin, AuthMixin, APIView):
         return Response(response_data)
 
 
-class Wiki(RendererMixin, AuthMixin, APIView):
+
+class WikiMixin(object):
+    def get_root_attributes(self):
+        return {
+            'id': self.article_id,
+            'title': self.title,
+            'slug': self.slug,
+        }
+
+    def get_labster_renderer_context(self):
+        return {
+            'root_name': "Wiki",
+            'root_attributes': self.get_root_attributes(),
+        }
+
+    def get_response_data(self):
+        # ref:
+        # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178
+        content_markdown = self.article.current_revision.content
+
+        return {
+            'name': "Content",
+            'attrib': {},
+            'children': [
+                {
+                    'name': "HTML",
+                    'attrib': {},
+                    'children': [],
+                    'text': self.article.render(),
+                },
+                {
+                    'name': "Markdown",
+                    'attrib': {},
+                    'children': [],
+                    'text': content_markdown,
+                }
+            ]
+        }
+
+
+class Wiki(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
 
     def get(self, request, course_id, *args, **kwargs):
         from course_wiki.utils import course_wiki_slug
@@ -493,25 +533,16 @@ class Wiki(RendererMixin, AuthMixin, APIView):
         except Article.DoesNotExist:
             article = None
 
-        # ref:
-        # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178
-        content_markdown = article.current_revision.content
+        self.article_id = str(url_path.article.id)
+        self.slug = course_slug
+        self.title = unicode(article)
+        self.article = article
 
-        response = {
-            'id': url_path.article.id,
-            'slug': course_slug,
-            'title': unicode(article),
-            'content': {
-                'html': article.render(),
-                'markdown': content_markdown,
-            },
-        }
-        return Response(response)
+        response_data = self.get_response_data()
+        return Response(response_data)
 
 
-class ArticleSlug(RendererMixin, AuthMixin, APIView):
-
-    renderer_classes = (XMLRenderer,)
+class ArticleSlug(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
 
     def get(self, request, article_slug, *args, **kwargs):
         from wiki.models import URLPath, Article
@@ -528,20 +559,13 @@ class ArticleSlug(RendererMixin, AuthMixin, APIView):
         except Article.DoesNotExist:
             article = None
 
-        # ref:
-        # https://github.com/Bodekaer/Labster.EdX.django-wiki/blob/66f357e4f6db1b96006ed8e75cd867f7541bb812/wiki/models/article.py#L178
-        content_markdown = article.current_revision.content
+        self.article_id = str(url_path.article.id)
+        self.slug = article_slug
+        self.title = unicode(article)
+        self.article = article
 
-        response = {
-            'id': url_path.article.id,
-            'slug': article_slug,
-            'title': unicode(article),
-            'content': {
-                'html': article.render(),
-                'markdown': content_markdown,
-            },
-        }
-        return Response(response)
+        response_data = self.get_response_data()
+        return Response(response_data)
 
 
 class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):

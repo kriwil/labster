@@ -1,7 +1,7 @@
 from django.utils.xmlutils import SimplerXMLGenerator
 
 from rest_framework.compat import StringIO
-# from rest_framework.compat import smart_text
+from rest_framework.compat import smart_text
 from rest_framework.renderers import XMLRenderer
 
 
@@ -36,8 +36,13 @@ class LabsterXMLRenderer(XMLRenderer):
             'children' in data,
         ])
 
+        is_text = 'text' in data
+
         if is_element:
             xml.startElement(data['name'], data['attrib'])
-            for each in data['children']:
-                self._to_xml(xml, each)
+            if is_text:
+                xml.characters(smart_text(data['text']))
+            else:
+                for each in data['children']:
+                    self._to_xml(xml, each)
             xml.endElement(data['name'])

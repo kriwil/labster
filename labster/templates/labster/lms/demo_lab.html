@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="http://webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/UnityObject2.js"></script>
+  </head>
+  <body>
+
+    <div id="unityPlayer">
+      <div class="missing">
+        <a href="http://unity3d.com/webplayer/" title="Unity Web Player. Install now!">
+          <img alt="Unity Web Player. Install now!" src="http://webplayer.unity3d.com/installation/getunity.png" width="193" height="63" />
+        </a>
+      </div>
+    </div>
+
+    <script>
+      var config = {
+        width: 957,
+        height: 650,
+        params: {
+          backgroundcolor: "000000",
+          disableContextMenu: true
+        }
+      };
+      var u = new UnityObject2();
+      u.initPlugin(jQuery("#unityPlayer")[0], "https://s3-us-west-2.amazonaws.com/labster/unity/test/labster.unity3d");
+    </script>
+
+  </body>
+</html>

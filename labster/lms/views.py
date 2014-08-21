@@ -1,11 +1,10 @@
-import logging
-
 import six
 try:
     import cStringIO.StringIO as StringIO
 except ImportError:
     StringIO = six.StringIO
 
+from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.xmlutils import SimplerXMLGenerator
@@ -13,9 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
 from labster.models import LabProxy
-
-
-logger = logging.getLogger(__name__)
 
 
 def demo_lab(request):
@@ -137,8 +133,12 @@ platform_xml = PlatformXml.as_view()
 
 @csrf_exempt
 def collect_response(request, api_type):
-    print(api_type)
-    print(str(request.POST))
-    print(str(request.FILES))
-    print('---')
+    messages = [
+        api_type,
+        str(request.POST),
+        str(request.FILES),
+    ]
+    message = "\n----\n".join(messages)
+    send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
+              ['kriwil+debug@gmail.com'], fail_silently=True)
     return HttpResponse('')

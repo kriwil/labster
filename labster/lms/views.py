@@ -1,3 +1,5 @@
+import logging
+
 import six
 try:
     import cStringIO.StringIO as StringIO
@@ -9,6 +11,11 @@ from django.shortcuts import render
 from django.utils.xmlutils import SimplerXMLGenerator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+
+from labster.models import LabProxy
+
+
+logger = logging.getLogger(__name__)
 
 
 def demo_lab(request):
@@ -46,12 +53,33 @@ class XMLView(View):
         return response
 
 
-class SettingsXml(XMLView):
+class LabProxyXMLView(XMLView):
+
+    def get_lab_proxy(self):
+        from opaque_keys.edx.locations import SlashSeparatedCourseKey
+
+        course_id = self.kwargs.get('course_id')
+        section = self.kwargs.get('section')
+
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+        location = "i4x://{}/{}/sequential/{}".format(
+            course_key.org, course_key.course, section)
+
+        lab_proxy = LabProxy.objects.get(location=location)
+        return lab_proxy
+
+
+class SettingsXml(LabProxyXMLView):
     root_name = 'Settings'
 
     def get_root_attributes(self):
+        engine_xml = "Engine_Cytogenetics.xml"
+        lab_proxy = self.get_lab_proxy()
+        if lab_proxy.lab.engine_xml:
+            engine_xml = lab_proxy.lab.engine_xml
+
         return {
-            'EngineXML': "Engine_Cytogenetics.xml",
+            'EngineXML': engine_xml,
             'NavigationMode': "Classic",
             'CameraMode': "Standard",
             'InputMode': "Mouse",
@@ -60,7 +88,7 @@ class SettingsXml(XMLView):
         }
 
 
-class PlatformXml(XMLView):
+class PlatformXml(LabProxyXMLView):
     root_name = 'Settings'
 
     def get_root_attributes(self):
@@ -73,7 +101,7 @@ class PlatformXml(XMLView):
         }
 
 
-class ServerXml(XMLView):
+class ServerXml(LabProxyXMLView):
     root_name = 'Server'
 
     def get_root_attributes(self):
@@ -109,8 +137,8 @@ platform_xml = PlatformXml.as_view()
 
 @csrf_exempt
 def collect_response(request, api_type):
-    print api_type
-    print request.POST
-    print request.FILES
-    print '---'
+    print(api_type)
+    print(str(request.POST))
+    print(str(request.FILES))
+    print('---')
     return HttpResponse('')

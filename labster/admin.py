@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from labster.models import LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token
+from labster.models import LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -50,3 +50,4 @@ admin.site.register(DeviceInfo, DeviceInfoAdmin)
 admin.site.register(UserSave, UserSaveAdmin)
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Lab, LabAdmin)
+admin.site.register(LabProxy, LabProxyAdmin)

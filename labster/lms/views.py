@@ -111,4 +111,6 @@ platform_xml = PlatformXml.as_view()
 def collect_response(request, api_type):
     print api_type
     print request.POST
+    print request.FILES
+    print '---'
     return HttpResponse('')

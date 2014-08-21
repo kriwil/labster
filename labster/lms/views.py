@@ -133,12 +133,14 @@ platform_xml = PlatformXml.as_view()
 
 @csrf_exempt
 def collect_response(request, api_type):
-    messages = [
-        api_type,
-        str(request.POST),
-        str(request.FILES),
-    ]
-    message = "\n----\n".join(messages)
-    send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
-              ['kriwil+debug@gmail.com'], fail_silently=True)
+    if api_type == 'savegame':
+        messages = [
+            str(request.user),
+            api_type,
+            str(request.POST),
+            str(request.FILES),
+        ]
+        message = "\n----\n".join(messages)
+        send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
+                ['kriwil+debug@gmail.com'], fail_silently=True)
     return HttpResponse('')

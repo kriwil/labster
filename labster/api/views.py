@@ -166,7 +166,7 @@ class ParserMixin:
 
 
 class AuthMixin:
-    authentication_classes = (GetTokenAuthentication, TokenAuthentication, SessionAuthentication)
+    authentication_classes = (TokenAuthentication, SessionAuthentication, GetTokenAuthentication)
     permission_classes = (IsAuthenticated,)
 
 
@@ -628,3 +628,32 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class UnityPlayLab(ParserMixin, AuthMixin, APIView):
+
+    def post(self, request, *args, **kwargs):
+        lab_id = kwargs.get('lab_id')
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+
+        start_end_type = request.POST.get('StartEndType')
+        try:
+            start_end_type = int(start_end_type)
+        except TypeError:
+            return Response('', status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if start_end_type not in [1, 2]:
+                return Response('', status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if start_end_type == 1:
+            user_attempt = UserAttempt.objects.create(
+                lab_proxy=lab_proxy, user=user)
+        else:
+            user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
+            user_attempt.is_finished = True
+            user_attempt.save()
+
+        response_data = ''
+
+        return Response(response_data, status=status.HTTP_204_NO_CONTENT)

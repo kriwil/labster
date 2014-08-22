@@ -288,6 +288,62 @@ class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
         self.assertEqual(user_attempts[0].is_finished, True)
 
 
+class UnityPlayLabTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
+
+    def setUp(self):
+        self.lab = LabFactory()
+        self.user = UserFactory()
+        self.lab_proxy = create_lab_proxy(lab=self.lab)
+
+        self.url = reverse('labster-api:play', args=[self.lab_proxy.id])
+        self.headers = get_auth_header(self.user)
+
+    def test_post_invalid(self):
+        post_data = {}
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_start_created(self):
+        post_data = {
+            'StartEndType': '1',
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 204)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
+
+        user_attempt = user_attempts[0]
+        self.assertEqual(user_attempt.get_total_play_count(), 1)
+        self.assertFalse(user_attempt.is_finished)
+
+    def test_post_exists_not_finished(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
+        post_data = {
+            'StartEndType': '1',
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 204)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 2)
+
+    def test_post_finished(self):
+        UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
+        post_data = {
+            'StartEndType': '2',
+        }
+        response = self.client.post(self.url, post_data, **self.headers)
+        self.assertEqual(response.status_code, 204)
+
+        user_attempts = UserAttempt.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
+        self.assertEqual(user_attempts.count(), 1)
+
+        user_attempt = user_attempts[0]
+        self.assertEqual(user_attempt.get_total_play_count(), 1)
+        self.assertTrue(user_attempt.is_finished)
+
+
 class AnswerProblemTest(TestCase):
 
     def setUp(self):

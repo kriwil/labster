@@ -7,7 +7,7 @@ class GetTokenAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
         key = request.GET.get('token')
-        if not key:
+        if key is None:
             return None
 
         # cleanup key

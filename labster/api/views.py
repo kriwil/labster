@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import Http404
 from django.http import QueryDict
 from django.shortcuts import get_object_or_404
@@ -18,8 +19,9 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from labster.api.serializers import (
-    UserSaveSerializer, ErrorInfoSerializer, DeviceInfoSerializer,
+    ErrorInfoSerializer, DeviceInfoSerializer,
     UserAttemptSerializer, FinishLabSerializer)
+from labster.authentication import GetTokenAuthentication
 from labster.models import (
     UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt)
 from labster.parsers.problem_parsers import MultipleChoiceProblemParser
@@ -243,12 +245,12 @@ class UserAuth(RendererMixin, APIView):
         return Response(response_data, status=http_status)
 
 
-class CreateSave(LabsterRendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
+class CreateSave(LabsterRendererMixin, ParserMixin, AuthMixin, APIView):
 
     def get_root_attributes(self):
         file_url = ""
-        if self.user_save:
-            file_url = self.user_save.save_file.url
+        # if self.user_save:
+        #     file_url = self.user_save.save_file.url
         return {
             'FileUrl': file_url,
         }
@@ -280,26 +282,20 @@ class CreateSave(LabsterRendererMixin, ParserMixin, AuthMixin, ListCreateAPIView
         obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
     def post(self, request, *args, **kwargs):
-        data = request.DATA
-
         user = request.user
         lab_id = kwargs.get('lab_id')
 
         lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+        self.user_save, _ = UserSave.objects.get_or_create(user=user, lab_proxy=lab_proxy)
 
-        try:
-            user_save, new_object = UserSave.objects.get(user=user, lab_proxy=lab_proxy), False
-        except ObjectDoesNotExist:
-            user_save, new_object = None, True
+        http_status = status.HTTP_200_OK
+        data_file = request.FILES.get('data')
+        file_name = self.user_save.get_new_save_file_name()
 
-        serializer = UserSaveSerializer(instance=user_save, data=data, files=request.FILES)
-        if serializer.is_valid():
-            self.pre_save(serializer.object)
-            serializer.save()
-            http_status = status.HTTP_201_CREATED if new_object else status.HTTP_204_NO_CONTENT
-            return Response({}, status=http_status)
+        self.user_save.save_file = SimpleUploadedFile(file_name, data_file.read())
+        self.user_save.save()
 
-        return Response({}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=http_status)
 
 
 class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):
@@ -467,7 +463,6 @@ class LabProxyView(LabsterRendererMixin, AuthMixin, APIView):
         lab_id = kwargs.get('lab_id')
         response_data = self.get_response_data(lab_id)
         return Response(response_data)
-
 
 
 class WikiMixin(object):

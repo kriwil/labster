@@ -5,11 +5,14 @@ except ImportError:
     StringIO = six.StringIO
 
 from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.xmlutils import SimplerXMLGenerator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+
+from rest_framework.authtoken.models import Token
 
 from labster.models import LabProxy
 
@@ -106,12 +109,19 @@ class ServerXml(LabProxyXMLView):
         }
 
     def insert_children(self, xml):
+        lab_proxy = self.get_lab_proxy()
+
+        # save_game = "/labster/api/collect-response/savegame/"
+        quiz_statistic = "/labster/api/collect-response/quizstatistic/"
         game_progress = "/labster/api/collect-response/gameprogress/"
         device_info = "/labster/api/collect-response/deviceinfo/"
-        quiz_statistic = "/labster/api/collect-response/quizstatistic/"
-        save_game = "/labster/api/collect-response/savegame/"
         send_email = "/labster/api/collect-response/sendemail/"
         player_start_end = "/labster/api/collect-response/playerstartend/"
+
+        token, _ = Token.objects.get_or_create(user=self.request.user)
+        save_game = reverse('labster-api:save', args=[lab_proxy.lab_id])
+        save_game = "{}?token={}".format(save_game, token.key)
+
         children = [
             {'Id': "GameProgress", 'Path': game_progress},
             {'Id': "DeviceInfo", 'Path': device_info},

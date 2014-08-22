@@ -61,7 +61,7 @@ class Lab(models.Model):
 
     url = models.URLField(max_length=120, blank=True, default="")
     wiki_url = models.URLField(max_length=120, blank=True, default="")
-    screenshot = models.ImageField(upload_to='labster/lab/images', blank=True)
+    screenshot = models.ImageField(upload_to='edx/labster/lab/images', blank=True)
     questions = models.TextField(default='', blank=True)
 
     def __unicode__(self):
@@ -111,7 +111,7 @@ class UserSave(models.Model):
     """
     lab_proxy = models.ForeignKey(LabProxy)
     user = models.ForeignKey(User)
-    save_file = models.FileField(blank=True, null=True, upload_to='labster/lab/save_file')
+    save_file = models.FileField(blank=True, null=True, upload_to='edx/labster/lab/save')
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
 

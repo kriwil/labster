@@ -76,6 +76,7 @@ class SettingsXml(LabProxyXMLView):
         lab_proxy = self.get_lab_proxy()
         if lab_proxy.lab.engine_xml:
             engine_xml = lab_proxy.lab.engine_xml
+            # engine_xml = "http://192.168.4.45:9000/unity/1408688971_4.zip"
 
         return {
             'EngineXML': engine_xml,
@@ -84,6 +85,7 @@ class SettingsXml(LabProxyXMLView):
             'InputMode': "Mouse",
             'HandMode': "Hand",
             'URLPrefix': "http://s3-us-west-2.amazonaws.com/labster/unity/",
+            # 'URLPrefix': "http://192.168.4.45:9000/unity/",
         }
 
 

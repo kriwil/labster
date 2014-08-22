@@ -164,7 +164,7 @@ class ParserMixin:
 
 
 class AuthMixin:
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    authentication_classes = (GetTokenAuthentication, TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
 
 

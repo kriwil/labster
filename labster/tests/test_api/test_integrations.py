@@ -187,12 +187,12 @@ class CreateSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
             save_file=self.user_save_file)
 
         post_data = {
-            'save_file': self.user_save_file,
+            'data': self.user_save_file,
         }
 
         # whenever we post another user save, it will replace the old data
         response = self.client.post(self.url, post_data, **self.headers)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 200)
 
         user_saves = UserSave.objects.filter(user=self.user, lab_proxy=self.lab_proxy)
         self.assertEqual(user_saves.count(), 1)

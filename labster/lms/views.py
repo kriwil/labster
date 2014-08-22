@@ -14,7 +14,7 @@ from django.views.generic import View
 
 from rest_framework.authtoken.models import Token
 
-from labster.models import LabProxy
+from labster.models import LabProxy, UserSave
 
 
 def demo_lab(request):
@@ -74,9 +74,17 @@ class SettingsXml(LabProxyXMLView):
     def get_root_attributes(self):
         engine_xml = "Engine_Cytogenetics.xml"
         lab_proxy = self.get_lab_proxy()
+        user = self.request.user
+
         if lab_proxy.lab.engine_xml:
             engine_xml = lab_proxy.lab.engine_xml
-            # engine_xml = "http://192.168.4.45:9000/unity/1408688971_4.zip"
+
+        try:
+            user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
+        except UserSave.DoesNotExist:
+            pass
+        else:
+            engine_xml = user_save.save_file.url
 
         return {
             'EngineXML': engine_xml,
@@ -115,15 +123,17 @@ class ServerXml(LabProxyXMLView):
 
         # save_game = "/labster/api/collect-response/savegame/"
         # player_start_end = "/labster/api/collect-response/playerstartend/"
-        quiz_statistic = "/labster/api/collect-response/quizstatistic/"
-        game_progress = "/labster/api/collect-response/gameprogress/"
-        device_info = "/labster/api/collect-response/deviceinfo/"
-        send_email = "/labster/api/collect-response/sendemail/"
+        quiz_statistic = "/labster/api/collect-response/QuizStatistic/"
+        game_progress = "/labster/api/collect-response/GameProgress/"
+        device_info = "/labster/api/collect-response/DeviceSnfo/"
+        send_email = "/labster/api/collect-response/SendEmail/"
+        wiki = "/labster/api/collect-response/Wiki/"
 
         token, _ = Token.objects.get_or_create(user=self.request.user)
         save_game = reverse('labster-api:save', args=[lab_proxy.lab_id])
         player_start_end = reverse('labster-api:play', args=[lab_proxy.lab_id])
 
+        # FIXME temp until the API could call with token
         save_game = "{}?token={}".format(save_game, token.key)
         player_start_end = "{}?token={}".format(player_start_end, token.key)
 
@@ -134,6 +144,7 @@ class ServerXml(LabProxyXMLView):
             {'Id': "SaveGame", 'Path': save_game},
             {'Id': "SendEmail", 'Path': send_email},
             {'Id': "PlayerStartEnd", 'Path': player_start_end},
+            {'Id': "Wiki", 'Path': wiki},
         ]
 
         for child in children:

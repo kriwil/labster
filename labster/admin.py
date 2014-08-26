@@ -17,7 +17,7 @@ class LabProxyAdmin(BaseAdmin):
 
 
 class UserSaveAdmin(BaseAdmin):
-    list_display = ('user', 'lab', 'save_file', 'created_at', 'modified_at')
+    list_display = ('user', 'lab', 'is_finished', 'play_count', 'modified_at')
 
     def lab(self, obj):
         return obj.lab_proxy.lab.name

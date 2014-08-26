@@ -79,6 +79,16 @@ class SettingsXml(LabProxyXMLView):
         if lab_proxy.lab.engine_xml:
             engine_xml = lab_proxy.lab.engine_xml
 
+        # check for save game
+        try:
+            user_save = UserSave.objects.get(
+                lab_proxy=lab_proxy, user=user, is_finished=False)
+        except UserSave.DoesNotExist:
+            pass
+        else:
+            if user_save.save_file:
+                engine_xml = user_save.save_file.url
+
         try:
             user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
         except UserSave.DoesNotExist:

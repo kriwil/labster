@@ -175,7 +175,7 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
     def get(self, request, *args, **kwargs):
         format = kwargs.get('format')
         lab_proxy_detail_url = reverse(
-            'labster-api:lab-proxy-detail',
+            'labster-api:questions',
             request=request,
             kwargs={'lab_id': 'LAB-ID'},
             format=format)
@@ -205,7 +205,7 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
             format=format)
 
         return Response({
-            'lab-proxy-detail': lab_proxy_detail_url,
+            'questions': lab_proxy_detail_url,
             'answer-problem': answer_problem_url,
             'save': save_url,
             'error': error_url,

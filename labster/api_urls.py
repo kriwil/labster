@@ -14,7 +14,7 @@ urlpatterns = patterns('',  # nopep8
     url('^$', APIRoot.as_view(), name='root'),
     url('auth/$', UserAuth.as_view(), name='auth'),
 
-    url('^labs/(?P<lab_id>\d+)/questions/$', LabProxyView.as_view(), name='lab-proxy-detail'),
+    url('^labs/(?P<lab_id>\d+)/questions/$', LabProxyView.as_view(), name='questions'),
     url('^labs/(?P<lab_id>\d+)/answer/$', AnswerProblem.as_view(), name='answer-problem'),
     url('^labs/(?P<lab_id>\d+)/save/$', CreateSave.as_view(), name='save'),
     url('^labs/(?P<lab_id>\d+)/log/error/$', CreateError.as_view(), name='log-error'),

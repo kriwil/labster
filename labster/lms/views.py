@@ -76,25 +76,18 @@ class SettingsXml(LabProxyXMLView):
         lab_proxy = self.get_lab_proxy()
         user = self.request.user
 
-        if lab_proxy.lab.engine_xml:
-            engine_xml = lab_proxy.lab.engine_xml
+        # if lab_proxy.lab.engine_xml:
+        #     engine_xml = lab_proxy.lab.engine_xml
 
-        # check for save game
-        try:
-            user_save = UserSave.objects.get(
-                lab_proxy=lab_proxy, user=user, is_finished=False)
-        except UserSave.DoesNotExist:
-            pass
-        else:
-            if user_save.save_file:
-                engine_xml = user_save.save_file.url
-
-        try:
-            user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
-        except UserSave.DoesNotExist:
-            pass
-        else:
-            engine_xml = user_save.save_file.url
+        # # check for save game
+        # try:
+        #     user_save = UserSave.objects.get(
+        #         lab_proxy=lab_proxy, user=user, is_finished=False)
+        # except UserSave.DoesNotExist:
+        #     pass
+        # else:
+        #     if user_save.save_file:
+        #         engine_xml = user_save.save_file.url
 
         return {
             'EngineXML': engine_xml,
@@ -156,7 +149,7 @@ class ServerXml(LabProxyXMLView):
             {'Id': "SaveGame", 'Path': save_game},
             {'Id': "SendEmail", 'Path': send_email},
             {'Id': "PlayerStartEnd", 'Path': player_start_end},
-            {'Id': "Wiki", 'Path': wiki},
+            {'Id': "Wiki", 'Path': wiki, 'CatchError': "false"},
             {'Id': "Questions", 'Path': questions},
         ]
 

@@ -122,7 +122,8 @@ class ServerXml(LabProxyXMLView):
 
     def get_root_attributes(self):
         return {
-            'Url': "",
+            # 'Url': "http://localhost:8000",
+            'Url': "https://edx.labster.com",
         }
 
     def insert_children(self, xml):

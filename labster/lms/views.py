@@ -130,21 +130,17 @@ class ServerXml(LabProxyXMLView):
 
         # save_game = "/labster/api/collect-response/savegame/"
         # player_start_end = "/labster/api/collect-response/playerstartend/"
+        # wiki = "/labster/api/collect-response/Wiki/"
         quiz_statistic = "/labster/api/collect-response/QuizStatistic/"
         game_progress = "/labster/api/collect-response/GameProgress/"
         device_info = "/labster/api/collect-response/DeviceSnfo/"
         send_email = "/labster/api/collect-response/SendEmail/"
-        wiki = "/labster/api/collect-response/Wiki/"
 
-        token, _ = Token.objects.get_or_create(user=self.request.user)
         save_game = reverse('labster-api:save', args=[lab_proxy.id])
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
-        questions = reverse('labster-api:questions', args=[lab_proxy.id])
-
-        # FIXME temp until the API could call with token
-        save_game = "{}?token={}".format(save_game, token.key)
-        player_start_end = "{}?token={}".format(player_start_end, token.key)
-        questions = "{}?token={}".format(questions, token.key)
+        quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
+        # wiki = reverse('labster-api:wiki-article', args=['replaceme'])
+        wiki = "/labster/api/wiki/article/"
 
         children = [
             {'Id': "GameProgress", 'Path': game_progress},
@@ -154,7 +150,7 @@ class ServerXml(LabProxyXMLView):
             {'Id': "SendEmail", 'Path': send_email},
             {'Id': "PlayerStartEnd", 'Path': player_start_end},
             {'Id': "Wiki", 'Path': wiki, 'CatchError': "false"},
-            {'Id': "Questions", 'Path': questions},
+            {'Id': "QuizBlock", 'Path': quiz_block},
         ]
 
         for child in children:

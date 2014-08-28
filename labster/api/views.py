@@ -1,4 +1,5 @@
 import json
+from lxml import etree
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -63,6 +64,7 @@ def get_lab_by_location(location):
             problem = {
                 'id': unicode(_problem.location),
                 'content': _problem.data,
+                'platform_xml': _problem.platform_xml,
                 'tags': _problem.tags,
             }
 
@@ -86,6 +88,70 @@ def get_lab_by_location(location):
     return lab
 
 
+def parse_platform_xml(xml_string):
+    quiz_tree = etree.fromstring(xml_string)
+    quiz_element = {
+        'name': quiz_tree.tag,
+        'attrib': quiz_tree.attrib,
+        'children': [],
+    }
+
+    for options_tree in quiz_tree.getchildren():
+        options_element = {
+            'name': options_tree.tag,
+            'attrib': options_tree.attrib,
+            'children': [],
+        }
+
+        for option_tree in options_tree.getchildren():
+            options_element['children'].append(
+                {
+                    'name': option_tree.tag,
+                    'attrib': option_tree.attrib,
+                    'children': [],
+                }
+            )
+
+        quiz_element['children'].append(options_element)
+
+    return quiz_element
+
+
+def parse_edx_xml(xml_string, problem_id):
+    parsed_problem = MultipleChoiceProblemParser(xml_string)
+
+    options = parsed_problem.options
+    options_element = {
+        'name': "Options",
+        'attrib': {},
+        'children': [],
+    }
+
+    for each in options:
+        attrib = {'Sentence': each['text']}
+        if each['is_correct']:
+            attrib['IsCorrectAnswer'] = "true"
+        option = {
+            'name': "Option",
+            'attrib': attrib,
+            'children': [],
+        }
+        options_element['children'].append(option)
+
+    quiz_element = {
+        'name': "Quiz",
+        'attrib': {
+            'Id': problem_id,
+            'Sentence': str(parsed_problem.problem).encode('string_escape'),
+            'CorrectMessage': str(parsed_problem.solution).encode('string_escape'),
+            'WrongMessage': "No. This is incorrect - please try again!",
+        },
+        'children': [options_element],
+    }
+
+    return quiz_element
+
+
 def get_lab_by_location_for_xml(location):
     lab_by_location = get_lab_by_location(location)
 
@@ -102,39 +168,14 @@ def get_lab_by_location_for_xml(location):
                 'Id': quiz_block['slug'],
             },
             'children': [],
+            'children_tree': [],
         }
 
         for problem in quiz_block['problems']:
-            parsed_problem = MultipleChoiceProblemParser(problem['content'])
-
-            options = parsed_problem.options
-            options_element = {
-                'name': "Options",
-                'attrib': {},
-                'children': [],
-            }
-
-            for each in options:
-                attrib = {'Sentence': each['text']}
-                if each['is_correct']:
-                    attrib['IsCorrectAnswer'] = "true"
-                option = {
-                    'name': "Option",
-                    'attrib': attrib,
-                    'children': [],
-                }
-                options_element['children'].append(option)
-
-            quiz_element = {
-                'name': "Quiz",
-                'attrib': {
-                    'Id': problem['id'],
-                    'Sentence': str(parsed_problem.problem).encode('string_escape'),
-                    'CorrectMessage': str(parsed_problem.solution).encode('string_escape'),
-                    'WrongMessage': "No. This is incorrect - please try again!",
-                },
-                'children': [options_element],
-            }
+            if problem['platform_xml']:
+                quiz_element = parse_platform_xml(problem['platform_xml'])
+            else:
+                quiz_element = parse_edx_xml(problem['content'], problem['id'])
 
             qb_element['children'].append(quiz_element)
 

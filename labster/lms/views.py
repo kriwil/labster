@@ -18,7 +18,7 @@ from rest_framework.authtoken.models import Token
 from labster.models import LabProxy, UserSave
 
 
-URL_PREFIX = settings.LABSTER_UNITY_URL_PREFIX
+URL_PREFIX = getattr(settings, 'LABSTER_UNITY_URL_PREFIX', '')
 
 
 def demo_lab(request):

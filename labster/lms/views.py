@@ -112,8 +112,8 @@ class PlatformXml(LabProxyXMLView):
             'Id': "ModularLab",
             'Version': "1",
             'Title': "Labster",
-            'LoaderAsset': "FlaskLoadingScene",
-            'LoaderScene': "FlaskLoadingScene",
+            'LoaderAsset': "Loading",
+            'LoaderScene': "Loading",
         }
 
 

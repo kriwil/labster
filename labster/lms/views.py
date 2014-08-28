@@ -13,9 +13,7 @@ from django.utils.xmlutils import SimplerXMLGenerator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
-from rest_framework.authtoken.models import Token
-
-from labster.models import LabProxy, UserSave
+from labster.models import LabProxy, UserSave, UserAttempt
 
 
 URL_PREFIX = getattr(settings, 'LABSTER_UNITY_URL_PREFIX', '')
@@ -80,18 +78,21 @@ class SettingsXml(LabProxyXMLView):
         lab_proxy = self.get_lab_proxy()
         user = self.request.user
 
-        # if lab_proxy.lab.engine_xml:
-        #     engine_xml = lab_proxy.lab.engine_xml
+        if lab_proxy.lab.engine_xml:
+            engine_xml = lab_proxy.lab.engine_xml
 
-        # # check for save game
-        # try:
-        #     user_save = UserSave.objects.get(
-        #         lab_proxy=lab_proxy, user=user, is_finished=False)
-        # except UserSave.DoesNotExist:
-        #     pass
-        # else:
-        #     if user_save.save_file:
-        #         engine_xml = user_save.save_file.url
+        # check if user has finished
+        # if user's not finished the game, try to fetch the save file
+        user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
+        if not user_attempt.is_finished:
+            # check for save game
+            try:
+                user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
+            except UserSave.DoesNotExist:
+                pass
+            else:
+                if user_save.save_file:
+                    engine_xml = user_save.save_file.url
 
         return {
             'EngineXML': engine_xml,
@@ -166,14 +167,13 @@ platform_xml = PlatformXml.as_view()
 
 @csrf_exempt
 def collect_response(request, api_type):
-    if api_type == 'savegame':
-        messages = [
-            str(request.user),
-            api_type,
-            str(request.POST),
-            str(request.FILES),
-        ]
-        message = "\n----\n".join(messages)
-        send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
-                ['kriwil+debug@gmail.com'], fail_silently=True)
+    messages = [
+        str(request.user),
+        api_type,
+        str(request.POST),
+        str(request.FILES),
+    ]
+    message = "\n----\n".join(messages)
+    send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
+            ['kriwil+debug@gmail.com'], fail_silently=True)
     return HttpResponse('')

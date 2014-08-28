@@ -4,6 +4,7 @@ try:
 except ImportError:
     StringIO = six.StringIO
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -15,6 +16,9 @@ from django.views.generic import View
 from rest_framework.authtoken.models import Token
 
 from labster.models import LabProxy, UserSave
+
+
+URL_PREFIX = settings.LABSTER_UNITY_URL_PREFIX
 
 
 def demo_lab(request):
@@ -95,7 +99,7 @@ class SettingsXml(LabProxyXMLView):
             'CameraMode': "Standard",
             'InputMode': "Mouse",
             'HandMode': "Hand",
-            'URLPrefix': "http://s3-us-west-2.amazonaws.com/labster/unity/",
+            'URLPrefix': URL_PREFIX,
             # 'URLPrefix': "http://192.168.4.45:9000/unity/",
         }
 

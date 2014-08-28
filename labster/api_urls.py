@@ -23,7 +23,7 @@ urlpatterns = patterns('',  # nopep8
 
     url('^wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', Wiki.as_view(), name='wiki'),
     # since article can have children it might conflict with course-wiki, so I add keyword article in the end
-    url('^wiki/article/(?P<article_slug>.+/|)$', ArticleSlug.as_view(), name='article_slug'),
+    url('^wiki/article/(?P<article_slug>.+/|)$', ArticleSlug.as_view(), name='wiki-article'),
 
     url('^collect-response/(?P<api_type>\w+)/$', 'labster.lms.views.collect_response'),
 
@@ -33,4 +33,4 @@ urlpatterns = patterns('',  # nopep8
 )
 
 
-urlpatterns = format_suffix_patterns(urlpatterns, allowed=['xml', 'json', 'html'])
+# urlpatterns = format_suffix_patterns(urlpatterns, allowed=['xml', 'json', 'html'])

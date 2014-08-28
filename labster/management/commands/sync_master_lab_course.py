@@ -54,10 +54,11 @@ def create_xblock(user, category, parent_location, name=None, extra_post=None):
     return store.get_item(usage_key)
 
 
-def update_problem(user, xblock, data, name):
+def update_problem(user, xblock, data, name, platform_xml):
     nullout = ["markdown"]
     metadata = {
         'display_name': name,
+        'platform_xml': platform_xml,
     }
 
     return _save_xblock(
@@ -165,4 +166,4 @@ class Command(BaseCommand):
 
                     problem_xblock = problem_dicts[name]
                     data = etree.tostring(quiz, pretty_print=True)
-                    update_problem(user, problem_xblock, data, name=name)
+                    update_problem(user, problem_xblock, data, name=name, platform_xml=data)

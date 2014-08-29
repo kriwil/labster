@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from labster.models import LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy
+from labster.models import (
+    LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy,
+    UnityLog)
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -44,6 +46,10 @@ class TokenAdmin(admin.ModelAdmin):
     list_display = ('name', 'key', 'created_at')
 
 
+class UnityLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'lab_proxy', 'log_type', 'created_at')
+
+
 admin.site.register(LanguageLab)
 admin.site.register(ErrorInfo, ErrorInfoAdmin)
 admin.site.register(DeviceInfo, DeviceInfoAdmin)
@@ -51,3 +57,4 @@ admin.site.register(UserSave, UserSaveAdmin)
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(LabProxy, LabProxyAdmin)
+admin.site.register(UnityLog, UnityLogAdmin)

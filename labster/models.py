@@ -1,5 +1,6 @@
 import binascii
 import calendar
+import json
 import os
 
 from datetime import datetime
@@ -7,8 +8,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models.signals import pre_delete, pre_save
-from django.dispatch.dispatcher import receiver
+from django.db.models.signals import pre_save
 from django.utils import timezone
 
 
@@ -191,21 +191,35 @@ class DeviceInfo(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
 
-@receiver(pre_delete, sender=UserSave)
-def game_user_save_delete(sender, instance, **kwargs):
-    # Also delete the save game file when deleting the GameUserSave
-    return
-    # try:
-    #     instance.save_file.delete(False)
-    # except OSError:
-    #     pass
+class UnityLog(models.Model):
+    user = models.ForeignKey(User, blank=True, null=True)
+    lab_proxy = models.ForeignKey(LabProxy, blank=True, null=True)
 
+    log_type = models.CharField(max_length=100, db_index=True)
+    url = models.CharField(max_length=255, default='')
+    request_method = models.CharField(max_length=10, blank=True, default='')
+    message = models.TextField(help_text="JSON representation of data")
 
-@receiver(pre_delete, sender=Lab)
-def lab_delete(sender, instance, **kwargs):
-    # Also delete the screenshot image file when deleting the Lab
-    return
-    # instance.screenshot.delete(False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def get_message(self):
+        if self.message:
+            return json.loads(self.message)
+        return None
+
+    def set_message(self, message):
+        self.message = json.dumps(message)
+
+    def save(self, *args, **kwargs):
+        self.log_type = self.log_type.strip().upper()
+        return super(UnityLog, self).save(*args, **kwargs)
+
+    @classmethod
+    def new(self, user, lab_proxy, log_type, message, url='', request_method=''):
+        message = json.dumps(message)
+        return self.objects.create(
+            user=user, lab_proxy=lab_proxy,
+            log_type=log_type, message=message, url=url, request_method=request_method)
 
 
 def update_modified_at(sender, instance, **kwargs):

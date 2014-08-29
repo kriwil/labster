@@ -24,7 +24,7 @@ from labster.api.serializers import (
     UserAttemptSerializer, FinishLabSerializer)
 from labster.authentication import GetTokenAuthentication
 from labster.models import (
-    UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt)
+    UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt, UnityLog)
 from labster.parsers.problem_parsers import MultipleChoiceProblemParser
 from labster.renderers import LabsterXMLRenderer
 
@@ -698,3 +698,20 @@ class UnityPlayLab(ParserMixin, AuthMixin, APIView):
         response_data = ''
 
         return Response(response_data, status=status.HTTP_204_NO_CONTENT)
+
+
+class CreateLog(ParserMixin, AuthMixin, APIView):
+
+    def post(self, request, *args, **kwargs):
+        log_type = kwargs.get('log_type')
+        lab_id = kwargs.get('lab_id')
+
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
+        user = request.user
+        message = request.POST.copy()
+        url = request.build_absolute_uri()
+        request_method = request.method
+
+        UnityLog.new(user, lab_proxy,
+                     log_type, message, url, request_method)
+        return Response('', status=status.HTTP_204_NO_CONTENT)

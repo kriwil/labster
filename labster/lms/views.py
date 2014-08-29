@@ -133,14 +133,19 @@ class ServerXml(LabProxyXMLView):
         # save_game = "/labster/api/collect-response/savegame/"
         # player_start_end = "/labster/api/collect-response/playerstartend/"
         # wiki = "/labster/api/collect-response/Wiki/"
-        quiz_statistic = "/labster/api/collect-response/QuizStatistic/"
-        game_progress = "/labster/api/collect-response/GameProgress/"
-        device_info = "/labster/api/collect-response/DeviceSnfo/"
-        send_email = "/labster/api/collect-response/SendEmail/"
+        # quiz_statistic = "/labster/api/collect-response/QuizStatistic/"
+        # game_progress = "/labster/api/collect-response/GameProgress/"
+        # device_info = "/labster/api/collect-response/DeviceSnfo/"
+        # send_email = "/labster/api/collect-response/SendEmail/"
 
         save_game = reverse('labster-api:save', args=[lab_proxy.id])
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
         quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
+        quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'QuizStatistic'])
+        game_progress = reverse('labster-api:create-log', args=[lab_proxy.id, 'GameProgress'])
+        device_info = reverse('labster-api:create-log', args=[lab_proxy.id, 'DeviceInfo'])
+        send_email = reverse('labster-api:create-log', args=[lab_proxy.id, 'SendEmail'])
+
         # wiki = reverse('labster-api:wiki-article', args=['replaceme'])
         wiki = "/labster/api/wiki/article/"
 

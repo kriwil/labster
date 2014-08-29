@@ -1,12 +1,12 @@
 from django.conf.urls import patterns, url
 
-from rest_framework.urlpatterns import format_suffix_patterns
+# from rest_framework.urlpatterns import format_suffix_patterns
 
 from labster.api.views import APIRoot
 from labster.api.views import CreateSave, CreateError, CreateDevice
 from labster.api.views import LabProxyView, AnswerProblem, Wiki, ArticleSlug
 from labster.api.views import UserAuth, PlayLab, FinishLab, LabSettings
-from labster.api.views import UnityPlayLab
+from labster.api.views import UnityPlayLab, CreateLog
 
 
 urlpatterns = patterns('',  # nopep8
@@ -20,6 +20,7 @@ urlpatterns = patterns('',  # nopep8
     url('^labs/(?P<lab_id>\d+)/log/error/$', CreateError.as_view(), name='log-error'),
     url('^labs/(?P<lab_id>\d+)/log/device/$', CreateDevice.as_view(), name='log-device'),
     url('^labs/(?P<lab_id>\d+)/play/$', UnityPlayLab.as_view(), name='play'),
+    url('^labs/(?P<lab_id>\d+)/log/(?P<log_type>\w+)/$', CreateLog.as_view(), name='create-log'),
 
     url('^wiki/(?P<course_id>[^/]+/[^/]+/[^/]+)/?$', Wiki.as_view(), name='wiki'),
     # since article can have children it might conflict with course-wiki, so I add keyword article in the end

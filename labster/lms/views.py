@@ -5,12 +5,10 @@ except ImportError:
     StringIO = six.StringIO
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.xmlutils import SimplerXMLGenerator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
 from labster.models import LabProxy, UserSave, UserAttempt
@@ -141,10 +139,10 @@ class ServerXml(LabProxyXMLView):
         save_game = reverse('labster-api:save', args=[lab_proxy.id])
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
         quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
-        quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'QuizStatistic'])
-        game_progress = reverse('labster-api:create-log', args=[lab_proxy.id, 'GameProgress'])
-        device_info = reverse('labster-api:create-log', args=[lab_proxy.id, 'DeviceInfo'])
-        send_email = reverse('labster-api:create-log', args=[lab_proxy.id, 'SendEmail'])
+        quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'quiz_statistic'])
+        game_progress = reverse('labster-api:create-log', args=[lab_proxy.id, 'game_progress'])
+        device_info = reverse('labster-api:create-log', args=[lab_proxy.id, 'device_info'])
+        send_email = reverse('labster-api:create-log', args=[lab_proxy.id, 'send_email'])
 
         # wiki = reverse('labster-api:wiki-article', args=['replaceme'])
         wiki = "/labster/api/wiki/article/"
@@ -168,17 +166,3 @@ class ServerXml(LabProxyXMLView):
 settings_xml = SettingsXml.as_view()
 server_xml = ServerXml.as_view()
 platform_xml = PlatformXml.as_view()
-
-
-@csrf_exempt
-def collect_response(request, api_type):
-    messages = [
-        str(request.user),
-        api_type,
-        str(request.POST),
-        str(request.FILES),
-    ]
-    message = "\n----\n".join(messages)
-    send_mail('DEBUG: {}'.format(api_type), message, 'log@example.com',
-            ['kriwil+debug@gmail.com'], fail_silently=True)
-    return HttpResponse('')

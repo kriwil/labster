@@ -84,7 +84,7 @@ class SettingsXml(LabProxyXMLView):
         # check if user has finished
         # if user's not finished the game, try to fetch the save file
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
-        if not user_attempt.is_finished:
+        if user_attempt and not user_attempt.is_finished:
             # check for save game
             try:
                 user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)

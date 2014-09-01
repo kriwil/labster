@@ -128,14 +128,6 @@ class ServerXml(LabProxyXMLView):
     def insert_children(self, xml):
         lab_proxy = self.get_lab_proxy()
 
-        # save_game = "/labster/api/collect-response/savegame/"
-        # player_start_end = "/labster/api/collect-response/playerstartend/"
-        # wiki = "/labster/api/collect-response/Wiki/"
-        # quiz_statistic = "/labster/api/collect-response/QuizStatistic/"
-        # game_progress = "/labster/api/collect-response/GameProgress/"
-        # device_info = "/labster/api/collect-response/DeviceSnfo/"
-        # send_email = "/labster/api/collect-response/SendEmail/"
-
         save_game = reverse('labster-api:save', args=[lab_proxy.id])
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
         quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
@@ -154,7 +146,7 @@ class ServerXml(LabProxyXMLView):
             {'Id': "SaveGame", 'Path': save_game},
             {'Id': "SendEmail", 'Path': send_email},
             {'Id': "PlayerStartEnd", 'Path': player_start_end},
-            {'Id': "Wiki", 'Path': wiki, 'CatchError': "false"},
+            {'Id': "Wiki", 'Path': wiki, 'CatchError': "false", 'AllowCache': "true"},
             {'Id': "QuizBlock", 'Path': quiz_block},
         ]
 

@@ -605,6 +605,11 @@ class LabProxyView(LabsterRendererMixin, AuthMixin, APIView):
         response_data = self.get_response_data(lab_id)
         return Response(response_data)
 
+    def post(self, request, format=None, *args, **kwargs):
+        lab_id = kwargs.get('lab_id')
+        response_data = self.get_response_data(lab_id)
+        return Response(response_data)
+
 
 class WikiMixin(object):
     def get_root_attributes(self):

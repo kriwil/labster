@@ -3,6 +3,16 @@ import re
 from lxml import etree
 import markdown
 
+from django.test.client import RequestFactory
+
+
+def get_request(user=None, data=None):
+    factory = RequestFactory()
+    request = factory.post('/', data=data, content_type='application/json',
+                           HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+    request.user = user
+    return request
+
 
 def choicegroup_xml_to_markdown(element_list, element_type='radio'):
     """

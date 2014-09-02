@@ -295,7 +295,7 @@ class CustomFileUploadParser(BaseParser):
     """
     Parser for file upload data.
     """
-    media_type = '*/*'
+    media_type = 'multipart/form-data'
 
     def parse(self, stream, media_type=None, parser_context=None):
         """
@@ -419,7 +419,6 @@ class CreateSave(AuthMixin, APIView):
         obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
     def post(self, request, *args, **kwargs):
-        request._content_type = '*/*'
         user = request.user
         lab_id = kwargs.get('lab_id')
 
@@ -427,11 +426,15 @@ class CreateSave(AuthMixin, APIView):
         self.user_save, _ = UserSave.objects.get_or_create(user=user, lab_proxy=lab_proxy)
 
         http_status = status.HTTP_200_OK
-        data_file = request.FILES.get('file')
-        file_name = self.user_save.get_new_save_file_name()
 
-        self.user_save.save_file = SimpleUploadedFile(file_name, data_file.read().strip())
-        self.user_save.save()
+        file_name = self.user_save.get_new_save_file_name()
+        # data_file = request.FILES.get('file')
+        # self.user_save.save_file.save(SimpleUploadedFile(file_name, data_file.read().strip()))
+        try:
+            self.user_save.save_file.save(SimpleUploadedFile(file_name, request.body.strip()))
+            self.user_save.save()
+        except:
+            pass
 
         return Response({}, status=http_status)
 

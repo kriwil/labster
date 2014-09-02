@@ -51,18 +51,17 @@ def update_problem(user, xblock, data, name, platform_xml):
     )
 
 
-def update_quizblocks(course, user, command=None):
+def update_quizblocks(course, user, section_name='Labs', command=None):
 
     section_dicts = {section.display_name: section for section in course.get_children()}
     course_location = course.location.to_deprecated_string()
 
     # required_section_names = ['Labs']
-    name = 'Labs'
-    if name not in section_dicts:
-        command and command.stdout.write("creating {}\n".format(name))
-        section_dicts[name] = create_xblock(user, 'chapter', course_location, name=name)
+    if section_name not in section_dicts:
+        command and command.stdout.write("creating {}\n".format(section_name))
+        section_dicts[section_name] = create_xblock(user, 'chapter', course_location, name=section_name)
 
-    section = section_dicts[name]
+    section = section_dicts[section_name]
     section_location = section.location.to_deprecated_string()
     sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
 

@@ -59,3 +59,51 @@ class MultipleChoiceProblemParser(object):
     @property
     def solution(self):
         return self._parse_solution()
+
+
+class QuizParser(object):
+
+    xml_template = """
+<problem>
+<p>A multiple choice problem presents radio buttons for student input. Students can only select a single option presented. Multiple Choice questions have been the subject of many areas of research due to the early invention and adoption of bubble sheets.</p>
+
+<p>One of the main elements that goes into a good multiple choice question is the existence of good distractors. That is, each of the alternate responses presented to the student should be the result of a plausible mistake that a student might make.</p>
+
+<p>What Apple device competed with the portable CD player?</p>
+<multiplechoiceresponse>
+  <choicegroup label="What Apple device competed with the portable CD player?" type="MultipleChoice">
+    <choice correct="false">The iPad</choice>
+    <choice correct="false">Napster</choice>
+    <choice correct="true">The iPod</choice>
+    <choice correct="false">The vegetable peeler</choice>
+  </choicegroup>
+</multiplechoiceresponse>
+
+
+<solution>
+<div class="detailed-solution">
+<p>Explanation</p>
+
+<p>The release of the iPod allowed consumers to carry their entire music library with them in a format that did not rely on fragile and energy-intensive spinning disks.</p>
+
+</div>
+</solution>
+
+</problem>
+    """
+
+    def __init__(self, quiz_tree):
+        self.quiz_tree = quiz_tree
+        self._parsed = ""
+
+    @property
+    def parsed(self):
+        if self._parsed:
+            return self._parsed
+
+        problem = etree.Element('problem')
+        p_el = etreeSubElement(problem, 'p')
+
+        correct_message = self.quiz_tree.attrib.get('CorrectMessage', '')
+        sentence = self.quiz_tree.attrib.get('sentence', '')
+        wrong_message = self.quiz_tree.attrib.get('WrongMessage', '')

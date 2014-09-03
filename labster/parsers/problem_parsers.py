@@ -63,47 +63,51 @@ class MultipleChoiceProblemParser(object):
 
 class QuizParser(object):
 
-    xml_template = """
-<problem>
-<p>A multiple choice problem presents radio buttons for student input. Students can only select a single option presented. Multiple Choice questions have been the subject of many areas of research due to the early invention and adoption of bubble sheets.</p>
-
-<p>One of the main elements that goes into a good multiple choice question is the existence of good distractors. That is, each of the alternate responses presented to the student should be the result of a plausible mistake that a student might make.</p>
-
-<p>What Apple device competed with the portable CD player?</p>
-<multiplechoiceresponse>
-  <choicegroup label="What Apple device competed with the portable CD player?" type="MultipleChoice">
-    <choice correct="false">The iPad</choice>
-    <choice correct="false">Napster</choice>
-    <choice correct="true">The iPod</choice>
-    <choice correct="false">The vegetable peeler</choice>
-  </choicegroup>
-</multiplechoiceresponse>
-
-
-<solution>
-<div class="detailed-solution">
-<p>Explanation</p>
-
-<p>The release of the iPod allowed consumers to carry their entire music library with them in a format that did not rely on fragile and energy-intensive spinning disks.</p>
-
-</div>
-</solution>
-
-</problem>
-    """
-
     def __init__(self, quiz_tree):
         self.quiz_tree = quiz_tree
-        self._parsed = ""
+        self._parsed = None
+        self._parsed_as_string = ""
 
     @property
     def parsed(self):
         if self._parsed:
             return self._parsed
 
-        problem = etree.Element('problem')
-        p_el = etreeSubElement(problem, 'p')
-
         correct_message = self.quiz_tree.attrib.get('CorrectMessage', '')
-        sentence = self.quiz_tree.attrib.get('sentence', '')
-        wrong_message = self.quiz_tree.attrib.get('WrongMessage', '')
+        sentence = self.quiz_tree.attrib.get('Sentence', '')
+        # wrong_message = self.quiz_tree.attrib.get('WrongMessage', '')
+
+        problem_el = etree.Element('problem')
+        p_el = etree.SubElement(problem_el, 'p')
+        p_el.text = sentence
+
+        multiplechoice_el = etree.SubElement(problem_el, 'multiplechoiceresponse')
+        choicegroup_el = etree.SubElement(multiplechoice_el, 'choicegroup',
+                                       {'type': "MultipleChoice",
+                                        'label': sentence,
+                                        })
+
+        for options in self.quiz_tree.getchildren():
+            for option in options.getchildren():
+                correct = 'true' if option.attrib.get('IsCorrectAnswer') == 'true' else 'false'
+                choice_el = etree.SubElement(choicegroup_el, 'choice', {'correct': correct})
+                choice_el.text = option.attrib.get('Sentence')
+
+        solution_el = etree.SubElement(problem_el, 'solution')
+        div_el = etree.SubElement(solution_el, 'div', {'class': "detailed-solution"})
+        p_el = etree.SubElement(div_el, 'p')
+        p_el.text = 'Explanation'
+        p_el = etree.SubElement(div_el, 'p')
+        p_el.text = correct_message
+
+        self._parsed = problem_el
+        print etree.tostring(problem_el, pretty_print=True)
+        return self._parsed
+
+    @property
+    def parsed_as_string(self):
+        if self._parsed_as_string:
+            return self._parsed_as_string
+
+        self._parsed_as_string = etree.tostring(self.parsed, pretty_print=True)
+        return self._parsed_as_string

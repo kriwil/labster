@@ -656,12 +656,9 @@ class WikiMixin(object):
         }
 
 
-class Wiki(WikiMixin, LabsterRendererMixin, APIView):
+class Wiki(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
 
-    def post(self, request, course_id, *args, **kwargs):
-        return self.get(request, course_id, *args, **kwargs)
-
-    def get(self, request, course_id, *args, **kwargs):
+    def _request(self, request, course_id, *args, **kwargs):
         from course_wiki.utils import course_wiki_slug
         from courseware.courses import get_course_by_id
         from opaque_keys.edx.locations import SlashSeparatedCourseKey
@@ -691,13 +688,16 @@ class Wiki(WikiMixin, LabsterRendererMixin, APIView):
         response_data = self.get_response_data()
         return Response(response_data)
 
+    def post(self, request, course_id, *args, **kwargs):
+        return self._request(request, course_id, *args, **kwargs)
 
-class ArticleSlug(WikiMixin, LabsterRendererMixin, APIView):
+    def get(self, request, course_id, *args, **kwargs):
+        return self._request(request, course_id, *args, **kwargs)
 
-    def post(self, request, article_slug, *args, **kwargs):
-        return self.get(request, article_slug, *args, **kwargs)
 
-    def get(self, request, article_slug, *args, **kwargs):
+class ArticleSlug(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
+
+    def _request(self, request, article_slug, *args, **kwargs):
         from wiki.models import URLPath, Article
 
         # since we already have article slug we don't need to search the course
@@ -719,6 +719,12 @@ class ArticleSlug(WikiMixin, LabsterRendererMixin, APIView):
 
         response_data = self.get_response_data()
         return Response(response_data)
+
+    def post(self, request, article_slug, *args, **kwargs):
+        return self._request(request, article_slug, *args, **kwargs)
+
+    def get(self, request, article_slug, *args, **kwargs):
+        return self._request(request, article_slug, *args, **kwargs)
 
 
 class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):

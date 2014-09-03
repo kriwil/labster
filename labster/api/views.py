@@ -613,11 +613,17 @@ class LabProxyView(LabsterRendererMixin, AuthMixin, APIView):
 
 class WikiMixin(object):
     def get_root_attributes(self):
-        return {
-            'id': self.article_id,
-            'title': self.title,
-            'slug': self.slug,
-        }
+        attr = {}
+        try:
+            attr = {
+                'id': self.article_id,
+                'title': self.title,
+                'slug': self.slug,
+            }
+        except AttributeError:
+            pass
+
+        return attr
 
     def get_labster_renderer_context(self):
         return {

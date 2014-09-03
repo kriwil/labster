@@ -649,6 +649,9 @@ class WikiMixin(object):
             ]
         }
 
+    def post(self, request, course_id, *args, **kwargs):
+        return self.get(request, course_id, *args, **kwargs)
+
 
 class Wiki(WikiMixin, LabsterRendererMixin, APIView):
 

@@ -655,11 +655,11 @@ class WikiMixin(object):
             ]
         }
 
-    def post(self, request, course_id, *args, **kwargs):
-        return self.get(request, course_id, *args, **kwargs)
-
 
 class Wiki(WikiMixin, LabsterRendererMixin, APIView):
+
+    def post(self, request, course_id, *args, **kwargs):
+        return self.get(request, course_id, *args, **kwargs)
 
     def get(self, request, course_id, *args, **kwargs):
         from course_wiki.utils import course_wiki_slug
@@ -693,6 +693,9 @@ class Wiki(WikiMixin, LabsterRendererMixin, APIView):
 
 
 class ArticleSlug(WikiMixin, LabsterRendererMixin, APIView):
+
+    def post(self, request, article_slug, *args, **kwargs):
+        return self.get(request, article_slug, *args, **kwargs)
 
     def get(self, request, article_slug, *args, **kwargs):
         from wiki.models import URLPath, Article

@@ -8,6 +8,7 @@ from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
 from labster.models import Lab
+from labster.parsers.problem_parsers import QuizParser
 from labster.utils import get_request
 
 QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
@@ -104,5 +105,6 @@ def update_quizblocks(course, user, section_name='Labs', command=None):
                     problem_dicts[name] = create_xblock(user, 'problem', unit_location, extra_post=extra_post)
 
                 problem_xblock = problem_dicts[name]
-                data = etree.tostring(quiz, pretty_print=True)
-                update_problem(user, problem_xblock, data, name=name, platform_xml=data)
+                platform_xml = etree.tostring(quiz, pretty_print=True)
+                edx_xml = QuizParser(quiz).parsed_as_string
+                update_problem(user, problem_xblock, data=edx_xml, name=name, platform_xml=platform_xml)

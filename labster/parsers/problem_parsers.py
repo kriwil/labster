@@ -101,7 +101,6 @@ class QuizParser(object):
         p_el.text = correct_message
 
         self._parsed = problem_el
-        print etree.tostring(problem_el, pretty_print=True)
         return self._parsed
 
     @property

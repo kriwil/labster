@@ -105,7 +105,7 @@ class ProblemParser(object):
                 for choicegroup in each.getchildren():
                     options = etree.SubElement(quiz_el, 'Options')
 
-                    for index, option in enumerate(choicegroup.getchildren(), index=0):
+                    for index, option in enumerate(choicegroup.getchildren(), start=0):
                         attrib = {'Sentence': option.text}
 
                         if option.attrib.get('correct') == 'true':

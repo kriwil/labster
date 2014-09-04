@@ -1,20 +1,22 @@
+import hashlib
 import json
 
 from lxml import etree
 import requests
 
-from contentstore.views.item import _create_item, _save_xblock
 from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
-from labster.models import Lab
-from labster.parsers.problem_parsers import QuizParser
+from labster.models import Lab, ProblemProxy
+from labster.parsers.problem_parsers import QuizParser, ProblemParser
 from labster.utils import get_request
 
 QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
 
 
 def create_xblock(user, category, parent_location, name=None, extra_post=None):
+    from contentstore.views.item import _create_item
+
     post_data = {
         'parent_locator': parent_location,
         'category': category,
@@ -38,6 +40,7 @@ def create_xblock(user, category, parent_location, name=None, extra_post=None):
 
 def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
                    correct_answer=''):
+    from contentstore.views.item import _save_xblock
 
     nullout = ["markdown"]
     metadata = {
@@ -47,7 +50,7 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
         'correct_answer': correct_answer,
     }
 
-    return _save_xblock(
+    response = _save_xblock(
         user,
         xblock,
         data=data,
@@ -55,6 +58,11 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
         metadata=metadata,
         publish='make_public',
     )
+
+    new_xblock = json.loads(response.content)
+    locator = UsageKey.from_string(new_xblock['id'])
+    modulestore().publish(locator, user.id)
+    return new_xblock
 
 
 def update_quizblocks(course, user, section_name='Labs', command=None):
@@ -116,3 +124,61 @@ def update_quizblocks(course, user, section_name='Labs', command=None):
                                platform_xml=platform_xml,
                                correct_index=quiz_parser.correct_index,
                                correct_answer=quiz_parser.correct_answer)
+
+
+def sync_quiz_xml(course, user, section_name='Labs', command=None):
+
+    section_dicts = {section.display_name: section for section in course.get_children()}
+
+    section = section_dicts[section_name]
+    sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
+
+    labs = Lab.objects.all()
+    for lab in labs:
+        sub_section = sub_section_dicts[lab.name]
+
+        for qb in sub_section.get_children():
+            for unit in qb.get_children():
+                if not unit.platform_xml:
+                    command and command.stdout.write("empty: {}\n".format(unit.display_name))
+                    parser = ProblemParser(etree.fromstring(unit.data))
+                    unit.platform_xml = parser.parsed_as_string
+                    unit.correct_answer = parser.correct_answer
+                    unit.correct_index = parser.correct_index
+                    modulestore().update_item(unit, user.id)
+
+                modulestore().publish(unit.location, user.id)
+            modulestore().publish(qb.location, user.id)
+        modulestore().publish(sub_section.location, user.id)
+
+
+def get_location_by_problem(lab_proxy, question):
+    hashed = hashlib.md5(question.encode('utf-8').strip()).hexdigest()
+
+    try:
+        obj = ProblemProxy.objects.get(lab_proxy=lab_proxy, question=hashed)
+    except ProblemProxy.DoesNotExist:
+        pass
+    else:
+        return obj.location
+
+    location = ''
+    locator = UsageKey.from_string(lab_proxy.location)
+    descriptor = modulestore().get_item(locator)
+
+    for _quiz_block in descriptor.get_children():
+        for _problem in _quiz_block.get_children():
+            tree = etree.fromstring(_problem.platform_xml)
+            _question = tree.attrib.get('Sentence')
+            _hashed = hashlib.md5(_question.encode('utf-8').strip()).hexdigest()
+            _location = str(_problem.location)
+
+            if hashed == _hashed:
+                location = _location
+
+            ProblemProxy.objects.get_or_create(
+                lab_proxy=lab_proxy, question=_hashed,
+                defaults={'location': _location},
+            )
+
+    return location

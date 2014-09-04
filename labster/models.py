@@ -222,6 +222,19 @@ class UnityLog(models.Model):
             log_type=log_type, message=message, url=url, request_method=request_method)
 
 
+class ProblemProxy(models.Model):
+    """
+    Model to store connection between quiz and the location
+    """
+    lab_proxy = models.ForeignKey(LabProxy)
+    question = models.CharField(max_length=100, db_index=True, help_text='Question in md5')
+    location = models.CharField(max_length=200, unique=True)
+    correct_answer = models.TextField()
+
+    class Meta:
+        unique_together = ('lab_proxy', 'question')
+
+
 def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
 

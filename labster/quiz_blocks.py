@@ -48,6 +48,7 @@ def update_problem(user, xblock, data, name, platform_xml):
         data=data,
         nullout=nullout,
         metadata=metadata,
+        publish='make_public',
     )
 
 

@@ -31,6 +31,7 @@ from labster.authentication import GetTokenAuthentication
 from labster.models import (
     UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt, UnityLog)
 from labster.parsers.problem_parsers import MultipleChoiceProblemParser
+from labster.quiz_blocks import get_location_by_problem
 from labster.renderers import LabsterXMLRenderer
 
 
@@ -727,7 +728,7 @@ class ArticleSlug(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
         return self._request(request, article_slug, *args, **kwargs)
 
 
-class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
+class AnswerProblem(ParserMixin, AuthMixin, APIView):
 
     def __init__(self, *args, **kwargs):
         self.usage_key = get_usage_key()
@@ -745,7 +746,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
         request.POST = request.POST.copy()
         field_name = "input_{tag}-{org}-{course}-{category}-{name}_2_1"
         field_key = {
-            'tag': problem_locator.tag,
+            'tag': 'i4x',  # problem_locator.tag,
             'org': problem_locator.org,
             'course': problem_locator.course,
             'category': problem_locator.category,
@@ -759,10 +760,7 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
 
         return post_data
 
-    def call_xblock_handler(self, request, location, problem_locator, answer, time_spent):
-
-        locator = self.usage_key.from_string(location)
-        course_id = locator.course_key.to_deprecated_string()
+    def call_xblock_handler(self, request, course_id, problem_locator, answer, time_spent):
         usage_id = problem_locator.to_deprecated_string()
         usage_id = usage_id.replace('/', ';_')
         handler = 'xmodule_handler'
@@ -774,18 +772,26 @@ class AnswerProblem(RendererMixin, ParserMixin, AuthMixin, APIView):
 
     def post(self, request, *args, **kwargs):
         response_data = {}
-
         lab_id = kwargs.get('lab_id')
-        problem_id = request.DATA.get('problem')
-        answer = request.DATA.get('answer')
-        time_spent = request.DATA.get('time_spent')
+        lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
+        question = request.DATA.get('QuizQuestion')
+        score = request.DATA.get('Score')
+        time_spent = request.DATA.get('CompletionTime')
+        answer = request.DATA.get('CorrectAnswer')
+        play_count = request.DATA.get('PlayCount')
+
+        if not all([request, score, time_spent, answer, play_count]):
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+        problem_id = get_location_by_problem(lab_proxy, question)
         problem_locator, problem_descriptor = self.get_problem_locator_descriptor(problem_id)
+        answer_index = problem_descriptor.correct_index
+        answer_value = "choice_{}".format(answer_index)
 
-        if 'multiplechoiceresponse' in problem_descriptor.data:
-            answer = "choice_{}".format(answer)
-
-        result = self.call_xblock_handler(request, lab_id, problem_locator, answer, time_spent)
+        course_id = problem_descriptor.location.course_key.to_deprecated_string()
+        result = self.call_xblock_handler(request, course_id,
+                                          problem_locator, answer_value, time_spent)
         content = json.loads(result.content)
         response_data = {
             'correct': content.get('success') == 'correct',

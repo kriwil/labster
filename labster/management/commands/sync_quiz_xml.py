@@ -19,9 +19,20 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         user = User.objects.get(id=ADMIN_USER_ID)
         course_id = args[0]
+        try:
+            section_name = args[1]
+        except IndexError:
+            section_name = ""
+        try:
+            sub_section_name = args[2]
+        except IndexError:
+            sub_section_name = ""
+
         org, number, run = course_id.split('/')
 
         course_key = SlashSeparatedCourseKey(org, number, run)
         course = get_course_by_id(course_key)
 
-        sync_quiz_xml(course, user, command=self)
+        sync_quiz_xml(course, user, command=self,
+                      section_name=section_name,
+                      sub_section_name=sub_section_name)

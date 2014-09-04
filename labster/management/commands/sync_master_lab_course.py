@@ -61,4 +61,4 @@ class Command(BaseCommand):
             # self.stdout.write("course {} exists\n".format(COURSE_ID))
             course = get_course_by_id(course_key)
 
-        update_quizblocks(course, user, command=self)
+        update_quizblocks(course, user, command=self, is_master=True)

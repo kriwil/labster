@@ -65,7 +65,7 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
     return new_xblock
 
 
-def update_quizblocks(course, user, section_name='Labs', command=None):
+def update_quizblocks(course, user, section_name='Labs', command=None, is_master=False):
 
     section_dicts = {section.display_name: section for section in course.get_children()}
     course_location = course.location.to_deprecated_string()
@@ -118,36 +118,53 @@ def update_quizblocks(course, user, section_name='Labs', command=None):
 
                 problem_xblock = problem_dicts[name]
                 platform_xml = etree.tostring(quiz, pretty_print=True)
+
                 quiz_parser = QuizParser(quiz)
-                edx_xml = quiz_parser.parsed_as_string
+                if is_master:
+                    edx_xml = platform_xml
+                else:
+                    edx_xml = quiz_parser.parsed_as_string
+
                 update_problem(user, problem_xblock, data=edx_xml, name=name,
                                platform_xml=platform_xml,
                                correct_index=quiz_parser.correct_index,
                                correct_answer=quiz_parser.correct_answer)
 
 
-def sync_quiz_xml(course, user, section_name='Labs', command=None):
+def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None):
 
     section_dicts = {section.display_name: section for section in course.get_children()}
 
     section = section_dicts[section_name]
     sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
 
-    labs = Lab.objects.all()
-    for lab in labs:
-        sub_section = sub_section_dicts[lab.name]
+    if sub_section_name:
+        labs = [sub_section_name]
+    else:
+        labs = Lab.objects.all()
+        labs = [lab.name for lab in labs]
+
+    for lab_name in labs:
+        sub_section = sub_section_dicts[lab_name]
 
         for qb in sub_section.get_children():
             for unit in qb.get_children():
+
                 if not unit.platform_xml:
                     command and command.stdout.write("empty: {}\n".format(unit.display_name))
                     parser = ProblemParser(etree.fromstring(unit.data))
                     unit.platform_xml = parser.parsed_as_string
                     unit.correct_answer = parser.correct_answer
                     unit.correct_index = parser.correct_index
-                    modulestore().update_item(unit, user.id)
 
+                elif unit.data == unit.platform_xml:
+                    command and command.stdout.write("converting to data: {}\n".format(unit.display_name))
+                    parser = QuizParser(etree.fromstring(unit.platform_xml))
+                    unit.data = parser.parsed_as_string
+
+                modulestore().update_item(unit, user.id)
                 modulestore().publish(unit.location, user.id)
+
             modulestore().publish(qb.location, user.id)
         modulestore().publish(sub_section.location, user.id)
 

@@ -61,6 +61,87 @@ class MultipleChoiceProblemParser(object):
         return self._parse_solution()
 
 
+class ProblemParser(object):
+
+    def __init__(self, problem_tree, id=''):
+        self.problem_tree = problem_tree
+        self.id = id
+        self._parsed = None
+        self._parsed_as_string = ""
+        self._correct_index = None
+        self._correct_answer = ''
+
+    @property
+    def parsed(self):
+        if self._parsed:
+            return self._parsed
+
+        quiz_attrib = {
+            'Id': self.id,
+            'CorrectMessage': "",
+            'WrongMessage': "No. This is incorrect - please try again!",
+            'Sentence': "",
+        }
+        sentences = []
+        correct_messages = []
+        for each in self.problem_tree.getchildren():
+            if each.tag != 'p':
+                break
+            sentences.append(each.text.strip())
+
+        for each in self.problem_tree.getchildren():
+            if each.tag == 'solution':
+                for div in each.getchildren():
+                    for p in div.getchildren():
+                        if p.text.upper() != 'EXPLANATION':
+                            correct_messages.append(p.text.strip())
+
+        quiz_attrib['Sentence'] = '\n'.join(sentences)
+        quiz_attrib['CorrectMessage'] = '\n'.join(correct_messages)
+        quiz_el = etree.Element('Quiz', quiz_attrib)
+
+        for each in self.problem_tree.getchildren():
+            if each.tag == 'multiplechoiceresponse':
+                for choicegroup in each.getchildren():
+                    options = etree.SubElement(quiz_el, 'Options')
+
+                    for index, option in enumerate(choicegroup.getchildren(), index=0):
+                        attrib = {'Sentence': option.text}
+
+                        if option.attrib.get('correct') == 'true':
+                            attrib['IsCorrectAnswer'] = 'true'
+                            self._correct_answer = option.text
+                            self._correct_index = index
+
+                        etree.SubElement(options, 'Option', **attrib)
+
+        self._parsed = quiz_el
+
+        return quiz_el
+
+    @property
+    def parsed_as_string(self):
+        if self._parsed_as_string:
+            return self._parsed_as_string
+
+        self._parsed_as_string = etree.tostring(self.parsed, pretty_print=True)
+        return self._parsed_as_string
+
+    @property
+    def correct_index(self):
+        if self._correct_index:
+            return self._correct_index
+
+        return self._correct_index
+
+    @property
+    def correct_answer(self):
+        if self._correct_answer:
+            return self._correct_answer
+
+        return self._correct_answer
+
+
 class QuizParser(object):
 
     def __init__(self, quiz_tree):

@@ -36,11 +36,15 @@ def create_xblock(user, category, parent_location, name=None, extra_post=None):
     return store.get_item(usage_key)
 
 
-def update_problem(user, xblock, data, name, platform_xml):
+def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
+                   correct_answer=''):
+
     nullout = ["markdown"]
     metadata = {
         'display_name': name,
         'platform_xml': platform_xml,
+        'correct_index': correct_index,
+        'correct_answer': correct_answer,
     }
 
     return _save_xblock(
@@ -106,5 +110,9 @@ def update_quizblocks(course, user, section_name='Labs', command=None):
 
                 problem_xblock = problem_dicts[name]
                 platform_xml = etree.tostring(quiz, pretty_print=True)
-                edx_xml = QuizParser(quiz).parsed_as_string
-                update_problem(user, problem_xblock, data=edx_xml, name=name, platform_xml=platform_xml)
+                quiz_parser = QuizParser(quiz)
+                edx_xml = quiz_parser.parsed_as_string
+                update_problem(user, problem_xblock, data=edx_xml, name=name,
+                               platform_xml=platform_xml,
+                               correct_index=quiz_parser.correct_index,
+                               correct_answer=quiz_parser.correct_answer)

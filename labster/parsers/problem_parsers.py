@@ -67,6 +67,8 @@ class QuizParser(object):
         self.quiz_tree = quiz_tree
         self._parsed = None
         self._parsed_as_string = ""
+        self._correct_index = None
+        self._correct_answer = ''
 
     @property
     def parsed(self):
@@ -88,10 +90,16 @@ class QuizParser(object):
                                         })
 
         for options in self.quiz_tree.getchildren():
-            for option in options.getchildren():
-                correct = 'true' if option.attrib.get('IsCorrectAnswer') == 'true' else 'false'
+            for index, option in enumerate(options.getchildren(), start=0):
+                sentence = option.attrib.get('Sentence')
+                correct = 'false'
+                if option.attrib.get('IsCorrectAnswer'):
+                    correct = 'true'
+                    self._correct_index = index
+                    self._correct_answer = sentence
+
                 choice_el = etree.SubElement(choicegroup_el, 'choice', {'correct': correct})
-                choice_el.text = option.attrib.get('Sentence')
+                choice_el.text = sentence
 
         solution_el = etree.SubElement(problem_el, 'solution')
         div_el = etree.SubElement(solution_el, 'div', {'class': "detailed-solution"})
@@ -110,3 +118,17 @@ class QuizParser(object):
 
         self._parsed_as_string = etree.tostring(self.parsed, pretty_print=True)
         return self._parsed_as_string
+
+    @property
+    def correct_index(self):
+        if self._correct_index:
+            return self._correct_index
+
+        return self._correct_index
+
+    @property
+    def correct_answer(self):
+        if self._correct_answer:
+            return self._correct_answer
+
+        return self._correct_answer

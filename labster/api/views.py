@@ -772,6 +772,7 @@ class AnswerProblem(ParserMixin, AuthMixin, APIView):
         return invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
 
     def post(self, request, *args, **kwargs):
+        request._content_type = 'application/x-www-form-urlencoded'
         response_data = {}
         lab_id = kwargs.get('lab_id')
         lab_proxy = get_object_or_404(LabProxy, id=lab_id)

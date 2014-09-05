@@ -132,6 +132,7 @@ class ServerXml(LabProxyXMLView):
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
         quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
         quiz_statistic = reverse('labster-api:answer', args=[lab_proxy.id])
+        quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'quiz_statistic'])
 
         game_progress = reverse('labster-api:create-log', args=[lab_proxy.id, 'game_progress'])
         device_info = reverse('labster-api:create-log', args=[lab_proxy.id, 'device_info'])

@@ -228,7 +228,7 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
             format=format)
 
         answer_problem_url = reverse(
-            'labster-api:answer-problem',
+            'labster-api:answer',
             request=request,
             kwargs={'lab_id': 'LAB-ID'},
             format=format)
@@ -253,7 +253,7 @@ class APIRoot(RendererMixin, AuthMixin, APIView):
 
         return Response({
             'questions': lab_proxy_detail_url,
-            'answer-problem': answer_problem_url,
+            'answer': answer_problem_url,
             'save': save_url,
             'error': error_url,
             'device': device_url,

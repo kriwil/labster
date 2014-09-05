@@ -363,7 +363,7 @@ class AnswerProblemTest(TestCase):
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
 
-        self.url = reverse('labster-api:answer-problem', args=[self.lab_proxy.id])
+        self.url = reverse('labster-api:answer', args=[self.lab_proxy.id])
         self.headers = get_auth_header(self.user)
 
     @mock.patch('labster.api.views.get_usage_key')

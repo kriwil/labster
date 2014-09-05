@@ -385,6 +385,8 @@ class CustomFileUploadParser(BaseParser):
 
 class CreateSave(AuthMixin, APIView):
     parser_classes = (CustomFileUploadParser,)
+    renderer_classes = (JSONRenderer,)
+    charset = 'utf-8'
 
     def get_root_attributes(self):
         file_url = ""
@@ -433,12 +435,20 @@ class CreateSave(AuthMixin, APIView):
         # data_file = request.FILES.get('file')
         # self.user_save.save_file.save(SimpleUploadedFile(file_name, data_file.read().strip()))
         try:
-            self.user_save.save_file.save(SimpleUploadedFile(file_name, request.body.strip()))
-            self.user_save.save()
+            self.user_save.save_file.save(
+                file_name,
+                SimpleUploadedFile(file_name, request.body.strip()),
+                save=True)
         except:
             pass
 
-        return Response({}, status=http_status)
+        file_url = ''
+        if self.user_save.save_file:
+            file_url = self.user_save.save_file.url
+        response_data = {
+            'path': file_url,
+        }
+        return Response(response_data, status=http_status)
 
 
 class PlayLab(RendererMixin, ParserMixin, AuthMixin, ListCreateAPIView):

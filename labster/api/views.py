@@ -776,12 +776,12 @@ class AnswerProblem(ParserMixin, AuthMixin, APIView):
         lab_id = kwargs.get('lab_id')
         lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
-        question = request.DATA.get('QuizQuestion')
-        score = request.DATA.get('Score')
-        time_spent = request.DATA.get('CompletionTime')
-        answer = request.DATA.get('CorrectAnswer')
-        play_count = request.DATA.get('PlayCount')
-        attempt_count = request.DATA.get('AttemptCount')
+        question = request.POST.get('QuizQuestion')
+        score = request.POST.get('Score')
+        time_spent = request.POST.get('CompletionTime')
+        answer = request.POST.get('CorrectAnswer')
+        play_count = request.POST.get('PlayCount')
+        attempt_count = request.POST.get('AttemptCount')
 
         if not all([request, score, time_spent, answer, play_count]):
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)

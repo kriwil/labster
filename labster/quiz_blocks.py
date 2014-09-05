@@ -146,7 +146,10 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
 
     for lab_name in labs:
         sub_section = sub_section_dicts[lab_name]
-        lab_proxy = LabProxy.objects.get(location=str(sub_section.location))
+        lab_proxy, _ = LabProxy.objects.get_or_create(
+            location=str(sub_section.location),
+            lab_id=sub_section.lab_id,
+        )
 
         for qb in sub_section.get_children():
             for unit in qb.get_children():
@@ -177,7 +180,7 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                 )
 
                 if created:
-                    command and command.stdout.write("create new object: {}\n".format(unit.location))
+                    command and command.stdout.write("new ProblemProxy: {}\n".format(unit.location))
 
             modulestore().publish(qb.location, user.id)
         modulestore().publish(sub_section.location, user.id)

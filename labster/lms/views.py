@@ -15,6 +15,7 @@ from labster.models import LabProxy, UserSave, UserAttempt
 
 
 URL_PREFIX = getattr(settings, 'LABSTER_UNITY_URL_PREFIX', '')
+API_PREFIX = getattr(settings, 'LABSTER_UNITY_API_PREFIX', '')
 
 
 def demo_lab(request):
@@ -121,8 +122,7 @@ class ServerXml(LabProxyXMLView):
 
     def get_root_attributes(self):
         return {
-            # 'Url': "http://localhost:8000",
-            'Url': "https://edx.labster.com",
+            'Url': API_PREFIX,
         }
 
     def insert_children(self, xml):

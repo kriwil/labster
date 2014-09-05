@@ -19,10 +19,16 @@ class LabProxyAdmin(BaseAdmin):
 
 
 class UserSaveAdmin(BaseAdmin):
-    list_display = ('user', 'lab', 'modified_at')
+    list_display = ('user', 'lab', 'location', 'has_file', 'modified_at')
 
     def lab(self, obj):
         return obj.lab_proxy.lab.name
+
+    def location(self, obj):
+        return obj.lab_proxy.location
+
+    def has_file(self, obj):
+        return not obj.save_file
 
 
 class ErrorInfoAdmin(admin.ModelAdmin):

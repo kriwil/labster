@@ -235,6 +235,18 @@ class ProblemProxy(models.Model):
         unique_together = ('lab_proxy', 'question')
 
 
+class UserAnswer(models.Model):
+    user = models.ForeignKey(User)
+    problem_proxy = models.ForeignKey(ProblemProxy)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    attempt_count = models.IntegerField(blank=True, null=True)
+    score = models.IntegerField(blank=True, null=True)
+    completion_time = models.FloatField(blank=True, null=True)
+    is_view_theory_clicked = models.BooleanField(default=False)
+    play_count = models.IntegerField(blank=True, null=True)
+
+
 def update_modified_at(sender, instance, **kwargs):
     instance.modified_at = timezone.now()
 

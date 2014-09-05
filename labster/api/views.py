@@ -29,9 +29,10 @@ from labster.api.serializers import (
     UserAttemptSerializer, FinishLabSerializer)
 from labster.authentication import GetTokenAuthentication
 from labster.models import (
-    UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt, UnityLog)
+    UserSave, ErrorInfo, DeviceInfo, LabProxy, UserAttempt, UnityLog,
+    UserAnswer)
 from labster.parsers.problem_parsers import MultipleChoiceProblemParser
-from labster.quiz_blocks import get_location_by_problem
+from labster.quiz_blocks import get_problem_proxy_by_question
 from labster.renderers import LabsterXMLRenderer
 
 
@@ -780,11 +781,25 @@ class AnswerProblem(ParserMixin, AuthMixin, APIView):
         time_spent = request.DATA.get('CompletionTime')
         answer = request.DATA.get('CorrectAnswer')
         play_count = request.DATA.get('PlayCount')
+        attempt_count = request.DATA.get('AttemptCount')
 
         if not all([request, score, time_spent, answer, play_count]):
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-        problem_id = get_location_by_problem(lab_proxy, question)
+        problem_proxy = get_problem_proxy_by_question(lab_proxy, question)
+        try:
+            UserAnswer.objects.create(
+                problem_proxy=problem_proxy,
+                user=request.user,
+                attempt_count=attempt_count,
+                play_count=play_count,
+                score=score,
+                completion_time=time_spent,
+            )
+        except:
+            pass
+
+        problem_id = problem_proxy.location
         problem_locator, problem_descriptor = self.get_problem_locator_descriptor(problem_id)
         answer_index = problem_descriptor.correct_index
         answer_value = "choice_{}".format(answer_index)

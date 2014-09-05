@@ -7,7 +7,7 @@ import requests
 from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
-from labster.models import Lab, ProblemProxy
+from labster.models import Lab, ProblemProxy, LabProxy
 from labster.parsers.problem_parsers import QuizParser, ProblemParser
 from labster.utils import get_request
 
@@ -146,6 +146,7 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
 
     for lab_name in labs:
         sub_section = sub_section_dicts[lab_name]
+        lab_proxy = LabProxy.objects.get(location=str(sub_section.location))
 
         for qb in sub_section.get_children():
             for unit in qb.get_children():
@@ -165,11 +166,28 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                 modulestore().update_item(unit, user.id)
                 modulestore().publish(unit.location, user.id)
 
+                # problem proxy
+                tree = etree.fromstring(unit.platform_xml)
+                question = tree.attrib.get('Sentence')
+                hashed = get_hashed_question(question)
+                obj, created = ProblemProxy.objects.get_or_create(
+                    lab_proxy=lab_proxy,
+                    question=hashed,
+                    defaults={'location': str(unit.location)},
+                )
+
+                if created:
+                    command and command.stdout.write("create new object: {}\n".format(unit.location))
+
             modulestore().publish(qb.location, user.id)
         modulestore().publish(sub_section.location, user.id)
 
 
-def get_location_by_problem(lab_proxy, question):
+def get_hashed_question(question):
+    return hashlib.md5(question.encode('utf-8').strip()).hexdigest()
+
+
+def get_problem_proxy_by_question(lab_proxy, question):
     hashed = hashlib.md5(question.encode('utf-8').strip()).hexdigest()
 
     try:
@@ -177,9 +195,9 @@ def get_location_by_problem(lab_proxy, question):
     except ProblemProxy.DoesNotExist:
         pass
     else:
-        return obj.location
+        return obj
 
-    location = ''
+    obj = None
     locator = UsageKey.from_string(lab_proxy.location)
     descriptor = modulestore().get_item(locator)
 
@@ -190,12 +208,12 @@ def get_location_by_problem(lab_proxy, question):
             _hashed = hashlib.md5(_question.encode('utf-8').strip()).hexdigest()
             _location = str(_problem.location)
 
-            if hashed == _hashed:
-                location = _location
-
-            ProblemProxy.objects.get_or_create(
+            new_obj, _ = ProblemProxy.objects.get_or_create(
                 lab_proxy=lab_proxy, question=_hashed,
                 defaults={'location': _location},
             )
 
-    return location
+            if hashed == _hashed:
+                obj = new_obj
+
+    return obj

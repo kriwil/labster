@@ -231,6 +231,8 @@ class ProblemProxy(models.Model):
     location = models.CharField(max_length=200, unique=True)
     correct_answer = models.TextField()
 
+    created_at = models.DateTimeField(default=timezone.now)
+
     class Meta:
         unique_together = ('lab_proxy', 'question')
 

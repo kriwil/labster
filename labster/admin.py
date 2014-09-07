@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from labster.models import (
     LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy,
-    UnityLog)
+    UnityLog, UserAnswer, ProblemProxy)
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -56,11 +56,30 @@ class UnityLogAdmin(admin.ModelAdmin):
     list_display = ('user', 'lab_proxy', 'log_type', 'created_at')
 
 
+class UserAnswerAdmin(admin.ModelAdmin):
+    list_display = ('user', 'lab', 'created_at')
+
+    def lab(self, obj):
+        return obj.problem_proxy.lab_proxy.lab.name
+
+    def question(self, obj):
+        return obj.problem_proxy.question
+
+
+class ProblemProxyAdmin(admin.ModelAdmin):
+    list_display = ('lab', 'location', 'created_at')
+
+    def lab(self, obj):
+        return obj.lab_proxy.lab.name
+
+
 admin.site.register(LanguageLab)
 admin.site.register(ErrorInfo, ErrorInfoAdmin)
 admin.site.register(DeviceInfo, DeviceInfoAdmin)
 admin.site.register(UserSave, UserSaveAdmin)
+admin.site.register(UserAnswer, UserAnswerAdmin)
 admin.site.register(Token, TokenAdmin)
 admin.site.register(Lab, LabAdmin)
 admin.site.register(LabProxy, LabProxyAdmin)
+admin.site.register(ProblemProxy, ProblemProxyAdmin)
 admin.site.register(UnityLog, UnityLogAdmin)

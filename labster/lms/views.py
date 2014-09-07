@@ -72,26 +72,44 @@ class LabProxyXMLView(XMLView):
 class SettingsXml(LabProxyXMLView):
     root_name = 'Settings'
 
-    def get_root_attributes(self):
+    def get_engine_xml(self, lab_proxy, user):
         engine_xml = "Engine_Cytogenetics.xml"
-        lab_proxy = self.get_lab_proxy()
-        user = self.request.user
+        return engine_xml
 
         if lab_proxy.lab.engine_xml:
             engine_xml = lab_proxy.lab.engine_xml
 
+        user_save_file_url = self.get_user_Save_file_url
+        if user_save_file_url:
+            engine_xml = user_save_file_url
+
+        return engine_xml
+
+    def get_user_save_file_url(self, lab_proxy, user):
+        engine_xml = ''
+
         # check if user has finished
         # if user's not finished the game, try to fetch the save file
         user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
-        if user_attempt and not user_attempt.is_finished:
-            # check for save game
-            try:
-                user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
-            except UserSave.DoesNotExist:
-                pass
-            else:
-                if user_save.save_file:
-                    engine_xml = user_save.save_file.url
+        if not user_attempt or user_attempt.is_finished:
+            return ''
+
+        # check for save game
+        try:
+            user_save = UserSave.objects.get(lab_proxy=lab_proxy, user=user)
+        except UserSave.DoesNotExist:
+            pass
+        else:
+            if user_save.save_file:
+                engine_xml = user_save.save_file.url
+
+        return engine_xml
+
+    def get_root_attributes(self):
+        lab_proxy = self.get_lab_proxy()
+        user = self.request.user
+
+        engine_xml = self.get_engine_xml(lab_proxy, user)
 
         return {
             'EngineXML': engine_xml,
@@ -132,7 +150,7 @@ class ServerXml(LabProxyXMLView):
         player_start_end = reverse('labster-api:play', args=[lab_proxy.id])
         quiz_block = reverse('labster-api:questions', args=[lab_proxy.id])
         quiz_statistic = reverse('labster-api:answer', args=[lab_proxy.id])
-        quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'quiz_statistic'])
+        # quiz_statistic = reverse('labster-api:create-log', args=[lab_proxy.id, 'quiz_statistic'])
 
         game_progress = reverse('labster-api:create-log', args=[lab_proxy.id, 'game_progress'])
         device_info = reverse('labster-api:create-log', args=[lab_proxy.id, 'device_info'])

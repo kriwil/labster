@@ -710,14 +710,15 @@ class Wiki(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
 class ArticleSlug(WikiMixin, LabsterRendererMixin, AuthMixin, APIView):
 
     def _request(self, request, article_slug, *args, **kwargs):
+        from wiki.core.exceptions import NoRootURL
         from wiki.models import URLPath, Article
 
         # since we already have article slug we don't need to search the course
         # article slug is unique
         try:
             url_path = URLPath.get_by_path(article_slug, select_related=True)
-        except ObjectDoesNotExist:
-            raise Http404
+        except (NoRootURL, ObjectDoesNotExist):
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             article = Article.objects.get(id=url_path.article.id)
@@ -778,11 +779,10 @@ class AnswerProblem(ParserMixin, AuthMixin, APIView):
         suffix = 'problem_check'
         user = request.user
         request.POST = self.get_post_data(request, problem_locator, answer, time_spent)
-
+        request._content_type = 'multipart/form-data'
         return invoke_xblock_handler(request, course_id, usage_id, handler, suffix, user)
 
     def post(self, request, *args, **kwargs):
-        request._content_type = 'application/x-www-form-urlencoded'
         response_data = {}
         lab_id = kwargs.get('lab_id')
         lab_proxy = get_object_or_404(LabProxy, id=lab_id)

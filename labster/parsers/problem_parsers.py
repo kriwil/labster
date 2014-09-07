@@ -132,6 +132,7 @@ class ProblemParser(object):
         if self._correct_index:
             return self._correct_index
 
+        self.parsed
         return self._correct_index
 
     @property
@@ -139,6 +140,7 @@ class ProblemParser(object):
         if self._correct_answer:
             return self._correct_answer
 
+        self.parsed
         return self._correct_answer
 
 
@@ -205,6 +207,7 @@ class QuizParser(object):
         if self._correct_index:
             return self._correct_index
 
+        self.parsed
         return self._correct_index
 
     @property
@@ -212,4 +215,5 @@ class QuizParser(object):
         if self._correct_answer:
             return self._correct_answer
 
+        self.parsed
         return self._correct_answer

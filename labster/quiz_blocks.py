@@ -154,7 +154,7 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
         for qb in sub_section.get_children():
             for unit in qb.get_children():
 
-                if not unit.platform_xml:
+                if not unit.platform_xml or unit.correct_index == -1:
                     command and command.stdout.write("empty: {}\n".format(unit.display_name))
                     parser = ProblemParser(etree.fromstring(unit.data))
                     unit.platform_xml = parser.parsed_as_string

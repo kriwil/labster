@@ -74,12 +74,11 @@ class SettingsXml(LabProxyXMLView):
 
     def get_engine_xml(self, lab_proxy, user):
         engine_xml = "Engine_Cytogenetics.xml"
-        return engine_xml
 
         if lab_proxy.lab.engine_xml:
             engine_xml = lab_proxy.lab.engine_xml
 
-        user_save_file_url = self.get_user_Save_file_url
+        user_save_file_url = self.get_user_save_file_url(lab_proxy, user)
         if user_save_file_url:
             engine_xml = user_save_file_url
 
@@ -118,7 +117,6 @@ class SettingsXml(LabProxyXMLView):
             'InputMode': "Mouse",
             'HandMode': "Hand",
             'URLPrefix': URL_PREFIX,
-            # 'URLPrefix': "http://192.168.4.45:9000/unity/",
         }
 
 

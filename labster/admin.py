@@ -28,7 +28,7 @@ class UserSaveAdmin(BaseAdmin):
         return obj.lab_proxy.location
 
     def has_file(self, obj):
-        return not obj.save_file
+        return obj.save_file is not None
 
 
 class ErrorInfoAdmin(admin.ModelAdmin):

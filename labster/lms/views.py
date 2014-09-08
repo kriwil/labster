@@ -176,6 +176,13 @@ class ServerXml(LabProxyXMLView):
             xml.endElement('ServerAPI')
 
 
+
+class StartNewLab(View):
+
+    def get(self, request, *args, **kwargs):
+        pass
+
+
 settings_xml = SettingsXml.as_view()
 server_xml = ServerXml.as_view()
 platform_xml = PlatformXml.as_view()

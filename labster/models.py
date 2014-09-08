@@ -124,7 +124,7 @@ class UserSave(models.Model):
 
     def get_new_save_file_name(self):
         timestamp = calendar.timegm(datetime.utcnow().utctimetuple())
-        file_name = "{}_{}.zip".format(timestamp, self.user_id)
+        file_name = "{}_{}_{}.zip".format(timestamp, self.lab_proxy_id, self.user_id)
         return file_name
 
 

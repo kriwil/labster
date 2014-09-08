@@ -10,6 +10,7 @@ class BaseAdmin(admin.ModelAdmin):
 
 
 class LabAdmin(BaseAdmin):
+    list_display = ('name', 'engine_xml', 'use_quiz_blocks',)
     fields = ('name', 'description', 'engine_xml', 'languages')
     filter_horizontal = ('languages',)
 

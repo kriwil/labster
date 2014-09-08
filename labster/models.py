@@ -52,6 +52,7 @@ class Lab(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(default='')
     engine_xml = models.CharField(max_length=128, blank=True, default="")
+    use_quiz_blocks = models.BooleanField(default=False)
 
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)

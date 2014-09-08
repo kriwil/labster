@@ -432,15 +432,22 @@ class CreateSave(AuthMixin, APIView):
         http_status = status.HTTP_200_OK
 
         file_name = self.user_save.get_new_save_file_name()
+        _, parsed = request._parse()
+        data_file = parsed.get('file')
+        self.user_save.save_file.save(
+            file_name,
+            SimpleUploadedFile(file_name, data_file.read().strip()[152:]),
+            save=True)
+
         # data_file = request.FILES.get('file')
         # self.user_save.save_file.save(SimpleUploadedFile(file_name, data_file.read().strip()))
-        try:
-            self.user_save.save_file.save(
-                file_name,
-                SimpleUploadedFile(file_name, request.body.strip()),
-                save=True)
-        except:
-            pass
+        # try:
+        #     self.user_save.save_file.save(
+        #         file_name,
+        #         SimpleUploadedFile(file_name, request.body.strip()),
+        #         save=True)
+        # except:
+        #     pass
 
         file_url = ''
         if self.user_save.save_file:

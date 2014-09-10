@@ -27,13 +27,18 @@ class Command(BaseCommand):
 
             lab_proxies = LabProxy.objects.all()
             for lab_proxy in lab_proxies:
+
+                try:
+                    locator = UsageKey.from_string(lab_proxy.location)
+                    descriptor = modulestore().get_item(locator)
+                    course_key = descriptor.location.course_key
+                    course = get_course_by_id(course_key)
+                except:
+                    self.stdout.write('skipping {}'.format(lab_proxy.id))
+                    continue
+
                 self.stdout.write('... {} - {} - {}\n'.format(
                     lab_proxy.id, lab_proxy.location, lab_proxy.lab.name))
-
-                locator = UsageKey.from_string(lab_proxy.location)
-                descriptor = modulestore().get_item(locator)
-                course_key = descriptor.location.course_key
-                course = get_course_by_id(course_key)
 
                 for section in course.get_children():
                     for sub_section in section.get_children():

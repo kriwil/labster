@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from courseware.courses import get_course_by_id
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
-from labster.constants import ADMIN_USER_ID
+from labster.constants import ADMIN_USER_ID, COURSE_ID
 from labster.models import LabProxy
 from labster.quiz_blocks import sync_quiz_xml
 
@@ -20,9 +20,39 @@ class Command(BaseCommand):
     to see how course is created
     """
 
+    def get_master_data(self):
+        data = {}
+        org, number, run = COURSE_ID.split('/')
+        course_key = SlashSeparatedCourseKey(org, number, run)
+        course = get_course_by_id(course_key)
+
+        for section in course.get_children():
+            sub_section_data = {}
+
+            for sub_section in section.get_children():
+                unit_data = {}
+
+                for unit in sub_section.get_children():
+                    problem_data = {}
+
+                    for problem in unit.get_children():
+                        problem_data[problem.display_name] = problem
+
+                    unit_data[unit.display_name] = problem_data
+                sub_section_data[sub_section.display_name] = unit_data
+            data[section.display_name] = sub_section_data
+
+        return data
+
     def handle(self, *args, **options):
         user = User.objects.get(id=ADMIN_USER_ID)
         if args[0] == 'all':
+
+            master_data = None
+            if args[1] == 'master':
+                self.stdout.write('fetching the master\n')
+                master_data = self.get_master_data()
+
             self.stdout.write('updating all quiz xml\n')
 
             lab_proxies = LabProxy.objects.all()
@@ -48,7 +78,8 @@ class Command(BaseCommand):
                         sync_quiz_xml(
                             course, user, command=self,
                             section_name=section.display_name,
-                            sub_section_name=sub_section.display_name)
+                            sub_section_name=sub_section.display_name,
+                            master_data=master_data)
 
         else:
             course_id = args[0]

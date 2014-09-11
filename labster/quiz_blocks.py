@@ -8,7 +8,7 @@ from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
 from labster.models import Lab, ProblemProxy, LabProxy
-from labster.parsers.problem_parsers import QuizParser, ProblemParser
+from labster.parsers.problem_parsers import QuizParser
 from labster.utils import get_request
 
 QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
@@ -131,7 +131,8 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
                                correct_answer=quiz_parser.correct_answer)
 
 
-def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None):
+def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None,
+                  master_data=None):
 
     section_dicts = {section.display_name: section for section in course.get_children()}
 
@@ -152,35 +153,50 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
         )
 
         for qb in sub_section.get_children():
-            for unit in qb.get_children():
+            for component in qb.get_children():
 
-                if not unit.platform_xml or unit.correct_index == -1:
-                    command and command.stdout.write("empty: {}\n".format(unit.display_name))
-                    parser = ProblemParser(etree.fromstring(unit.data))
-                    unit.platform_xml = parser.parsed_as_string
-                    unit.correct_answer = parser.correct_answer
-                    unit.correct_index = parser.correct_index
+                if master_data:
+                    qb_name = qb.display_name.replace("'", '')
+                    component_name = component.display_name.replace("'", '')
 
-                elif unit.data == unit.platform_xml:
-                    command and command.stdout.write("converting to data: {}\n".format(unit.display_name))
-                    parser = QuizParser(etree.fromstring(unit.platform_xml))
-                    unit.data = parser.parsed_as_string
+                    master = None
+                    for key_0, value_0 in master_data['Labs'].items():
+                        try:
+                            master = value_0[qb_name][component_name]
+                        except:
+                            continue
+                        else:
+                            break
 
-                modulestore().update_item(unit, user.id)
-                modulestore().publish(unit.location, user.id)
+                    component.platform_xml = master.data
+
+                quiz_parser = QuizParser(etree.fromstring(component.platform_xml))
+
+                if component.correct_index == -1:
+                    command and command.stdout.write("no correct index: {}\n".format(component.display_name))
+
+                    component.correct_answer = quiz_parser.correct_answer
+                    component.correct_index = quiz_parser.correct_index
+
+                if component.data == component.platform_xml:
+                    command and command.stdout.write("converting to data: {}\n".format(component.display_name))
+                    component.data = quiz_parser.parsed_as_string
+
+                modulestore().update_item(component, user.id)
+                modulestore().publish(component.location, user.id)
 
                 # problem proxy
-                tree = etree.fromstring(unit.platform_xml)
+                tree = etree.fromstring(component.platform_xml)
                 question = tree.attrib.get('Sentence')
                 hashed = get_hashed_question(question)
                 obj, created = ProblemProxy.objects.get_or_create(
                     lab_proxy=lab_proxy,
                     question=hashed,
-                    defaults={'location': str(unit.location)},
+                    defaults={'location': str(component.location)},
                 )
 
                 if created:
-                    command and command.stdout.write("new ProblemProxy: {}\n".format(unit.location))
+                    command and command.stdout.write("new ProblemProxy: {}\n".format(component.location))
 
             modulestore().publish(qb.location, user.id)
         modulestore().publish(sub_section.location, user.id)

@@ -176,13 +176,46 @@ class ServerXml(LabProxyXMLView):
             xml.endElement('ServerAPI')
 
 
+class PlayLab(View):
 
-class StartNewLab(View):
+    def get_lab_proxy(self):
+        from opaque_keys.edx.locations import SlashSeparatedCourseKey
+
+        course_id = self.kwargs.get('course_id')
+        section = self.kwargs.get('section')
+
+        course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+        location = "i4x://{}/{}/sequential/{}".format(
+            course_key.org, course_key.course, section)
+
+        lab_proxy = LabProxy.objects.get(location=location)
+        return lab_proxy
+
+    def render(self, request):
+        return HttpResponse(1)
+
+
+class StartNewLab(PlayLab):
 
     def get(self, request, *args, **kwargs):
-        pass
+        lab_proxy = self.get_lab_proxy()
+        user = request.user
+        user_attempt = UserAttempt.objects.latest_for_user(lab_proxy, user)
+        if user_attempt:
+            user_attempt.is_finished = True
+            user_attempt.save()
+
+        return self.render(request)
+
+
+class ContinueLab(PlayLab):
+
+    def get(self, request, *args, **kwargs):
+        return self.render(request)
 
 
 settings_xml = SettingsXml.as_view()
 server_xml = ServerXml.as_view()
 platform_xml = PlatformXml.as_view()
+start_new_lab = StartNewLab.as_view()
+continue_lab = ContinueLab.as_view()

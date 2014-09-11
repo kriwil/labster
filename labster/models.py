@@ -145,6 +145,7 @@ class UserAttempt(models.Model):
 
     created_at = models.DateTimeField(default=timezone.now)
     modified_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(blank=True, null=True)
 
     objects = UserAttemptManager()
 
@@ -154,6 +155,7 @@ class UserAttempt(models.Model):
 
     def mark_finished(self):
         self.is_finished = True
+        self.finished_at = timezone.now()
         self.save()
 
     def get_total_play_count(self):

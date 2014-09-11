@@ -27,7 +27,8 @@ class Command(BaseCommand):
         course = get_course_by_id(course_key)
 
         for section in course.get_children():
-            sub_section_data = {}
+            if section.display_name != 'Labs':
+                continue
 
             for sub_section in section.get_children():
                 unit_data = {}
@@ -39,8 +40,7 @@ class Command(BaseCommand):
                         problem_data[problem.display_name] = problem
 
                     unit_data[unit.display_name] = problem_data
-                sub_section_data[sub_section.display_name] = unit_data
-            data[section.display_name] = sub_section_data
+                data[sub_section.display_name] = unit_data
 
         return data
 
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                     continue
 
                 self.stdout.write('... {} - {} - {}\n'.format(
-                    lab_proxy.id, lab_proxy.location, lab_proxy.lab.name))
+                    lab_proxy.id, course_key, lab_proxy.lab.name))
 
                 for section in course.get_children():
                     for sub_section in section.get_children():
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                             course, user, command=self,
                             section_name=section.display_name,
                             sub_section_name=sub_section.display_name,
-                            master_data=master_data)
+                            master_data=master_data, lab_name=lab_proxy.lab.name)
 
         else:
             course_id = args[0]

@@ -132,7 +132,7 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
 
 
 def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None,
-                  master_data=None):
+                  master_data=None, lab_name=None):
 
     section_dicts = {section.display_name: section for section in course.get_children()}
 
@@ -156,17 +156,20 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
             for component in qb.get_children():
 
                 if master_data:
-                    qb_name = qb.display_name.replace("'", '')
+                    unit_name = qb.display_name.replace("'", '')
                     component_name = component.display_name.replace("'", '')
 
                     master = None
-                    for key_0, value_0 in master_data['Labs'].items():
+                    for key, value in master_data.items():
                         try:
-                            master = value_0[qb_name][component_name]
+                            master = value[unit_name][component_name]
                         except:
                             continue
                         else:
                             break
+
+                    if not master:
+                        continue
 
                     component.platform_xml = master.data
 

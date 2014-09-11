@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     course_key = descriptor.location.course_key
                     course = get_course_by_id(course_key)
                 except:
-                    self.stdout.write('skipping {}'.format(lab_proxy.id))
+                    self.stdout.write('skipping {}\n'.format(lab_proxy.id))
                     continue
 
                 self.stdout.write('... {} - {} - {}\n'.format(

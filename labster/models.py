@@ -229,7 +229,7 @@ class ProblemProxy(models.Model):
     """
     lab_proxy = models.ForeignKey(LabProxy)
     question = models.CharField(max_length=100, db_index=True, help_text='Question in md5')
-    location = models.CharField(max_length=200, unique=True)
+    location = models.CharField(max_length=200)
     correct_answer = models.TextField()
 
     created_at = models.DateTimeField(default=timezone.now)

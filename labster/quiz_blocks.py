@@ -195,6 +195,10 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                     defaults={'location': str(component.location)},
                 )
 
+                if obj.location != str(component.location):
+                    obj.location = str(component.location)
+                    obj.save()
+
                 if created:
                     command and command.stdout.write("new ProblemProxy: {}\n".format(component.location))
 

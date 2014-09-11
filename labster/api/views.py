@@ -423,6 +423,8 @@ class CreateSave(AuthMixin, APIView):
         obj.lab_proxy = get_object_or_404(LabProxy, id=lab_id)
 
     def post(self, request, *args, **kwargs):
+        return Response({})
+
         user = request.user
         lab_id = kwargs.get('lab_id')
 

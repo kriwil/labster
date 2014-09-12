@@ -4,7 +4,6 @@ import json
 from lxml import etree
 import requests
 
-from contentstore.views.item import _duplicate_item
 from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
@@ -247,6 +246,7 @@ def get_problem_proxy_by_question(lab_proxy, question):
 
 
 def sync_surveys(course, user, master_survey):
+    from contentstore.views.item import _duplicate_item
     section = None
 
     for each in course.get_children():

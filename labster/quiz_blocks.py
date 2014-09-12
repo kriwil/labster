@@ -4,6 +4,7 @@ import json
 from lxml import etree
 import requests
 
+from contentstore.views.item import _duplicate_item
 from opaque_keys.edx.keys import UsageKey
 from xmodule.modulestore.django import modulestore
 
@@ -243,3 +244,22 @@ def get_problem_proxy_by_question(lab_proxy, question):
                 obj = new_obj
 
     return obj
+
+
+def sync_surveys(course, user, master_survey):
+    section = None
+
+    for each in course.get_children():
+        if each.display_name == 'Survey':
+            section = each
+            break
+
+    course_location = course.location.to_deprecated_string()
+    if not section:
+        section = create_xblock(user, 'chapter', course_location, name='Survey')
+
+    for sub_section in master_survey.get_children():
+        new_location = _duplicate_item(
+            section.location, sub_section.location, user=user,
+            display_name=sub_section.display_name)
+        modulestore().publish(new_location, user.id)

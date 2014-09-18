@@ -49,9 +49,14 @@ class Command(BaseCommand):
         if args[0] == 'all':
 
             master_data = None
-            if args[1] == 'master':
-                self.stdout.write('fetching the master\n')
-                master_data = self.get_master_data()
+            try:
+                args_1 = args[1]
+            except IndexError:
+                pass
+            else:
+                if args_1 == 'master':
+                    self.stdout.write('fetching the master\n')
+                    master_data = self.get_master_data()
 
             self.stdout.write('updating all quiz xml\n')
 

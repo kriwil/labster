@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 
 from labster.models import (
     LanguageLab, Lab, ErrorInfo, DeviceInfo, UserSave, Token, LabProxy,
@@ -84,3 +86,23 @@ admin.site.register(Lab, LabAdmin)
 admin.site.register(LabProxy, LabProxyAdmin)
 admin.site.register(ProblemProxy, ProblemProxyAdmin)
 admin.site.register(UnityLog, UnityLogAdmin)
+
+
+# remove defaul UserAdmin and replace it
+admin.site.unregister(User)
+
+
+class CustomUserAdmin(UserAdmin):
+
+    def set_active(self, request, queryset):
+        queryset.update(is_active=True)
+    set_active.short_descripion = "Set users active."
+
+    def set_inactive(self, request, queryset):
+        queryset.update(is_active=False)
+    set_inactive.short_descripion = "Set users inactive."
+
+    actions = UserAdmin.actions + [set_active, set_inactive]
+
+
+admin.site.register(User, CustomUserAdmin)

@@ -17,6 +17,7 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
+        assert False, "this isn't used anymore"
         user = User.objects.get(id=ADMIN_USER_ID)
         course_id = args[0]
         org, number, run = course_id.split('/')

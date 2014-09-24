@@ -7,6 +7,12 @@ from django.test.client import RequestFactory
 
 
 def get_request(user=None, data=None):
+    """
+    creates request object to be used to do some xblock modifications
+
+    This is needed because we're using functions that originally created
+    to be used in views by users.
+    """
     factory = RequestFactory()
     request = factory.post('/', data=data, content_type='application/json',
                            HTTP_X_REQUESTED_WITH='XMLHttpRequest')

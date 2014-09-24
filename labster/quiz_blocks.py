@@ -15,6 +15,9 @@ QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
 
 
 def create_xblock(user, category, parent_location, name=None, extra_post=None):
+    """
+    Wrapper to create xblock
+    """
     from contentstore.views.item import _create_item
 
     post_data = {
@@ -40,6 +43,9 @@ def create_xblock(user, category, parent_location, name=None, extra_post=None):
 
 def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
                    correct_answer=''):
+    """
+    update 'problem' (quizblock with component type)
+    """
     from contentstore.views.item import _save_xblock
 
     nullout = ["markdown"]
@@ -66,11 +72,22 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
 
 
 def update_quizblocks(course, user, section_name='Labs', command=None, is_master=False):
+    """
+    updates sub sections (quizblocks) of master course
+
+    This function will create the section, sub section, and fetch quizblock from
+    XML. This should only be used for master lab.
+    """
+
+    # FIXME
+    assert is_master, "only master lab"
 
     section_dicts = {section.display_name: section for section in course.get_children()}
     course_location = course.location.to_deprecated_string()
 
-    # required_section_names = ['Labs']
+    # create the section if the defined section doesn't exist yet
+    # most of the time, this shouldn't happen since usually we're just create
+    # the section manually
     if section_name not in section_dicts:
         command and command.stdout.write("creating {}\n".format(section_name))
         section_dicts[section_name] = create_xblock(user, 'chapter', course_location, name=section_name)
@@ -80,7 +97,12 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
     sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
 
     labs = Lab.objects.all()
+
+    # iterates through all the labs and create it in master course if it doesn't
+    # exist. it will fetch quizblocks from xml if the xml exists in s3.
     for lab in labs:
+        # sub section is using lab's name as the name
+        # FIXME: we should use location for this as name could be changed
         if lab.name not in sub_section_dicts:
             command and command.stdout.write("creating {}\n".format(lab.name))
             sub_section_dicts[lab.name] = create_xblock(user, 'sequential', section_location, name=lab.name)
@@ -92,6 +114,8 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
         if response.status_code != 200:
             return
 
+        # parse quizblock xml and store it in the sub section
+        # the quizblock xml contains quizblock and quiz
         tree = etree.fromstring(response.content)
         sub_section = sub_section_dicts[lab.name]
         sub_section_location = sub_section.location.to_deprecated_string()
@@ -120,6 +144,8 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
                 platform_xml = etree.tostring(quiz, pretty_print=True)
 
                 quiz_parser = QuizParser(quiz)
+
+                # FIXME: not needed
                 if is_master:
                     edx_xml = platform_xml
                 else:
@@ -133,6 +159,14 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
 
 def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None,
                   master_data=None, lab_name=None):
+    """
+    updates quiz/problem content from it's problem_xml field
+
+    it will updates the data field, parsed from problem_xml.
+    if master_data is defined, it fill fetch the problem_xml from master
+    and store it as well. it will also creates ProblemProxy objects if there's
+    no ProblemProxy yet.
+    """
 
     section_dicts = {section.display_name: section for section in course.get_children()}
 
@@ -156,6 +190,8 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
             for component in qb.get_children():
 
                 if master_data:
+                    # remove \' char because somehow the duplicate process
+                    # added it
                     unit_name = qb.display_name.replace("'", '')
                     component_name = component.display_name.replace("'", '')
 
@@ -188,7 +224,7 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                 modulestore().update_item(component, user.id)
                 modulestore().publish(component.location, user.id)
 
-                # problem proxy
+                # create ProblemProxy
                 tree = etree.fromstring(component.platform_xml)
                 question = tree.attrib.get('Sentence')
                 hashed = get_hashed_question(question)
@@ -214,6 +250,13 @@ def get_hashed_question(question):
 
 
 def get_problem_proxy_by_question(lab_proxy, question):
+    """
+    get ProblemProxy for given question
+
+    it will creates all ProblemProxy if that single question doesn't
+    have it. This shouldn't even happen.
+    """
+
     hashed = hashlib.md5(question.encode('utf-8').strip()).hexdigest()
 
     try:
@@ -223,6 +266,7 @@ def get_problem_proxy_by_question(lab_proxy, question):
     else:
         return obj
 
+    # FIXME: do not do this
     obj = None
     locator = UsageKey.from_string(lab_proxy.location)
     descriptor = modulestore().get_item(locator)
@@ -246,6 +290,9 @@ def get_problem_proxy_by_question(lab_proxy, question):
 
 
 def sync_surveys(course, user, master_survey):
+    """
+    Copy surveys from master course to all other courses
+    """
     from contentstore.views.item import _duplicate_item
     section = None
 

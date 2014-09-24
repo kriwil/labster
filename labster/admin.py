@@ -12,8 +12,8 @@ class BaseAdmin(admin.ModelAdmin):
 
 
 class LabAdmin(BaseAdmin):
-    list_display = ('name', 'engine_xml', 'use_quiz_blocks',)
-    fields = ('name', 'description', 'engine_xml', 'languages', 'use_quiz_blocks')
+    list_display = ('name', 'engine_xml', 'engine_file', 'use_quiz_blocks',)
+    fields = ('name', 'description', 'engine_xml', 'languages', 'engine_file', 'use_quiz_blocks')
     filter_horizontal = ('languages',)
 
 

@@ -6,10 +6,6 @@ import requests
 
 from django.contrib.auth.models import User
 
-from contentstore.utils import (
-    add_instructor,
-    initialize_permissions,
-)
 from courseware.courses import get_course_by_id
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
@@ -27,6 +23,8 @@ SECTION_NAME = 'Labs'
 
 
 def get_master_course(user=None, command=None):
+    from contentstore.utils import add_instructor, initialize_permissions
+
     if not user:
         user = User.objects.get(id=ADMIN_USER_ID)
 

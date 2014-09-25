@@ -4,14 +4,94 @@ import json
 from lxml import etree
 import requests
 
-from opaque_keys.edx.keys import UsageKey
-from xmodule.modulestore.django import modulestore
+from django.contrib.auth.models import User
 
+from contentstore.utils import (
+    add_instructor,
+    initialize_permissions,
+)
+from courseware.courses import get_course_by_id
+from opaque_keys.edx.keys import UsageKey
+from opaque_keys.edx.locations import SlashSeparatedCourseKey
+from student.roles import CourseRole
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.exceptions import InvalidLocationError
+
+from labster.constants import COURSE_ID, ADMIN_USER_ID
 from labster.models import Lab, ProblemProxy, LabProxy
 from labster.parsers.problem_parsers import QuizParser
 from labster.utils import get_request
 
 QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
+SECTION_NAME = 'Labs'
+
+
+def get_master_course(user=None, command=None):
+    if not user:
+        user = User.objects.get(id=ADMIN_USER_ID)
+
+    display_name = "LabsterX Master"
+    org, number, run = COURSE_ID.split('/')
+
+    try:
+        course_key = SlashSeparatedCourseKey(org, number, run)
+        fields = {'display_name': display_name}
+
+        wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
+        definition_data = {'wiki_slug': wiki_slug}
+        fields.update(definition_data)
+
+        if CourseRole.course_group_already_exists(course_key):
+            raise InvalidLocationError()
+
+        course = modulestore().create_course(
+            course_key.org,
+            course_key.course,
+            course_key.run,
+            user.id,
+            fields=fields,
+        )
+
+        # Make sure user has instructor and staff access to the new course
+        add_instructor(course.id, user, user)
+
+        # Initialize permissions for user in the new course
+        initialize_permissions(course.id, user)
+        command and command.stdout.write("name: {}\n".format(course.display_name))
+
+    except InvalidLocationError:
+        course = get_course_by_id(course_key)
+
+    return course
+
+
+def get_master_sections(user=None, course=None, command=None):
+    """
+    return section_location and sub_section_dicts
+
+    this used to create master quizblocks and quizzes
+    """
+    section_name = SECTION_NAME
+    if not user:
+        user = User.objects.get(id=ADMIN_USER_ID)
+    if not course:
+        course = get_master_course(user=user, command=command)
+
+    section_dicts = {section.display_name: section for section in course.get_children()}
+    course_location = course.location.to_deprecated_string()
+
+    # create the section if the defined section doesn't exist yet
+    # most of the time, this shouldn't happen since usually we're just create
+    # the section manually
+    if section_name not in section_dicts:
+        command and command.stdout.write("creating {}\n".format(section_name))
+        section_dicts[section_name] = create_xblock(user, 'chapter', course_location, name=section_name)
+
+    section = section_dicts[section_name]
+    section_location = section.location.to_deprecated_string()
+    sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
+
+    return section_location, sub_section_dicts
 
 
 def create_xblock(user, category, parent_location, name=None, extra_post=None):
@@ -71,7 +151,71 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
     return new_xblock
 
 
-def update_quizblocks(course, user, section_name='Labs', command=None, is_master=False):
+def update_master_lab(lab, user=None, course=None,
+                      section_location=None,
+                      sub_section_dicts=None,
+                      command=None):
+
+    if not user:
+        user = User.objects.get(id=ADMIN_USER_ID)
+
+    if not course:
+        course = get_master_course(user=user, command=command)
+        section_location, sub_section_dicts = get_master_sections(
+            user=user, course=course, command=command)
+
+    # sub section is using lab's name as the name
+    # FIXME: we should use location for this as name could be changed
+    if lab.name not in sub_section_dicts:
+        command and command.stdout.write("creating {}\n".format(lab.name))
+        sub_section_dicts[lab.name] = create_xblock(user, 'sequential', section_location, name=lab.name)
+
+    quizblock_xml = lab.engine_xml.replace('Engine_', 'QuizBlocks_')
+    quizblock_xml = QUIZ_BLOCK_S3_PATH.format(quizblock_xml)
+
+    response = requests.get(quizblock_xml)
+    if response.status_code != 200:
+        return
+
+    # parse quizblock xml and store it in the sub section
+    # the quizblock xml contains quizblock and quiz
+    tree = etree.fromstring(response.content)
+    sub_section = sub_section_dicts[lab.name]
+    sub_section_location = sub_section.location.to_deprecated_string()
+
+    unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
+
+    for quizblock in tree.getchildren():
+        name = quizblock.attrib.get('Id')
+        if name not in unit_dicts:
+            command and command.stdout.write("creating quizblock {}\n".format(name))
+            unit_dicts[name] = create_xblock(user, 'vertical', sub_section_location, name=name)
+
+        unit = unit_dicts[name]
+        unit_location = unit.location.to_deprecated_string()
+        problem_dicts = {problem.display_name: problem for problem in unit.get_children()}
+
+        for quiz in quizblock.getchildren():
+            name = quiz.attrib.get('Id')
+
+            if name not in problem_dicts:
+                command and command.stdout.write("creating problem {}\n".format(name))
+                extra_post = {'boilerplate': "multiplechoice.yaml"}
+                problem_dicts[name] = create_xblock(user, 'problem', unit_location, extra_post=extra_post)
+
+            problem_xblock = problem_dicts[name]
+            platform_xml = etree.tostring(quiz, pretty_print=True)
+
+            quiz_parser = QuizParser(quiz)
+
+            edx_xml = platform_xml
+            update_problem(user, problem_xblock, data=edx_xml, name=name,
+                           platform_xml=platform_xml,
+                           correct_index=quiz_parser.correct_index,
+                           correct_answer=quiz_parser.correct_answer)
+
+
+def update_quizblocks(course=None, user=None, section_name='Labs', command=None, is_master=False):
     """
     updates sub sections (quizblocks) of master course
 
@@ -82,79 +226,23 @@ def update_quizblocks(course, user, section_name='Labs', command=None, is_master
     # FIXME
     assert is_master, "only master lab"
 
-    section_dicts = {section.display_name: section for section in course.get_children()}
-    course_location = course.location.to_deprecated_string()
+    if not user:
+        user = User.objects.get(id=ADMIN_USER_ID)
 
-    # create the section if the defined section doesn't exist yet
-    # most of the time, this shouldn't happen since usually we're just create
-    # the section manually
-    if section_name not in section_dicts:
-        command and command.stdout.write("creating {}\n".format(section_name))
-        section_dicts[section_name] = create_xblock(user, 'chapter', course_location, name=section_name)
+    if not course:
+        course = get_master_course(user=user, command=command)
 
-    section = section_dicts[section_name]
-    section_location = section.location.to_deprecated_string()
-    sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
+    section_location, sub_section_dicts = get_master_sections(
+        user=user, course=course, command=command)
 
     labs = Lab.objects.all()
 
     # iterates through all the labs and create it in master course if it doesn't
     # exist. it will fetch quizblocks from xml if the xml exists in s3.
     for lab in labs:
-        # sub section is using lab's name as the name
-        # FIXME: we should use location for this as name could be changed
-        if lab.name not in sub_section_dicts:
-            command and command.stdout.write("creating {}\n".format(lab.name))
-            sub_section_dicts[lab.name] = create_xblock(user, 'sequential', section_location, name=lab.name)
-
-        quizblock_xml = lab.engine_xml.replace('Engine_', 'QuizBlocks_')
-        quizblock_xml = QUIZ_BLOCK_S3_PATH.format(quizblock_xml)
-
-        response = requests.get(quizblock_xml)
-        if response.status_code != 200:
-            return
-
-        # parse quizblock xml and store it in the sub section
-        # the quizblock xml contains quizblock and quiz
-        tree = etree.fromstring(response.content)
-        sub_section = sub_section_dicts[lab.name]
-        sub_section_location = sub_section.location.to_deprecated_string()
-
-        unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
-
-        for quizblock in tree.getchildren():
-            name = quizblock.attrib.get('Id')
-            if name not in unit_dicts:
-                command and command.stdout.write("creating quizblock {}\n".format(name))
-                unit_dicts[name] = create_xblock(user, 'vertical', sub_section_location, name=name)
-
-            unit = unit_dicts[name]
-            unit_location = unit.location.to_deprecated_string()
-            problem_dicts = {problem.display_name: problem for problem in unit.get_children()}
-
-            for quiz in quizblock.getchildren():
-                name = quiz.attrib.get('Id')
-
-                if name not in problem_dicts:
-                    command and command.stdout.write("creating problem {}\n".format(name))
-                    extra_post = {'boilerplate': "multiplechoice.yaml"}
-                    problem_dicts[name] = create_xblock(user, 'problem', unit_location, extra_post=extra_post)
-
-                problem_xblock = problem_dicts[name]
-                platform_xml = etree.tostring(quiz, pretty_print=True)
-
-                quiz_parser = QuizParser(quiz)
-
-                # FIXME: not needed
-                if is_master:
-                    edx_xml = platform_xml
-                else:
-                    edx_xml = quiz_parser.parsed_as_string
-
-                update_problem(user, problem_xblock, data=edx_xml, name=name,
-                               platform_xml=platform_xml,
-                               correct_index=quiz_parser.correct_index,
-                               correct_answer=quiz_parser.correct_answer)
+        update_master_lab(lab, user, course=course,
+                          section_location=section_location,
+                          sub_section_dicts=sub_section_dicts, command=command)
 
 
 def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None,

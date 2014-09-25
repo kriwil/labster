@@ -62,7 +62,8 @@ def home(request):
 
     base_url = "http://localhost:9000"  # get_base_url()
     backoffice_urls = {
-        'buy_lab': '{}/api/payments/create/'.format(base_url)
+        'buy_lab': '{}/api/payments/create/'.format(base_url),
+        'payment': '{}/api/payments/'.format(base_url),
     }
 
     context = {

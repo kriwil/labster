@@ -8,7 +8,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.utils import timezone
 
 
@@ -253,10 +253,6 @@ class UserAnswer(models.Model):
     play_count = models.IntegerField(blank=True, null=True)
 
 
-def update_modified_at(sender, instance, **kwargs):
-    instance.modified_at = timezone.now()
-
-
 def fetch_labs_as_json():
     labs = Lab.objects.order_by('name')
     labs_json = [lab.to_json() for lab in labs]
@@ -282,6 +278,14 @@ def get_or_create_lab_proxy(location, lab=None):
     return lab_proxy
 
 
+def create_master_lab(sender, instance, created, **kwargs):
+    from labster.quiz_blocks import update_master_lab
+    update_master_lab(instance)
+post_save.connect(create_master_lab, sender=Lab)
+
+
+def update_modified_at(sender, instance, **kwargs):
+    instance.modified_at = timezone.now()
 pre_save.connect(update_modified_at, sender=Lab)
 pre_save.connect(update_modified_at, sender=LabProxy)
 pre_save.connect(update_modified_at, sender=UserSave)

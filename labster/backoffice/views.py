@@ -11,10 +11,13 @@ def get_base_url():
     return settings.LABSTER_BACKOFFICE_BASE_URL
 
 
-def get_labs(format='json'):
+def get_labs(token, format='json'):
+    headers = {
+        'authorization': "Token {}".format(token),
+    }
     lab_list_url = '{}/api/products/'.format(get_base_url())
 
-    resp = requests.get(lab_list_url)
+    resp = requests.get(lab_list_url, headers=headers)
     assert resp.status_code == 200
 
     if format == 'string':
@@ -31,16 +34,8 @@ def create_user(user, format='json'):
     create_user_url = '{}/api/users/create/'.format(get_base_url())
 
     resp = requests.post(create_user_url, data=post_data)
-    assert resp.status_code == 200
+    assert resp.status_code in range(200, 205)
 
-    if format == 'string':
-        return resp.content
-    return resp.json()
-
-
-def get_user(user, format='json'):
-    user_detail_url = '{}'.format(get_base_url())
-    resp = requests.get(user_detail_url)
     if format == 'string':
         return resp.content
     return resp.json()
@@ -53,9 +48,9 @@ def home(request):
 
     template_name = 'labster/backoffice.html'
 
-    lab_list = get_labs(format='string')
     bo_user = create_user(request.user, format='json')
     token = bo_user['token']
+    lab_list = get_labs(token=token, format='string')
     backoffice = {
         'user_id': bo_user['id']
     }

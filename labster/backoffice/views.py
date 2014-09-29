@@ -55,10 +55,13 @@ def home(request):
         'user_id': bo_user['id']
     }
 
-    base_url = "http://localhost:9000"  # get_base_url()
+    from django.conf import settings
+    base_url = settings.LABSTER_BACKOFFICE_JS_BASE_URL
+
     backoffice_urls = {
         'buy_lab': '{}/api/payments/create/'.format(base_url),
         'payment': '{}/api/payments/'.format(base_url),
+        'license': '{}/api/licenses/'.format(base_url),
     }
 
     context = {

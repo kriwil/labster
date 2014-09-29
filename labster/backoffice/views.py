@@ -18,7 +18,7 @@ def get_labs(token, format='json'):
     lab_list_url = '{}/api/products/'.format(get_base_url())
 
     resp = requests.get(lab_list_url, headers=headers)
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.status_code
 
     if format == 'string':
         return resp.content
@@ -34,7 +34,7 @@ def create_user(user, format='json'):
     create_user_url = '{}/api/users/create/'.format(get_base_url())
 
     resp = requests.post(create_user_url, data=post_data)
-    assert resp.status_code in range(200, 205)
+    assert resp.status_code in range(200, 205), resp.status_code
 
     if format == 'string':
         return resp.content

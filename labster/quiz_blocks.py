@@ -152,7 +152,8 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
 def update_master_lab(lab, user=None, course=None,
                       section_location=None,
                       sub_section_dicts=None,
-                      command=None):
+                      command=None,
+                      force_update=False):
 
     if not user:
         user = User.objects.get(id=ADMIN_USER_ID)
@@ -167,6 +168,9 @@ def update_master_lab(lab, user=None, course=None,
     if lab.name not in sub_section_dicts:
         command and command.stdout.write("creating {}\n".format(lab.name))
         sub_section_dicts[lab.name] = create_xblock(user, 'sequential', section_location, name=lab.name)
+
+    elif not force_update:
+        return
 
     quizblock_xml = lab.engine_xml.replace('Engine_', 'QuizBlocks_')
     quizblock_xml = QUIZ_BLOCK_S3_PATH.format(quizblock_xml)
@@ -189,6 +193,9 @@ def update_master_lab(lab, user=None, course=None,
             command and command.stdout.write("creating quizblock {}\n".format(name))
             unit_dicts[name] = create_xblock(user, 'vertical', sub_section_location, name=name)
 
+        elif not force_update:
+            continue
+
         unit = unit_dicts[name]
         unit_location = unit.location.to_deprecated_string()
         problem_dicts = {problem.display_name: problem for problem in unit.get_children()}
@@ -200,6 +207,9 @@ def update_master_lab(lab, user=None, course=None,
                 command and command.stdout.write("creating problem {}\n".format(name))
                 extra_post = {'boilerplate': "multiplechoice.yaml"}
                 problem_dicts[name] = create_xblock(user, 'problem', unit_location, extra_post=extra_post)
+
+            elif not force_update:
+                continue
 
             problem_xblock = problem_dicts[name]
             platform_xml = etree.tostring(quiz, pretty_print=True)
@@ -213,7 +223,7 @@ def update_master_lab(lab, user=None, course=None,
                            correct_answer=quiz_parser.correct_answer)
 
 
-def update_quizblocks(course=None, user=None, section_name='Labs', command=None, is_master=False):
+def update_quizblocks(course=None, user=None, section_name='Labs', command=None, is_master=False, force_update=False):
     """
     updates sub sections (quizblocks) of master course
 
@@ -240,7 +250,8 @@ def update_quizblocks(course=None, user=None, section_name='Labs', command=None,
     for lab in labs:
         update_master_lab(lab, user, course=course,
                           section_location=section_location,
-                          sub_section_dicts=sub_section_dicts, command=command)
+                          sub_section_dicts=sub_section_dicts, command=command,
+                          force_update=force_update)
 
 
 def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', command=None,

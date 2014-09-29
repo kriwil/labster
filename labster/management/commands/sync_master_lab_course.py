@@ -12,4 +12,8 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
-        update_quizblocks(command=self, is_master=True)
+        try:
+            force_update = args[1] == 'force'
+        except:
+            force_update = False
+        update_quizblocks(command=self, is_master=True, force_update=force_update)

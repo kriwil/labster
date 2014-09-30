@@ -6,13 +6,6 @@ import requests
 
 from django.contrib.auth.models import User
 
-from courseware.courses import get_course_by_id
-from opaque_keys.edx.keys import UsageKey
-from opaque_keys.edx.locations import SlashSeparatedCourseKey
-from student.roles import CourseRole
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.exceptions import InvalidLocationError
-
 from labster.constants import COURSE_ID, ADMIN_USER_ID
 from labster.models import Lab, ProblemProxy, LabProxy
 from labster.parsers.problem_parsers import QuizParser
@@ -22,8 +15,22 @@ QUIZ_BLOCK_S3_PATH = "https://s3-us-west-2.amazonaws.com/labster/uploads/{}"
 SECTION_NAME = 'Labs'
 
 
+def get_usage_key():
+    from opaque_keys.edx.keys import UsageKey
+    return UsageKey
+
+
+def get_modulestore():
+    from xmodule.modulestore.django import modulestore
+    return modulestore
+
+
 def get_master_course(user=None, command=None):
     from contentstore.utils import add_instructor, initialize_permissions
+    from courseware.courses import get_course_by_id
+    from opaque_keys.edx.locations import SlashSeparatedCourseKey
+    from student.roles import CourseRole
+    from xmodule.modulestore.exceptions import InvalidLocationError
 
     if not user:
         user = User.objects.get(id=ADMIN_USER_ID)
@@ -42,7 +49,7 @@ def get_master_course(user=None, command=None):
         if CourseRole.course_group_already_exists(course_key):
             raise InvalidLocationError()
 
-        course = modulestore().create_course(
+        course = get_modulestore().create_course(
             course_key.org,
             course_key.course,
             course_key.run,
@@ -113,8 +120,8 @@ def create_xblock(user, category, parent_location, name=None, extra_post=None):
     response = _create_item(request)
     response_content = json.loads(response.content)
     section_location = response_content['locator']
-    usage_key = UsageKey.from_string(section_location)
-    store = modulestore()
+    usage_key = get_usage_key().from_string(section_location)
+    store = get_modulestore()
 
     return store.get_item(usage_key)
 
@@ -144,8 +151,8 @@ def update_problem(user, xblock, data, name, platform_xml, correct_index=None,
     )
 
     new_xblock = json.loads(response.content)
-    locator = UsageKey.from_string(new_xblock['id'])
-    modulestore().publish(locator, user.id)
+    locator = get_usage_key().from_string(new_xblock['id'])
+    get_modulestore().publish(locator, user.id)
     return new_xblock
 
 
@@ -318,8 +325,8 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                     command and command.stdout.write("converting to data: {}\n".format(component.display_name))
                     component.data = quiz_parser.parsed_as_string
 
-                modulestore().update_item(component, user.id)
-                modulestore().publish(component.location, user.id)
+                get_modulestore().update_item(component, user.id)
+                get_modulestore().publish(component.location, user.id)
 
                 # create ProblemProxy
                 tree = etree.fromstring(component.platform_xml)
@@ -338,8 +345,8 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
                 if created:
                     command and command.stdout.write("new ProblemProxy: {}\n".format(component.location))
 
-            modulestore().publish(qb.location, user.id)
-        modulestore().publish(sub_section.location, user.id)
+            get_modulestore().publish(qb.location, user.id)
+        get_modulestore().publish(sub_section.location, user.id)
 
 
 def get_hashed_question(question):
@@ -365,8 +372,8 @@ def get_problem_proxy_by_question(lab_proxy, question):
 
     # FIXME: do not do this
     obj = None
-    locator = UsageKey.from_string(lab_proxy.location)
-    descriptor = modulestore().get_item(locator)
+    locator = get_usage_key().from_string(lab_proxy.location)
+    descriptor = get_modulestore().get_item(locator)
 
     for _quiz_block in descriptor.get_children():
         for _problem in _quiz_block.get_children():
@@ -406,4 +413,4 @@ def sync_surveys(course, user, master_survey):
         new_location = _duplicate_item(
             section.location, sub_section.location, user=user,
             display_name=sub_section.display_name)
-        modulestore().publish(new_location, user.id)
+        get_modulestore().publish(new_location, user.id)

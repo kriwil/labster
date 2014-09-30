@@ -22,7 +22,7 @@ def get_usage_key():
 
 def get_modulestore():
     from xmodule.modulestore.django import modulestore
-    return modulestore
+    return modulestore()
 
 
 def get_master_course(user=None, command=None):

@@ -64,10 +64,12 @@ def home(request):
         'license': '{}/api/licenses/'.format(base_url),
     }
 
+    stripe_publishable_key = settings.STRIPE_PUBLISHABLE_KEY
     context = {
         'lab_list': lab_list,
         'token': token,
         'backoffice': backoffice,
         'backoffice_urls': backoffice_urls,
+        'stripe_publishable_key': stripe_publishable_key,
     }
     return render_to_response(template_name, context)

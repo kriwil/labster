@@ -1,5 +1,8 @@
+import mock
+
 from django.test import TestCase
 
+from labster.constants import ADMIN_USER_ID
 from labster.models import UserAttempt
 from labster.tests.factories import (
     UserFactory, LabFactory, UserAttemptFactory, create_lab_proxy,
@@ -8,12 +11,17 @@ from labster.tests.factories import (
 
 class UserAttemptTest(TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         lab = LabFactory()
         self.lab_proxy = create_lab_proxy(lab=lab)
         self.user = UserFactory()
 
     def test_get_for_user(self):
+
         first_user_attempt = UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
         second_user_attempt = UserAttemptFactory(user=self.user, lab_proxy=self.lab_proxy)
 

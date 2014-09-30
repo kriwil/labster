@@ -7,6 +7,7 @@ from django.test.client import RequestFactory
 
 from rest_framework.authtoken.models import Token
 
+from labster.constants import ADMIN_USER_ID
 from labster.api.views import AnswerProblem
 from labster.models import ErrorInfo, DeviceInfo, UserSave, UserAttempt
 from labster.tests.factories import (
@@ -54,7 +55,11 @@ class AuthPostOnlyMixin(object):
 
 class CreateErrorTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -100,7 +105,11 @@ class CreateErrorTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
 class CreateDeviceTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -166,7 +175,11 @@ class CreateDeviceTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
 class CreateSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -214,7 +227,11 @@ class CreateSaveTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
 class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -260,7 +277,11 @@ class PlayLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
 class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -302,7 +323,11 @@ class FinishLabTest(AuthGetOnlyMixin, AuthPostOnlyMixin, TestCase):
 
 class UnityPlayLabTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -358,7 +383,11 @@ class UnityPlayLabTest(NoGetMixin, AuthPostOnlyMixin, TestCase):
 
 class AnswerProblemTest(TestCase):
 
-    def setUp(self):
+    @mock.patch('labster.quiz_blocks.update_master_lab')
+    def setUp(self, update_master_lab):
+        update_master_lab.return_value = None
+        UserFactory(id=ADMIN_USER_ID)
+
         self.lab = LabFactory()
         self.user = UserFactory()
         self.lab_proxy = create_lab_proxy(lab=self.lab)
@@ -369,10 +398,19 @@ class AnswerProblemTest(TestCase):
     @mock.patch('labster.api.views.get_usage_key')
     @mock.patch('labster.api.views.get_modulestore')
     @mock.patch('labster.api.views.invoke_xblock_handler')
-    def test_post(self, invoke_xblock_handler, modulestore, usage_key):
+    @mock.patch('labster.api.views.get_problem_proxy_by_question')
+    def test_post(self, get_problem_proxy_by_question, invoke_xblock_handler, modulestore, usage_key):
         invoke_xblock_handler.return_value = DummyXblockResult()
 
-        response = self.client.post(self.url, **self.headers)
+        post_data = {
+            'QuizQuestion': "test",
+            'Score': 1,
+            'CompletionTime': 1,
+            'CorrectAnswer': 1,
+            'PlayCount': 1,
+        }
+
+        response = self.client.post(self.url, post_data, **self.headers)
         self.assertEqual(response.status_code, 201)
 
     @mock.patch('labster.api.views.get_usage_key')
@@ -384,6 +422,6 @@ class AnswerProblemTest(TestCase):
         answer = "1"
         time_spent = "10.13"
         post_data = AnswerProblem().get_post_data(request, problem_locator, answer, time_spent)
-        self.assertIn('input_tag-org-course-category-name_2_1', post_data)
-        self.assertEqual(post_data.get('input_tag-org-course-category-name_2_1'), '1')
+        self.assertIn('input_i4x-org-course-category-name_2_1', post_data)
+        self.assertEqual(post_data.get('input_i4x-org-course-category-name_2_1'), '1')
         self.assertEqual(post_data.get('time_spent'), time_spent)

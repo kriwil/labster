@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            force_update = args[1] == 'force'
+            force_update = args[0] == 'force'
         except:
             force_update = False
         update_quizblocks(command=self, is_master=True, force_update=force_update)

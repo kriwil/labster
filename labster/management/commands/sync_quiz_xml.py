@@ -103,5 +103,5 @@ class Command(BaseCommand):
             course = get_course_by_id(course_key)
 
             sync_quiz_xml(course, user, command=self,
-                        section_name=section_name,
-                        sub_section_name=sub_section_name)
+                          section_name=section_name,
+                          sub_section_name=sub_section_name)

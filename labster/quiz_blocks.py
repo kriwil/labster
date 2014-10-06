@@ -183,8 +183,7 @@ def update_master_lab(lab, user=None, course=None,
     quizblock_xml = QUIZ_BLOCK_S3_PATH.format(quizblock_xml)
 
     response = requests.get(quizblock_xml)
-    if response.status_code != 200:
-        return
+    assert response.status_code == 200, "missing quizblocks xml"
 
     # parse quizblock xml and store it in the sub section
     # the quizblock xml contains quizblock and quiz
@@ -285,9 +284,15 @@ def sync_quiz_xml(course, user, section_name='Labs', sub_section_name='', comman
 
     for lab_name in labs:
         sub_section = sub_section_dicts[lab_name]
+        try:
+            lab = Lab.objects.get(id=sub_section.lab_id)
+        except Lab.DoesNotExist:
+            command and command.stdout.write("lab {} does not exist\n".format(sub_section.lab_id))
+            continue
+
         lab_proxy, _ = LabProxy.objects.get_or_create(
             location=str(sub_section.location),
-            lab_id=sub_section.lab_id,
+            defaults={'lab': lab},
         )
 
         for qb in sub_section.get_children():

@@ -229,6 +229,69 @@ def update_master_lab(lab, user=None, course=None,
                            correct_answer=quiz_parser.correct_answer)
 
 
+def update_course_lab(user, course, section_name, sub_section_name,
+                      lab_name=None,
+                      command=None,
+                      force_update=False):
+
+    section_dicts = {section.display_name: section for section in course.get_children()}
+
+    section = section_dicts[section_name]
+    sub_section_dicts = {sub.display_name: sub for sub in section.get_children()}
+
+    sub_section = sub_section_dicts[sub_section_name]
+    sub_section_location = sub_section.location.to_deprecated_string()
+    lab_proxy = LabProxy.objects.get(id=sub_section.lab_id)
+    lab = lab_proxy.lab
+
+    quizblock_xml = lab.engine_xml.replace('Engine_', 'QuizBlocks_')
+    quizblock_xml = QUIZ_BLOCK_S3_PATH.format(quizblock_xml)
+
+    response = requests.get(quizblock_xml)
+    assert response.status_code == 200, "missing quizblocks xml"
+
+    # parse quizblock xml and store it in the sub section
+    # the quizblock xml contains quizblock and quiz
+    tree = etree.fromstring(response.content)
+
+    unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
+
+    for quizblock in tree.getchildren():
+        name = quizblock.attrib.get('Id')
+        if name not in unit_dicts:
+            command and command.stdout.write("creating quizblock {}\n".format(name))
+            unit_dicts[name] = create_xblock(user, 'vertical', sub_section_location, name=name)
+
+        elif not force_update:
+            continue
+
+        unit = unit_dicts[name]
+        unit_location = unit.location.to_deprecated_string()
+        problem_dicts = {problem.display_name: problem for problem in unit.get_children()}
+
+        for quiz in quizblock.getchildren():
+            name = quiz.attrib.get('Id')
+
+            if name not in problem_dicts:
+                command and command.stdout.write("creating problem {}\n".format(name))
+                extra_post = {'boilerplate': "multiplechoice.yaml"}
+                problem_dicts[name] = create_xblock(user, 'problem', unit_location, extra_post=extra_post)
+
+            elif not force_update:
+                continue
+
+            problem_xblock = problem_dicts[name]
+            platform_xml = etree.tostring(quiz, pretty_print=True)
+
+            quiz_parser = QuizParser(quiz)
+
+            edx_xml = platform_xml
+            update_problem(user, problem_xblock, data=edx_xml, name=name,
+                           platform_xml=platform_xml,
+                           correct_index=quiz_parser.correct_index,
+                           correct_answer=quiz_parser.correct_answer)
+
+
 def update_quizblocks(course=None, user=None, section_name='Labs', command=None, is_master=False, force_update=False):
     """
     updates sub sections (quizblocks) of master course

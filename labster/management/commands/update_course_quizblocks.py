@@ -5,24 +5,22 @@ from courseware.courses import get_course_by_id
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
 from labster.constants import ADMIN_USER_ID
-from labster.quiz_blocks import update_quizblocks
+from labster.quiz_blocks import update_course_lab
 
 
 class Command(BaseCommand):
-    """
-    Management command to sync master course
-
-    Check cms/djangoapps/contentstore/views/course.py:_create_new_course()
-    to see how course is created
-    """
 
     def handle(self, *args, **options):
-        assert False, "this isn't used anymore"
         user = User.objects.get(id=ADMIN_USER_ID)
+
         course_id = args[0]
+        section_name = args[1]
+        sub_section_name = args[2]
+
         org, number, run = course_id.split('/')
 
         course_key = SlashSeparatedCourseKey(org, number, run)
         course = get_course_by_id(course_key)
 
-        update_quizblocks(course, user, command=self)
+        update_course_lab(user, course, section_name, sub_section_name,
+                          command=self, force_update=True)

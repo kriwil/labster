@@ -241,7 +241,7 @@ def update_course_lab(user, course, section_name, sub_section_name,
 
     sub_section = sub_section_dicts[sub_section_name]
     sub_section_location = sub_section.location.to_deprecated_string()
-    lab_proxy = LabProxy.objects.get(id=sub_section.lab_id)
+    lab_proxy = LabProxy.objects.get(location=sub_section_location)
     lab = lab_proxy.lab
 
     quizblock_xml = lab.engine_xml.replace('Engine_', 'QuizBlocks_')
@@ -253,6 +253,10 @@ def update_course_lab(user, course, section_name, sub_section_name,
     # parse quizblock xml and store it in the sub section
     # the quizblock xml contains quizblock and quiz
     tree = etree.fromstring(response.content)
+
+    if force_update:
+        for qb in sub_section.get_children():
+            get_modulestore().delete_item(qb.location, user.id)
 
     unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
 

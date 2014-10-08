@@ -258,7 +258,7 @@ def update_course_lab(user, course, section_name, sub_section_name,
         for qb in sub_section.get_children():
             get_modulestore().delete_item(qb.location, user.id)
 
-    unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
+    unit_dicts = {}  # qb.display_name: qb for qb in sub_section.get_children()}
 
     for quizblock in tree.getchildren():
         name = quizblock.attrib.get('Id')

@@ -60,7 +60,7 @@ class Command(BaseCommand):
 
             self.stdout.write('updating all quiz xml\n')
 
-            lab_proxies = LabProxy.objects.all()
+            lab_proxies = LabProxy.objects.filter(is_active=True)
             for lab_proxy in lab_proxies:
 
                 try:
@@ -77,7 +77,7 @@ class Command(BaseCommand):
 
                 for section in course.get_children():
                     for sub_section in section.get_children():
-                        if not sub_section.lab_id:
+                        if not str(sub_section.location) == lab_proxy.location:
                             continue
 
                         sync_quiz_xml(

@@ -191,7 +191,13 @@ def update_master_lab(lab, user=None, course=None,
     sub_section = sub_section_dicts[lab.name]
     sub_section_location = sub_section.location.to_deprecated_string()
 
-    unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
+    if force_update:
+        unit_dicts = {}
+        for qb in sub_section.get_children():
+            get_modulestore().delete_item(qb.location, user.id)
+
+    else:
+        unit_dicts = {qb.display_name: qb for qb in sub_section.get_children()}
 
     for quizblock in tree.getchildren():
         name = quizblock.attrib.get('Id')

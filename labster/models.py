@@ -103,6 +103,11 @@ class LabProxy(models.Model):
     class Meta:
         verbose_name_plural = 'Lab proxies'
 
+    @property
+    def course_from_location(self):
+        paths = self.location.split('/')
+        return '/'.join([paths[2], paths[3]])
+
 
 class UserSave(models.Model):
     """

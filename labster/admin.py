@@ -18,7 +18,8 @@ class LabAdmin(BaseAdmin):
 
 
 class LabProxyAdmin(BaseAdmin):
-    pass
+    list_display = ('id', 'course_from_location', 'lab', 'location', 'is_active')
+    list_filter = ('is_active',)
 
 
 class UserSaveAdmin(BaseAdmin):

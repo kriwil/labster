@@ -54,6 +54,8 @@ class Lab(models.Model):
     engine_xml = models.CharField(max_length=128, blank=True, default="")
     engine_file = models.CharField(max_length=128, blank=True, default="labster.unity3d")
     use_quiz_blocks = models.BooleanField(default=False)
+    screenshot = models.ImageField(upload_to='edx/labster/lab/images', blank=True)
+    screenshot_url = models.URLField(max_length=500, blank=True, default="")
 
     # lab can have many languages
     languages = models.ManyToManyField(LanguageLab)
@@ -63,7 +65,6 @@ class Lab(models.Model):
 
     url = models.URLField(max_length=120, blank=True, default="")
     wiki_url = models.URLField(max_length=120, blank=True, default="")
-    screenshot = models.ImageField(upload_to='edx/labster/lab/images', blank=True)
     questions = models.TextField(default='', blank=True)
 
     def __unicode__(self):

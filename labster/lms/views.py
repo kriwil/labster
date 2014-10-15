@@ -1,4 +1,6 @@
+import json
 import six
+
 try:
     import cStringIO.StringIO as StringIO
 except ImportError:
@@ -8,6 +10,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 from django.utils.xmlutils import SimplerXMLGenerator
 from django.views.generic import View
 
@@ -219,3 +222,74 @@ server_xml = ServerXml.as_view()
 platform_xml = PlatformXml.as_view()
 start_new_lab = StartNewLab.as_view()
 continue_lab = ContinueLab.as_view()
+
+
+def get_modulestore():
+    from xmodule.modulestore.django import modulestore
+    return modulestore()
+
+
+def get_course_meta(user):
+    org = "LabsterX"
+    number = user.email.replace('@', '.').upper()
+    run = timezone.now().strftime("%Y_%m")
+
+    return org, number, run
+
+
+def get_or_create_course(source_course, user):
+    from contentstore.utils import add_instructor, initialize_permissions
+    from courseware.courses import get_course_by_id
+    from opaque_keys.edx.locations import SlashSeparatedCourseKey
+    from student.roles import CourseRole
+    from xmodule.modulestore.exceptions import InvalidLocationError
+
+    display_name = source_course.display_name
+    org, number, run = get_course_meta(user)
+
+    try:
+        course_key = SlashSeparatedCourseKey(org, number, run)
+        fields = {'display_name': display_name}
+
+        wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
+        definition_data = {'wiki_slug': wiki_slug}
+        fields.update(definition_data)
+
+        if CourseRole.course_group_already_exists(course_key):
+            raise InvalidLocationError()
+
+        course = get_modulestore().create_course(
+            course_key.org,
+            course_key.course,
+            course_key.run,
+            user.id,
+            fields=fields,
+        )
+
+        # Make sure user has instructor and staff access to the new course
+        add_instructor(course.id, user, user)
+
+        # Initialize permissions for user in the new course
+        initialize_permissions(course.id, user)
+
+    except InvalidLocationError:
+        course = get_course_by_id(course_key)
+
+    return course
+
+
+def duplicate_course(request):
+    from courseware.courses import get_course_by_id
+    from opaque_keys.edx.locations import SlashSeparatedCourseKey
+
+    response_data = {}
+    if request.method == 'POST':
+
+        source = request.POST.get('source')
+        source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
+        course = get_or_create_course(source_course=source_course, user=request.user)
+        print course
+
+    return HttpResponse(
+        json.dumps(response_data),
+        content_type='application/json')

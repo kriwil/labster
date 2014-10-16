@@ -1,8 +1,12 @@
+from contentstore.utils import add_instructor, initialize_permissions
 from contentstore.views.item import _duplicate_item
-from courseware.courses import get_course_by_id
+from courseware.courses import get_course_by_id, get_course
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
+from student.roles import CourseRole
 from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.exceptions import InvalidLocationError
+
 
 from labster.constants import COURSE_ID
 
@@ -47,3 +51,101 @@ def duplicate_lab_content(user, source_location, parent_location):
     for quiz_block in source_item.get_children():
         new_location = _duplicate_item(parent_locator, quiz_block.location, user=user, display_name=quiz_block.display_name)
         modulestore().publish(new_location, user.id)
+
+
+def get_or_create_course(source, target, user):
+    source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
+
+    display_name = source_course.display_name
+    org, number, run = target.split('/')
+
+    course_key = SlashSeparatedCourseKey(org, number, run)
+    fields = {'display_name': display_name}
+
+    wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
+    definition_data = {'wiki_slug': wiki_slug}
+    fields.update(definition_data)
+
+    try:
+        if CourseRole.course_group_already_exists(course_key):
+            raise InvalidLocationError()
+
+        course = modulestore().create_course(
+            course_key.org,
+            course_key.course,
+            course_key.run,
+            user.id,
+            fields=fields,
+        )
+
+    except InvalidLocationError:
+        course = get_course(course_key)
+
+    else:
+        # Make sure user has instructor and staff access to the new course
+        add_instructor(course.id, user, user)
+
+        # Initialize permissions for user in the new course
+        initialize_permissions(course.id, user)
+
+    return course
+
+
+def force_create_course(source, target, user):
+    source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
+    display_name = source_course.display_name
+    fields = {'display_name': display_name}
+
+    course = None
+    start_index = 0
+    org, original_number, run = target.split('/')
+
+    number = original_number
+    while course is None:
+        course_key = SlashSeparatedCourseKey(org, number, run)
+
+        wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
+        definition_data = {'wiki_slug': wiki_slug}
+        fields.update(definition_data)
+
+        try:
+            if CourseRole.course_group_already_exists(course_key):
+                raise InvalidLocationError()
+
+            course = modulestore().create_course(
+                course_key.org,
+                course_key.course,
+                course_key.run,
+                user.id,
+                fields=fields,
+            )
+
+        except InvalidLocationError:
+            start_index += 1
+            number = "{}{}".format(original_number, start_index)
+            continue
+
+        else:
+            # Make sure user has instructor and staff access to the new course
+            add_instructor(course.id, user, user)
+
+            # Initialize permissions for user in the new course
+            initialize_permissions(course.id, user)
+
+    return course
+
+
+def duplicate_course(source, target, user):
+    source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
+    target_course = force_create_course(source, target, user)
+
+    for child in target_course.get_children():
+        modulestore().delete_item(child.location, user.id)
+
+    target_locator = target_course.location
+
+    for child in source_course.get_children():
+        new_location = _duplicate_item(target_locator, child.location, user=user, display_name=child.display_name)
+        modulestore().publish(new_location, user.id)
+
+    return target_course

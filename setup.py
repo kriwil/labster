@@ -20,6 +20,7 @@ setup(
     install_requires=[
         'django-cors-headers==0.12',
         'django-live-profiler==0.0.9',
+        'django-widget-tweaks==1.3',
         'html2text==2014.7.3',
     ],
     classifiers=[

@@ -1,4 +1,5 @@
 from django.utils import timezone
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,6 +15,8 @@ def get_course_meta(user):
 
 
 class CourseDuplicate(APIView):
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+
     def post(self, request, *args, **kwargs):
         response_data = {}
 

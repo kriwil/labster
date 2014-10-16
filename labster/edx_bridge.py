@@ -91,7 +91,7 @@ def get_or_create_course(source, target, user):
     return course
 
 
-def force_create_course(source, target, user):
+def force_create_course(source, target, user, extra_fields=None):
     source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
     display_name = source_course.display_name
     fields = {'display_name': display_name}
@@ -107,6 +107,8 @@ def force_create_course(source, target, user):
         wiki_slug = u"{0}.{1}.{2}".format(course_key.org, course_key.course, course_key.run)
         definition_data = {'wiki_slug': wiki_slug}
         fields.update(definition_data)
+        if extra_fields:
+            fields.update(extra_fields)
 
         try:
             if CourseRole.course_group_already_exists(course_key):
@@ -135,9 +137,9 @@ def force_create_course(source, target, user):
     return course
 
 
-def duplicate_course(source, target, user):
+def duplicate_course(source, target, user, extra_fields=None):
     source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
-    target_course = force_create_course(source, target, user)
+    target_course = force_create_course(source, target, user, extra_fields)
 
     for child in target_course.get_children():
         modulestore().delete_item(child.location, user.id)

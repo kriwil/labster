@@ -19,7 +19,11 @@ class CourseDuplicate(APIView):
 
         source = request.DATA.get('source')
         target = source
-        course = duplicate_course(source, target, request.user)
+        extra_fields = {
+            'invitation_only': True,
+            'max_student_enrollments_allowed': 3,
+        }
+        course = duplicate_course(source, target, request.user, extra_fields)
 
         response_data = {'course_id': str(course.id)}
 

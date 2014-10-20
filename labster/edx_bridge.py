@@ -14,6 +14,7 @@ from courseware.courses import get_course_by_id, get_course
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from student.roles import CourseRole
+from student.models import UserProfile
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
 from xmodule.modulestore.django import modulestore
@@ -145,6 +146,11 @@ def force_create_course(source, target, user, extra_fields=None):
 
             # Initialize permissions for user in the new course
             initialize_permissions(course.id, user)
+
+    UserProfile.objects\
+        .filter(user_id=user.id)\
+        .exclude(user_type=UserProfile.USER_TYPE_TEACHER)\
+        .update(user_type=UserProfile.USER_TYPE_TEACHER)
 
     return course
 

@@ -3,7 +3,7 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from labster.edx_bridge import duplicate_course
+from labster.edx_bridge import duplicate_course, unregister_course
 
 
 def get_course_meta(user):
@@ -29,6 +29,8 @@ class CourseDuplicate(APIView):
         scheme = 'https' if request.is_secure() else 'http'
         course = duplicate_course(source, target, request.user, extra_fields,
                                   http_protocol=scheme)
+
+        unregister_course(request.user, source)
 
         response_data = {'course_id': str(course.id)}
 

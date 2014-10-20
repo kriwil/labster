@@ -14,7 +14,7 @@ from courseware.courses import get_course_by_id, get_course
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 from student.roles import CourseRole
-from student.models import UserProfile
+from student.models import UserProfile, CourseEnrollment
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
 from xmodule.modulestore.django import modulestore
@@ -240,3 +240,9 @@ def upload_image(course_key, upload_file):
     # }
 
     # return JsonResponse(response_payload)
+
+
+def unregister_course(user, course_id):
+    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    if CourseEnrollment.is_enrolled(user, course_key):
+        CourseEnrollment.unenroll(user, course_key)

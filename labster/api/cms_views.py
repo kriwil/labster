@@ -26,7 +26,9 @@ class CourseDuplicate(APIView):
             'invitation_only': True,
             'max_student_enrollments_allowed': 3,
         }
-        course = duplicate_course(source, target, request.user, extra_fields)
+        scheme = 'https' if request.is_secure() else 'http'
+        course = duplicate_course(source, target, request.user, extra_fields,
+                                  http_protocol=scheme)
 
         response_data = {'course_id': str(course.id)}
 

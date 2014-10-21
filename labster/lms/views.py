@@ -1,4 +1,3 @@
-import json
 import six
 
 try:
@@ -9,8 +8,7 @@ except ImportError:
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render
-from django.utils import timezone
+from django.shortcuts import render, render_to_response
 from django.utils.xmlutils import SimplerXMLGenerator
 from django.views.generic import View
 
@@ -19,6 +17,13 @@ from labster.models import LabProxy, UserSave, UserAttempt
 
 URL_PREFIX = getattr(settings, 'LABSTER_UNITY_URL_PREFIX', '')
 API_PREFIX = getattr(settings, 'LABSTER_UNITY_API_PREFIX', '')
+
+
+def invalid_browser(request):
+    template_name = 'labster/lms/invalid_browser.html'
+    context = {
+    }
+    return render_to_response(template_name, context)
 
 
 def demo_lab(request):

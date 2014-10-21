@@ -2,14 +2,18 @@
 # Original author: udfalkso
 # Modified by: Shwagroo Team and Gun.io
 
-import sys
+
+import StringIO
+import hotshot, hotshot.stats
 import os
 import re
-import hotshot, hotshot.stats
+import sys
 import tempfile
-import StringIO
 
 from django.conf import settings
+
+from labster.lms.views import invalid_browser
+
 
 words_re = re.compile( r'\s+' )
 
@@ -111,3 +115,28 @@ class ProfileMiddleware(object):
             os.unlink(self.tmpfile)
 
         return response
+
+
+class IEDetectionMiddleware(object):
+    """
+    middleware to detect if the user is on old IE
+    """
+
+    def process_request(self, request):
+        is_ie = False
+
+        if 'HTTP_USER_AGENT' in request.META:
+            user_agent = request.META['HTTP_USER_AGENT']
+
+            # Test IE 1-7
+            pattern = "msie [1-8]\."
+            prog = re.compile(pattern, re.IGNORECASE)
+            match = prog.search(user_agent)
+
+            if match:
+                is_ie = True  # NOOOOOO
+
+        if is_ie:
+            # url = reverse('invalid_browser')
+            # return HttpResponseRedirect(url)
+            return invalid_browser(request)

@@ -3,9 +3,8 @@ from functools import partial
 import requests
 
 from django.conf import settings
-from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from cache_toolbox.core import del_cached_content
 from contentstore.utils import add_instructor, initialize_permissions, course_image_url
@@ -192,7 +191,8 @@ def duplicate_course(source, target, user, extra_fields=None, http_protocol='htt
 
     new_course_key = str(target_course.location.course_key)
     image_url = "{}://{}{}".format(http_protocol, settings.LMS_BASE, course_image_url(source_course))
-    upload_image_from_url(new_course_key, image_url)
+    target_course.course_image = upload_image_from_url(new_course_key, image_url)
+    modulestore().update_item(target_course, user.id)
 
     for child in target_course.get_children():
         modulestore().delete_item(child.location, user.id)
@@ -214,19 +214,15 @@ def upload_image_from_url(course, url):
     name = url.split('/')[-1]
     content = res.content
     content_type = res.headers.get('content-type')
-    size = len(content)
-    charset = res.headers.get('encoding')
 
     temp_file = NamedTemporaryFile(delete=True)
     temp_file.write(content)
     temp_file.flush()
 
-    upload_file = InMemoryUploadedFile(
-        File(temp_file), 'file',
-        name, content_type, size, charset)
+    upload_file = SimpleUploadedFile(name, content, content_type)
 
     course_key = SlashSeparatedCourseKey.from_deprecated_string(course)
-    upload_image(course_key, upload_file)
+    return upload_image(course_key, upload_file)
 
 
 def upload_image(course_key, upload_file):
@@ -261,16 +257,7 @@ def upload_image(course_key, upload_file):
     contentstore().save(content)
     del_cached_content(content.location)
 
-    # readback the saved content - we need the database timestamp
-    # readback = contentstore().find(content.location)
-
-    # locked = getattr(content, 'locked', False)
-    # response_payload = {
-    #     'asset': _get_asset_json(content.name, readback.last_modified_at, content.location, content.thumbnail_location, locked),
-    #     'msg': _('Upload completed')
-    # }
-
-    # return JsonResponse(response_payload)
+    return filename
 
 
 def unregister_course(user, course_id):

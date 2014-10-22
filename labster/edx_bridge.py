@@ -18,7 +18,7 @@ from student.models import UserProfile, CourseEnrollment
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.exceptions import InvalidLocationError
+from xmodule.modulestore.exceptions import InvalidLocationError, ItemNotFoundError
 
 
 from labster.constants import COURSE_ID
@@ -105,9 +105,21 @@ def get_or_create_course(source, target, user):
 
 
 def force_create_course(source, target, user, extra_fields=None):
-    source_course = get_course_by_id(SlashSeparatedCourseKey.from_deprecated_string(source))
+    source_course_key = SlashSeparatedCourseKey.from_deprecated_string(source)
+    source_course = get_course_by_id(source_course_key)
     display_name = source_course.display_name
+
     fields = {'display_name': display_name}
+    # duplicated_fields = [
+    #     'key_dates', 'video',
+    #     'course_staff_short', 'course_staff_extended',
+    #     'requirements', 'textbook', 'faq', 'more_info',
+    #     'number', 'instructors', 'end_date',
+    #     'prerequisites', 'ocw_links',
+    # ]
+
+    # for field in duplicated_fields:
+    #     fields[field] = getattr(source_course, field)
 
     course = None
     start_index = 0
@@ -147,12 +159,31 @@ def force_create_course(source, target, user, extra_fields=None):
             # Initialize permissions for user in the new course
             initialize_permissions(course.id, user)
 
+    copy_about_fields(user, source_course_key, course_key, course)
+
     UserProfile.objects\
         .filter(user_id=user.id)\
         .exclude(user_type=UserProfile.USER_TYPE_TEACHER)\
         .update(user_type=UserProfile.USER_TYPE_TEACHER)
 
     return course
+
+
+def copy_about_fields(user, source_course_key, target_course_key, target_course):
+    about_fields = ['syllabus', 'overview', 'effort', 'short_description']
+    for about in about_fields:
+        source_temploc = source_course_key.make_usage_key('about', about)
+        target_temploc = target_course_key.make_usage_key('about', about)
+        store = modulestore()
+
+        try:
+            source_about = store.get_item(source_temploc)
+        except ItemNotFoundError:
+            continue
+
+        target_about = store.create_xmodule(target_temploc, runtime=target_course.runtime)
+        target_about.data = source_about.data
+        store.update_item(target_about, user.id)
 
 
 def duplicate_course(source, target, user, extra_fields=None, http_protocol='https'):
